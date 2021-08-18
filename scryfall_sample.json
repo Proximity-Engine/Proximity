@@ -1,0 +1,129 @@
+{
+  "object": "card",
+  "id": "b3bbecfc-0983-4ade-b00a-2bac2cad8d2f",
+  "oracle_id": "e77e8768-3ea8-44f9-aba6-1e023e006946",
+  "multiverse_ids": [
+    482831
+  ],
+  "tcgplayer_id": 212299,
+  "cardmarket_id": 454158,
+  "name": "Artifact Mutation",
+  "lang": "en",
+  "released_at": "2020-04-17",
+  "uri": "https://api.scryfall.com/cards/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f",
+  "scryfall_uri": "https://scryfall.com/card/c20/203/artifact-mutation?utm_source\u003dapi",
+  "layout": "normal",
+  "highres_image": true,
+  "image_status": "highres_scan",
+  "image_uris": {
+    "small": "https://c1.scryfall.com/file/scryfall-cards/small/front/b/3/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f.jpg?1591321161",
+    "normal": "https://c1.scryfall.com/file/scryfall-cards/normal/front/b/3/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f.jpg?1591321161",
+    "large": "https://c1.scryfall.com/file/scryfall-cards/large/front/b/3/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f.jpg?1591321161",
+    "png": "https://c1.scryfall.com/file/scryfall-cards/png/front/b/3/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f.png?1591321161",
+    "art_crop": "https://c1.scryfall.com/file/scryfall-cards/art_crop/front/b/3/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f.jpg?1591321161",
+    "border_crop": "https://c1.scryfall.com/file/scryfall-cards/border_crop/front/b/3/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f.jpg?1591321161"
+  },
+  "mana_cost": "{R}{G}",
+  "cmc": 2.0,
+  "type_line": "Instant",
+  "oracle_text": "Destroy target artifact. It can\u0027t be regenerated. Create X 1/1 green Saproling creature tokens, where X is that artifact\u0027s mana value.",
+  "colors": [
+    "G",
+    "R"
+  ],
+  "color_identity": [
+    "G",
+    "R"
+  ],
+  "keywords": [],
+  "all_parts": [
+    {
+      "object": "related_card",
+      "id": "b3bbecfc-0983-4ade-b00a-2bac2cad8d2f",
+      "component": "combo_piece",
+      "name": "Artifact Mutation",
+      "type_line": "Instant",
+      "uri": "https://api.scryfall.com/cards/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f"
+    },
+    {
+      "object": "related_card",
+      "id": "1e584eb2-fa22-4d75-b612-e25ecf827918",
+      "component": "token",
+      "name": "Saproling",
+      "type_line": "Token Creature � Saproling",
+      "uri": "https://api.scryfall.com/cards/1e584eb2-fa22-4d75-b612-e25ecf827918"
+    }
+  ],
+  "legalities": {
+    "standard": "not_legal",
+    "future": "not_legal",
+    "historic": "not_legal",
+    "gladiator": "not_legal",
+    "pioneer": "not_legal",
+    "modern": "not_legal",
+    "legacy": "legal",
+    "pauper": "not_legal",
+    "vintage": "legal",
+    "penny": "not_legal",
+    "commander": "legal",
+    "brawl": "not_legal",
+    "historicbrawl": "not_legal",
+    "paupercommander": "not_legal",
+    "duel": "legal",
+    "oldschool": "not_legal",
+    "premodern": "legal"
+  },
+  "games": [
+    "paper",
+    "mtgo"
+  ],
+  "reserved": false,
+  "foil": false,
+  "nonfoil": true,
+  "oversized": false,
+  "promo": false,
+  "reprint": true,
+  "variation": false,
+  "set_id": "f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set": "c20",
+  "set_name": "Commander 2020",
+  "set_type": "commander",
+  "set_uri": "https://api.scryfall.com/sets/f60ec786-1f8d-42f7-9abc-0d880fe243f6",
+  "set_search_uri": "https://api.scryfall.com/cards/search?order\u003dset\u0026q\u003de%3Ac20\u0026unique\u003dprints",
+  "scryfall_set_uri": "https://scryfall.com/sets/c20?utm_source\u003dapi",
+  "rulings_uri": "https://api.scryfall.com/cards/b3bbecfc-0983-4ade-b00a-2bac2cad8d2f/rulings",
+  "prints_search_uri": "https://api.scryfall.com/cards/search?order\u003dreleased\u0026q\u003doracleid%3Ae77e8768-3ea8-44f9-aba6-1e023e006946\u0026unique\u003dprints",
+  "collector_number": "203",
+  "digital": false,
+  "rarity": "rare",
+  "flavor_text": "\"From shards and splinters I call forth my living horde.\"\n�Molimo, maro-sorcerer",
+  "card_back_id": "0aeebaf5-8c7d-4636-9e82-8c27447861f7",
+  "artist": "Greg Staples",
+  "artist_ids": [
+    "93d65564-bf00-447b-8406-e2031f03b6b1"
+  ],
+  "illustration_id": "e8862252-9af5-4b34-8206-1ac9f049e6a6",
+  "border_color": "black",
+  "frame": "2015",
+  "full_art": false,
+  "textless": false,
+  "booster": false,
+  "story_spotlight": false,
+  "edhrec_rank": 1613,
+  "prices": {
+    "usd": "0.19",
+    "eur": "0.50"
+  },
+  "related_uris": {
+    "gatherer": "https://gatherer.wizards.com/Pages/Card/Details.aspx?multiverseid\u003d482831",
+    "tcgplayer_infinite_articles": "https://infinite.tcgplayer.com/search?contentMode\u003darticle\u0026game\u003dmagic\u0026partner\u003dscryfall\u0026q\u003dArtifact+Mutation\u0026utm_campaign\u003daffiliate\u0026utm_medium\u003dapi\u0026utm_source\u003dscryfall",
+    "tcgplayer_infinite_decks": "https://infinite.tcgplayer.com/search?contentMode\u003ddeck\u0026game\u003dmagic\u0026partner\u003dscryfall\u0026q\u003dArtifact+Mutation\u0026utm_campaign\u003daffiliate\u0026utm_medium\u003dapi\u0026utm_source\u003dscryfall",
+    "edhrec": "https://edhrec.com/route/?cc\u003dArtifact+Mutation",
+    "mtgtop8": "https://mtgtop8.com/search?MD_check\u003d1\u0026SB_check\u003d1\u0026cards\u003dArtifact+Mutation"
+  },
+  "purchase_uris": {
+    "tcgplayer": "https://shop.tcgplayer.com/product/productsearch?id\u003d212299\u0026utm_campaign\u003daffiliate\u0026utm_medium\u003dapi\u0026utm_source\u003dscryfall",
+    "cardmarket": "https://www.cardmarket.com/en/Magic/Products/Search?referrer\u003dscryfall\u0026searchString\u003dArtifact+Mutation\u0026utm_campaign\u003dcard_prices\u0026utm_medium\u003dtext\u0026utm_source\u003dscryfall",
+    "cardhoarder": "https://www.cardhoarder.com/cards?affiliate_id\u003dscryfall\u0026data%5Bsearch%5D\u003dArtifact+Mutation\u0026ref\u003dcard-profile\u0026utm_campaign\u003daffiliate\u0026utm_medium\u003dcard\u0026utm_source\u003dscryfall"
+  }
+}
