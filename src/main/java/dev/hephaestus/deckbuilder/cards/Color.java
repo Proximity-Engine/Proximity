@@ -6,11 +6,11 @@ import java.util.Map;
 public final class Color {
     private static final Map<Character, Color> COLORS = new HashMap<>();
 
-    public static final Color WHITE = Color.of('W', 247, 247, 242);
-    public static final Color BLUE = Color.of('U', 0, 118, 198);
-    public static final Color BLACK = Color.of('B', 42, 41, 39);
-    public static final Color GREEN = Color.of('G', 0, 115, 68);
-    public static final Color RED = Color.of('R', 255, 16, 0);
+    public static final Color WHITE = Color.of('W', 255, 253, 234);
+    public static final Color BLUE = Color.of('U', 167, 224, 249);
+    public static final Color BLACK = Color.of('B', 213, 207, 207);
+    public static final Color RED = Color.of('R', 252, 179, 146);
+    public static final Color GREEN = Color.of('G', 166, 222, 187);
 
     public static final Color GOLD = Color.of(null, 245, 203, 66);
     public static final Color ARTIFACT = Color.of(null, 255, 32, 32);

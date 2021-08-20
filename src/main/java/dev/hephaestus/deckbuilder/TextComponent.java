@@ -1,6 +1,8 @@
 package dev.hephaestus.deckbuilder;
 
-public record TextComponent(Integer color, String string) {
+import dev.hephaestus.deckbuilder.text.Style;
+
+public record TextComponent(Style style, String string) {
     public TextComponent(String string) {
         this(null, string);
     }

@@ -1,13 +1,17 @@
 package dev.hephaestus.deckbuilder.templates;
 
+import dev.hephaestus.deckbuilder.util.StatefulGraphics;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class ImageLayer implements Layer {
+public class ImageLayer extends Layer {
     private final String name;
     private final BufferedImage image;
 
-    public ImageLayer(String name, BufferedImage image, Integer width, Integer height) {
+    public ImageLayer(String name, BufferedImage image, Integer width, Integer height, int x, int y) {
+        super(x, y);
+
         this.name = name;
 
         if (width == image.getWidth() && height == image.getHeight()) {
@@ -32,8 +36,12 @@ public class ImageLayer implements Layer {
     }
 
     @Override
-    public void draw(Graphics2D out) {
+    public Rectangle draw(StatefulGraphics out, Rectangle wrap) {
+        out.push(this.x, this.y);
         out.drawImage(this.image, null, null);
+        out.pop();
+
+        return new Rectangle(this.x, this.y, this.image.getWidth(), this.image.getHeight());
     }
 
     @Override

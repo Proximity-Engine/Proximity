@@ -1,23 +1,29 @@
 package dev.hephaestus.deckbuilder.templates;
 
-import dev.hephaestus.deckbuilder.cards.Card;
+import dev.hephaestus.deckbuilder.util.StatefulGraphics;
 
 import java.awt.*;
-import java.util.function.Function;
 
-public interface Layer {
-    Layer EMPTY = new Empty();
+public abstract class Layer {
+    public int x, y;
 
-    void draw(Graphics2D out);
+    public static Layer EMPTY = new Empty();
 
-    interface Factory {
-        Function<Card, Layer> create(Template template);
+    protected Layer(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 
-    class Empty implements Layer {
-        @Override
-        public void draw(Graphics2D out) {
+    protected abstract Rectangle draw(StatefulGraphics out, Rectangle wrap);
 
+    private static class Empty extends Layer {
+        protected Empty() {
+            super(0, 0);
+        }
+
+        @Override
+        public Rectangle draw(StatefulGraphics out, Rectangle wrap) {
+            return new Rectangle();
         }
     }
 }

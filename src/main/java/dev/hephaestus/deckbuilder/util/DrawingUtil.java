@@ -33,4 +33,21 @@ public final class DrawingUtil {
     public static Color getColor(int color) {
         return COLORS.computeIfAbsent(color, Color::new);
     }
+
+    public static Rectangle encompassing(Rectangle r1, Rectangle r2) {
+        int x = Math.min(r1.x, r2.x);
+        int y = Math.min(r1.x, r2.x);
+
+        int width = Math.max(
+                r1.x + r1.width,
+                r2.x + r2.width
+        ) - x;
+
+        int height = Math.max(
+                r1.y + r1.height,
+                r2.y + r2.height
+        ) - y;
+
+        return new Rectangle(x, y, width, height);
+    }
 }

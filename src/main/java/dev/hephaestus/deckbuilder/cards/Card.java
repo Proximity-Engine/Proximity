@@ -1,29 +1,28 @@
 package dev.hephaestus.deckbuilder.cards;
 
-import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.text.Style;
-import dev.hephaestus.deckbuilder.text.Text;
-
 import java.net.URL;
 import java.util.List;
 
 public class Card {
-    private final Text name;
+    private final String name;
     private final List<Color> colors;
-    private final Text type;
+    private final String type;
     private final URL image;
     private final TypeContainer types;
 
     public Card(String name, String type, List<Color> colors, URL image, TypeContainer types) {
-        this.name = new Text(new Style.Builder()
-                .size(160F)
-                .color(0x000000)
-                .build(), new TextComponent(name));
+//        this.name = new Text(new Style.Builder()
+//                .size(160F)
+//                .color(0x000000)
+//                .build(), new TextComponent(name));
+//
+//        this.type = new Text(new Style.Builder()
+//                .size(130F)
+//                .color(0x000000)
+//                .build(), new TextComponent(type));
 
-        this.type = new Text(new Style.Builder()
-                .size(130F)
-                .color(0x000000)
-                .build(), new TextComponent(type));
+        this.name = name;
+        this.type = type;
 
         this.colors = colors;
         this.types = types;
@@ -59,7 +58,7 @@ public class Card {
         });
     }
 
-    public final Text name() {
+    public final String name() {
         return this.name;
     }
 
@@ -67,7 +66,7 @@ public class Card {
         return this.colors;
     }
 
-    public final Text type() {
+    public final String type() {
         return this.type;
     }
 

@@ -1,5 +1,15 @@
 {
     styles: {
+        name: {
+            font: "Beleren2016-Bold",
+            color: "#000000",
+            size: 160
+        },
+        type: {
+            font: "Beleren2016",
+            color: "#000000",
+            size: 130
+        },
         // These are the styles to be used for symbols
         white: "#FFFFFF",
         blue: {
@@ -25,6 +35,7 @@
         [
             [
                 {
+                    type: "image",
                     src: "backgrounds/artifact.png",
                     conditions: {
                         // You can check for any type/supertype
@@ -33,6 +44,7 @@
                     }
                 },
                 {
+                    type: "image",
                     src: "backgrounds/artifact.png",
                     conditions: {
                         artifact: true
@@ -40,34 +52,38 @@
                 }
             ],
             {
+                type: "image",
                 src: "backgrounds/land.png",
                 conditions: {
                     land: true
                 }
             },
             {
+                type: "image",
                 // There are certain placeholders defined for image paths
-                src: "backgrounds/${color}.png",
+                src: "backgrounds/${card.color}.png",
                 conditions: {
                     colorCount: 1
                 }
             },
             {
+                type: "image",
                 src: "backgrounds/gold.png",
                 conditions: {
                     hybrid: false
                 }
             },
             {
+                type: "image",
                 // Some placeholders can even be used multiple times!
-                src: "backgrounds/${color}.png",
+                src: "backgrounds/${card.color}.png",
                 conditions: {
                     hybrid: true
                 }
             }
         ],
         {
-            src: "${art}",
+            type: "art",
             // Any layer can contain x and y offsets
             x: 352,
             y: 605,
@@ -79,20 +95,29 @@
             height: 1882
         },
         // If a layer is just a string, we'll treat that as if it was the 'src' value for a layer with no conditions
-        "pinlines/shadow.png",
+        {
+            type: "image",
+            src: "pinlines/shadow.png"
+        },
         [
             {
+                type: "image",
                 src: "borders/legendary.png",
                 conditions: {
                     legendary: true
                 }
             },
-            "borders/default.png"
+            {
+                type: "image",
+                src: "borders/default.png"
+            }
         ],
         [
             {
-                src: [
+                type: "compound",
+                children: [
                     {
+                        type: "image",
                         src: "pinlines/land/artifact.png",
                         conditions: {
                             artifact: true,
@@ -100,6 +125,7 @@
                         }
                     },
                     {
+                        type: "image",
                         src: "pinlines/land/colorless.png",
                         "conditions": {
                             artifact: false,
@@ -107,12 +133,16 @@
                         }
                     },
                     {
-                        src: "pinlines/land/${color}.png",
+                        type: "image",
+                        src: "pinlines/land/${card.color}.png",
                         conditions: {
                             colorCount: 1
                         }
                     },
-                    "pinlines/land/gold.png"
+                    {
+                        type: "image",
+                        src: "pinlines/land/gold.png"
+                    }
                 ],
                 conditions: {
                     land: true
@@ -120,6 +150,7 @@
             },
             [
                 {
+                    type: "image",
                     src: "pinlines/standard/artifact.png",
                     conditions: {
                         artifact: true,
@@ -127,6 +158,7 @@
                     }
                 },
                 {
+                    type: "image",
                     src: "pinlines/standard/colorless.png",
                     "conditions": {
                         artifact: false,
@@ -134,36 +166,44 @@
                     }
                 },
                 {
-                    src: "pinlines/standard/${color}.png",
+                    type: "image",
+                    src: "pinlines/standard/${card.color}.png",
                     conditions: {
                         colorCount: 1
                     }
                 },
                 {
-                    src: "pinlines/standard/${color}.png",
+                    type: "image",
+                    src: "pinlines/standard/${card.color}.png",
                     conditions: {
                         colorCount: 2
                     }
                 },
-                "pinlines/standard/gold.png"
+                {
+                    type: "image",
+                    src: "pinlines/standard/gold.png"
+                }
             ]
         ],
         {
-            // A layer can be any file, or array of layers, nested as much as you want
-            src: [
+            type: "compound",
+            children: [
                 {
+                    type: "image",
                     src: "pt/vehicle.png",
                     conditions: {
                         vehicle: true
                     }
                 },
                 {
-                    src: "pt/${color}.png",
+                    type: "image",
+                    src: "pt/${card.color}.png",
                     conditions: {
                         colorCount: 1
                     }
                 },
                 {
+                    type: "image",
                     src: "pt/artifact.png",
                     conditions: {
                         colorCount: 0,
@@ -171,54 +211,73 @@
                     }
                 },
                 {
+                    type: "image",
                     src: "pt/gold.png",
                     conditions: {
                         hybrid: false
                     }
                 },
-                "pt/colorless.png"
+                {
+                    type: "image",
+                    src: "pt/colorless.png"
+                }
             ],
             conditions: {
                 creature: true
             }
         },
+        {
+            type: "compound",
+            children: [
+                {
+                    type: "image",
+                    src: "crowns/legendary/artifact.png",
+                    conditions: {
+                        artifact: true,
+                        colorCount: 0
+                    }
+                },
+                {
+                    type: "image",
+                    src: "crowns/legendary/colorless.png",
+                    "conditions": {
+                        artifact: false,
+                        colorCount: 0
+                    }
+                },
+                {
+                    type: "image",
+                    src: "crowns/legendary/${card.color}.png",
+                    conditions: {
+                        colorCount: 1
+                    }
+                },
+                {
+                    type: "image",
+                    src: "crowns/legendary/${card.color}.png",
+                    conditions: {
+                        colorCount: 2
+                    }
+                },
+                {
+                    type: "image",
+                    src: "crowns/legendary/gold.png"
+                }
+            ],
+            conditions: {
+                legendary: true
+            }
+        },
         [
             {
-                src: "crowns/legendary/artifact.png",
-                conditions: {
-                    artifact: true,
-                    colorCount: 0
-                }
-            },
-            {
-                src: "crowns/legendary/colorless.png",
-                "conditions": {
-                    artifact: false,
-                    colorCount: 0
-                }
-            },
-            {
-                src: "crowns/legendary/${color}.png",
-                conditions: {
-                    colorCount: 1
-                }
-            },
-            {
-                src: "crowns/legendary/${color}.png",
-                conditions: {
-                    colorCount: 2
-                }
-            },
-            "crowns/legendary/gold.png"
-        ],
-        [
-            {
+                type: "image",
                 src: "plates/land.png",
                 conditions: {
                     land: true
                 }
             },
             {
+                type: "image",
                 src: "plates/artifact.png",
                 conditions: {
                     artifact: true,
@@ -226,6 +285,7 @@
                 }
             },
             {
+                type: "image",
                 src: "plates/colorless.png",
                 "conditions": {
                     artifact: false,
@@ -233,21 +293,40 @@
                 }
             },
             {
-                src: "plates/${color}.png",
+                type: "image",
+                src: "plates/${card.color}.png",
                 conditions: {
                     colorCount: 1
                 }
             },
             {
+                type: "image",
                 src: "plates/colorless.png",
                 "conditions": {
                     hybrid: true
                 }
             },
-            "plates/gold.png"
-        ]
-    ],
-    text: [
-        
+            {
+                type: "image",
+                src: "plates/gold.png"
+            }
+        ],
+        {
+            type: "squish",
+            main: {
+                type: "text",
+                value: "${card.cost}",
+                alignment: "right",
+                x: 2925,
+                y: 515
+            },
+            flex: {
+                type: "text",
+                value: "${card.name}",
+                style: "name",
+                x: 395,
+                y: 515
+            }
+        }
     ]
 }

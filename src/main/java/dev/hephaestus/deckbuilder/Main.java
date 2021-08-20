@@ -76,7 +76,7 @@ public class Main {
 
         long lastRequest = 0;
 
-        getCards: while (!cardsList.isEmpty()) {
+        while (!cardsList.isEmpty()) {
             List<String> cycleCards = new ArrayList<>();
 
             for (int i = 0; i < 5 && !cardsList.isEmpty(); ++i) {
@@ -154,8 +154,6 @@ public class Main {
                     if (!cards.containsKey(cardName)) {
                         System.out.printf("Received unknown card '%s'%n", cardName);
                     }
-
-                    break getCards;
                 }
             } catch (IOException | InterruptedException exception) {
                 exception.printStackTrace();
@@ -168,7 +166,7 @@ public class Main {
 
             template.draw(card, out);
 
-            Path path = Path.of("images", entry.getKey() + ".png");
+            Path path = Path.of("images", entry.getKey().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
 
             if (!Files.isDirectory(path.getParent())) {
                 Files.createDirectories(path.getParent());

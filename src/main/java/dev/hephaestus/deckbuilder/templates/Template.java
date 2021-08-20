@@ -3,58 +3,60 @@ package dev.hephaestus.deckbuilder.templates;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import dev.hephaestus.deckbuilder.ImageCache;
+import dev.hephaestus.deckbuilder.TextComponent;
 import dev.hephaestus.deckbuilder.cards.Card;
 import dev.hephaestus.deckbuilder.cards.Color;
+import dev.hephaestus.deckbuilder.cards.Spell;
 import dev.hephaestus.deckbuilder.text.Alignment;
 import dev.hephaestus.deckbuilder.text.Style;
+import dev.hephaestus.deckbuilder.util.DrawingUtil;
+import dev.hephaestus.deckbuilder.util.StatefulGraphics;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public final class Template {
     private final Map<String, Style> styles;
-    private final List<Function<Card, Layer>> layers = new ArrayList<>();
+    private final List<LayerFactory> layers = new ArrayList<>();
 
-    private Template(Map<String, Style> styles, List<Layer.Factory> factories) {
+    private Template(Map<String, Style> styles, List<LayerFactoryFactory> factories) {
         this.styles = Map.copyOf(styles);
 
-        for (Layer.Factory factory : factories) {
+        for (LayerFactoryFactory factory : factories) {
             this.layers.add(factory.create(this));
         }
     }
 
     public Style getStyle(String name) {
-        return this.styles.get(name);
+        if (name == null) return Style.EMPTY;
+
+        return this.styles.getOrDefault(name, Style.EMPTY);
     }
 
     public void draw(Card card, BufferedImage out) {
-        Graphics2D graphics = out.createGraphics();
+        StatefulGraphics graphics = new StatefulGraphics(out.createGraphics());
 
-        for (Function<Card, Layer> function : this.layers) {
-            Layer layer = function.apply(card);
+        for (LayerFactory factory : this.layers) {
+            Layer layer = factory.create(card, 0, 0);
 
             if (layer != null) {
-                layer.draw(graphics);
+                layer.draw(graphics, null);
             }
         }
     }
 
     public static final class Builder {
         private final Map<String, Style> styles = new HashMap<>();
-        private final List<Layer.Factory> factories = new ArrayList<>();
+        private final List<LayerFactoryFactory> factories = new ArrayList<>();
 
-        public Builder layer(Layer.Factory factory) {
+        public Builder layer(LayerFactoryFactory factory) {
             this.factories.add(factory);
 
             return this;
@@ -77,73 +79,64 @@ public final class Template {
         if (object.has("styles")) {
             for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("styles").entrySet()) {
                 if (entry.getValue().isJsonObject()) {
-                    Style.Builder styleBuilder = new Style.Builder();
-
-                    for (Map.Entry<String, JsonElement> styleEntry : entry.getValue().getAsJsonObject().entrySet()) {
-                        switch (styleEntry.getKey().toLowerCase(Locale.ROOT)) {
-                            case "font" -> styleBuilder.font(styleEntry.getValue().getAsString());
-                            case "size" -> styleBuilder.size(styleEntry.getValue().getAsFloat());
-                            case "color" -> styleBuilder.color(styleEntry.getValue() == null || styleEntry.getValue().isJsonNull() ? null : Integer.decode(styleEntry.getValue().getAsString()));
-                            case "alignment" -> styleBuilder.alignment(Alignment.valueOf(styleEntry.getValue().getAsString().toUpperCase(Locale.ROOT)));
-                            case "shadow" -> styleBuilder.shadow(Style.Shadow.parse(styleEntry.getValue().getAsJsonObject()));
-                            case "outline" -> styleBuilder.outline(Style.Outline.parse(styleEntry.getValue().getAsJsonObject()));
-                            default -> throw new IllegalStateException("Unexpected value: " + styleEntry.getKey().toLowerCase(Locale.ROOT));
-                        }
-                    }
-
-                    builder.style(entry.getKey(), styleBuilder.build());
+                    builder.style(entry.getKey(), parseStyle(entry.getValue().getAsJsonObject()));
                 }
             }
         }
 
         if (object.has("layers")) {
             for (JsonElement layer : object.getAsJsonArray("layers")) {
-                builder.layer(parse(layer, cache));
+                builder.layer(parseLayer(layer, cache));
             }
-        }
-
-        if (object.has("text")) {
-            // TODO
         }
 
         return builder.build();
     }
 
-    private static Layer.Factory parse(JsonElement element, ImageCache cache) {
-        if (element.isJsonPrimitive() && ((JsonPrimitive) element).isString()) {
-            return parseString(element.getAsString(), cache);
-        } else if (element.isJsonArray()) {
+    private static Style parseStyle(JsonObject object) {
+        Style.Builder styleBuilder = new Style.Builder();
+
+        for (Map.Entry<String, JsonElement> styleEntry : object.entrySet()) {
+            switch (styleEntry.getKey().toLowerCase(Locale.ROOT)) {
+                case "font" -> styleBuilder.font(styleEntry.getValue().getAsString());
+                case "size" -> styleBuilder.size(styleEntry.getValue().getAsFloat());
+                case "color" -> styleBuilder.color(styleEntry.getValue() == null || styleEntry.getValue().isJsonNull() ? null : Integer.decode(styleEntry.getValue().getAsString()));
+                case "shadow" -> styleBuilder.shadow(Style.Shadow.parse(styleEntry.getValue().getAsJsonObject()));
+                case "outline" -> styleBuilder.outline(Style.Outline.parse(styleEntry.getValue().getAsJsonObject()));
+                default -> throw new IllegalStateException("Unexpected value: " + styleEntry.getKey().toLowerCase(Locale.ROOT));
+            }
+        }
+
+        return styleBuilder.build();
+    }
+
+    private static LayerFactoryFactory parseLayer(JsonElement element, ImageCache cache) {
+        if (element.isJsonArray()) {
             return parseArray(element.getAsJsonArray(), cache);
+        } else if (element.isJsonObject()) {
+            return parseLayerFromObject(element.getAsJsonObject(), cache);
         } else {
-            return parseObject(element.getAsJsonObject(), cache);
+            throw new RuntimeException(String.format("Layer '%s' is an invalid format", element));
         }
     }
 
-    private static Layer.Factory parseString(String string, ImageCache cache) {
-        return template -> card -> {
-            String sub = substitute(string, card);
-            BufferedImage image = cache.get(sub);
-            return new ImageLayer(sub,image, image.getWidth(), image.getHeight());
-        };
-    }
-
-    private static Layer.Factory parseArray(JsonArray array, ImageCache cache) {
-        List<Layer.Factory> factories = new ArrayList<>();
+    private static LayerFactoryFactory parseArray(JsonArray array, ImageCache cache) {
+        List<LayerFactoryFactory> factories = new ArrayList<>();
 
         for (JsonElement element : array) {
-            factories.add(parse(element, cache));
+            factories.add(parseLayer(element, cache));
         }
 
         return template -> {
-            List<Function<Card, Layer>> layers = new ArrayList<>();
+            List<LayerFactory> layers = new ArrayList<>();
 
-            for (Layer.Factory factory : factories) {
+            for (LayerFactoryFactory factory : factories) {
                 layers.add(factory.create(template));
             }
 
-            return card -> {
-                for (Function<Card, Layer> function : layers) {
-                    Layer layer = function.apply(card);
+            return (card, x, y) -> {
+                for (LayerFactory factory : layers) {
+                    Layer layer = factory.create(card, x, y);
 
                     if (layer != Layer.EMPTY) return layer;
                 }
@@ -153,68 +146,124 @@ public final class Template {
         };
     }
 
-    private static Layer.Factory parseObject(JsonObject object, ImageCache cache) {
-        Integer width = object.has("width") ? object.get("width").getAsInt() : null;
-        Integer height = object.has("height") ? object.get("height").getAsInt() : null;
-
-        Layer.Factory factory = object.get("src").isJsonPrimitive() && (width != null || height != null)
-                ? template -> card -> art(card, width, height)
-                : parse(object.get("src"), cache);
-
-        List<Predicate<Card>> predicates = new ArrayList<>();
-
-        if (object.has("conditions")) {
-            for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("conditions").entrySet()) {
-                switch (entry.getKey().toLowerCase(Locale.ROOT)) {
-                    case "colorcount" -> predicates.add(card -> card.colors().size() == entry.getValue().getAsInt());
-                    case "hybrid" -> predicates.add(card -> false == entry.getValue().getAsBoolean()); // TODO
-                    default -> predicates.add(card -> card.getTypes().has(entry.getKey().toLowerCase(Locale.ROOT)) == entry.getValue().getAsBoolean());
-                }
-            }
-        }
+    private static LayerFactoryFactory parseLayerFromObject(JsonObject object, ImageCache cache) {
+        List<Predicate<Card>> predicates = parseConditions(object.getAsJsonObject("conditions"));
 
         int dX = object.has("x") ? object.get("x").getAsInt() : 0;
         int dY = object.has("y") ? object.get("y").getAsInt() : 0;
 
-        return template -> {
-            Function<Card, Layer> function = factory.create(template);
+        LayerFactoryFactory factory = switch (object.get("type").getAsString()) {
+            case "art" -> parseArt(object);
+            case "compound" -> parseArray(object.getAsJsonArray("children"), cache);
+            case "image" -> parseImage(object, cache);
+            case "squish" -> parseSquish(object, cache);
+            case "text" -> parseText(object);
+            default -> throw new IllegalStateException("Unexpected value: " + object.get("type").getAsString());
+        };
 
-            return card -> {
+        return template -> {
+            LayerFactory function = factory.create(template);
+
+            return (card, x, y) -> {
                 for (Predicate<Card> predicate : predicates) {
                     if (!predicate.test(card)) return Layer.EMPTY;
                 }
 
-                Layer layer = function.apply(card);
+                return function.create(card, dX, dY);
+            };
+        };
+    }
 
-                return graphics -> {
-                    AffineTransform transform = graphics.getTransform();
+    private static LayerFactoryFactory parseSquish(JsonObject object, ImageCache cache) {
+        LayerFactoryFactory main = parseLayer(object.get("main").getAsJsonObject(), cache);
+        LayerFactoryFactory flex = parseLayer(object.get("flex").getAsJsonObject(), cache);
 
-                    transform.translate(dX, dY);
-                    graphics.setTransform(transform);
+        return template -> {
+            LayerFactory mainFunction = main.create(template);
+            LayerFactory flexFunction = flex.create(template);
 
-                    layer.draw(graphics);
+            return (card, x, y) -> {
+                Layer mainLayer = mainFunction.create(card, x, y);
+                Layer flexLayer = flexFunction.create(card, x, y);
 
-                    transform.translate(-dX, -dY);
-                    graphics.setTransform(transform);
+                return new Layer(0, 0) {
+                    @Override
+                    protected Rectangle draw(StatefulGraphics out, Rectangle wrap) {
+                        Rectangle mainLayerBounds = mainLayer.draw(out, wrap);
+                        Rectangle flexLayerBounds = flexLayer.draw(out, mainLayerBounds);
+
+                        return DrawingUtil.encompassing(mainLayerBounds, flexLayerBounds);
+                    }
                 };
             };
         };
     }
 
-    private static Layer art(Card card, Integer width, Integer height) {
-        if (card.image() == null) return Layer.EMPTY;
+    private static LayerFactoryFactory parseText(JsonObject object) {
+        Alignment alignment = object.has("alignment") ?
+                Alignment.valueOf(object.get("alignment").getAsString().toUpperCase(Locale.ROOT))
+                : Alignment.LEFT;
 
-        try {
-            return new ImageLayer(card.image().toString(), ImageIO.read(card.image().openStream()), width, height);
-        } catch (IOException exception) {
-            exception.printStackTrace();
+        String style = object.has("style") ? object.get("style").getAsString() : null;
+        String string = object.get("value").getAsString();
+
+        return template -> (card, x, y) -> {
+            TextComponent[] text = string.equals("${card.cost}") && card instanceof Spell spell
+                    ? spell.manaCost().toArray(new TextComponent[0])
+                    : new TextComponent[] { new TextComponent(substitute(string, card)) };
+
+            return new TextLayer(alignment, template.getStyle(style), text, x, y);
+        };
+    }
+
+    private static LayerFactoryFactory parseArt(JsonObject object) {
+        Integer width = object.has("width") ? object.get("width").getAsInt() : null;
+        Integer height = object.has("height") ? object.get("height").getAsInt() : null;
+
+        if (width != null || height != null) {
+            return template -> (card, x, y) -> {
+                if (card.image() == null) return Layer.EMPTY;
+
+                try {
+                    return new ImageLayer(card.image().toString(), ImageIO.read(card.image().openStream()), width, height, x, y);
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                }
+
+                return Layer.EMPTY;
+            };
+        } else {
+            throw new RuntimeException("Art layer requires at least one of 'width' and/or 'height'");
+        }
+    }
+
+    private static LayerFactoryFactory parseImage(JsonObject object, ImageCache cache) {
+        return template -> (card, x, y) -> {
+            String sub = substitute(object.get("src").getAsString(), card);
+            BufferedImage image = cache.get(sub);
+            return new ImageLayer(sub,image, image.getWidth(), image.getHeight(), x, y);
+        };
+    }
+
+    private static List<Predicate<Card>> parseConditions(JsonObject conditions) {
+        if (conditions == null) return Collections.emptyList();
+
+        List<Predicate<Card>> predicates = new ArrayList<>();
+
+        for (Map.Entry<String, JsonElement> entry : conditions.entrySet()) {
+            switch (entry.getKey().toLowerCase(Locale.ROOT)) {
+                case "colorcount" -> predicates.add(card -> card.colors().size() == entry.getValue().getAsInt());
+                case "hybrid" -> predicates.add(card -> false == entry.getValue().getAsBoolean()); // TODO
+                default -> predicates.add(card -> card.getTypes().has(entry.getKey().toLowerCase(Locale.ROOT)) == entry.getValue().getAsBoolean());
+            }
         }
 
-        return Layer.EMPTY;
+        return predicates;
     }
 
     private static String substitute(String src, Card card) {
-        return src.replace("${color}", join(card.colors()));
+        return src.replace("${card.color}", join(card.colors()))
+                .replace("${card.name}", card.name());
     }
 
     private static String join(Iterable<Color> colors) {
