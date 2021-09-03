@@ -1,4 +1,6 @@
 {
+    width: 3288,
+    height: 4488,
     styles: {
         name: {
             font: "Beleren2016-Bold",
@@ -23,7 +25,7 @@
         }
     },
     layers: [
-        // If a layer is a list of layers, we'll render the first layer whose conditions match, if any
+        // If a layer is a list color layers, we'll render the first layer whose conditions match, if any
         [
             [
                 {
@@ -94,7 +96,7 @@
             width: 2584,
             height: 1882,
             conditions: {
-                "use-art": true
+                use_art: true
             }
         },
         // If a layer is just a string, we'll treat that as if it was the 'src' value for a layer with no conditions
@@ -146,6 +148,13 @@
                         src: "pinlines/land/${card.color}.png",
                         conditions: {
                             colorCount: 1
+                        }
+                    },
+                    {
+                        type: "image",
+                        src: "pinlines/land/${card.color}.png",
+                        conditions: {
+                            colorCount: 2
                         }
                     },
                     {
@@ -374,7 +383,7 @@
             x: 400,
             y: 2800,
             width: 2488,
-            height: 1050
+            height: 1047
         }
     ]
 }

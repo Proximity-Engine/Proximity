@@ -111,7 +111,7 @@ public class TextLayer extends Layer {
 
         graphics.push(textColor, Graphics2D::setColor, Graphics2D::getColor);
         graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
-        // Get shape of the glyphs being drawn
+        // Get shape color the glyphs being drawn
         FontRenderContext fontRenderContext = graphics.getFontRenderContext();
         TextLayout textLayout = new TextLayout(text.string(), graphics.getFont(), fontRenderContext);
         Shape shape = textLayout.getOutline(null);
@@ -157,9 +157,9 @@ public class TextLayer extends Layer {
 
         return new Rectangle(
                 (int) graphics.getTransform().getTranslateX() + x,
-                (int) graphics.getTransform().getTranslateY(),
+                (int) (graphics.getTransform().getTranslateY() - shape.getBounds().height),
                 (int) textLayout.getAdvance(),
-                (int) size
+                shape.getBounds().height
         );
     }
 
@@ -186,13 +186,6 @@ public class TextLayer extends Layer {
         Rectangle bounds = null;
 
         if (draw && this.textBox != null) {
-            if (false /* DEBUG */) {
-                graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
-                graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
-                graphics.drawRect(this.x, this.y, this.textBox.width, this.textBox.height);
-                graphics.pop(2);
-            }
-
             Rectangle drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
 
             while(drawnBounds.height > this.textBox.height) {
@@ -207,6 +200,13 @@ public class TextLayer extends Layer {
                 drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
             }
 
+            if (false /* DEBUG */) {
+                graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
+                graphics.drawRect(this.x, this.y, this.textBox.width, this.textBox.height);
+                graphics.pop(2);
+            }
+
             graphics.push(0, (int) ((this.textBox.height - drawnBounds.height) / 2 + this.text.get(0).get(0).style().size() + fontSizeChange));
         }
 
@@ -214,7 +214,7 @@ public class TextLayer extends Layer {
         graphics.push(this.x, this.y);
 
         loop: for (int i = 0; i < 100; ++i) {
-
+            graphics.push("Loop");
             int x = this.offset(graphics, fontSizeChange, this.text);
             int minX = x;
 
@@ -242,27 +242,26 @@ public class TextLayer extends Layer {
                 }
 
                 Rectangle rectangle = this.draw(graphics, text, x, fontSizeChange, false);
-                bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
 
-                if ((wrap != null && bounds.intersects(wrap))) {
-                    bounds = null;
-                    fontSizeChange -= 5;
-                    continue loop;
-                }
-
-                if (this.textBox != null && !this.textBox.contains(rectangle) && text != lastTextComponent && rectangle.y + rectangle.height < this.y + this.textBox.height) {
+                if (this.textBox != null && rectangle.x + rectangle.width > this.textBox.x + this.textBox.width && text != lastTextComponent) {
                     x = minX;
                     graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
 
-
                     if (text.get(0).string().startsWith(" ")) {
-                        List<TextComponent> list = new ArrayList<>(text);
                         text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
                     }
 
                     deque.addFirst(text);
                     lastTextComponent = text;
                     continue;
+                }
+
+                bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
+
+                if ((wrap != null && bounds.intersects(wrap))) {
+                    bounds = null;
+                    fontSizeChange -= 5;
+                    continue loop;
                 }
 
                 if (draw) {
@@ -278,6 +277,13 @@ public class TextLayer extends Layer {
         }
 
         graphics.pop("Text");
+
+        if (draw && bounds != null && false /* DEBUG */) {
+            graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+            graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
+            graphics.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
+            graphics.pop(2);
+        }
 
         return bounds == null ? new Rectangle() : bounds;
     }

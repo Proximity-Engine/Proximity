@@ -5,12 +5,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.hephaestus.deckbuilder.ImageCache;
 import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.cards.Card;
-import dev.hephaestus.deckbuilder.cards.Color;
-import dev.hephaestus.deckbuilder.cards.Creature;
-import dev.hephaestus.deckbuilder.cards.Spell;
+import dev.hephaestus.deckbuilder.cards.*;
 import dev.hephaestus.deckbuilder.text.Alignment;
 import dev.hephaestus.deckbuilder.text.Style;
+import dev.hephaestus.deckbuilder.text.Symbol;
 import dev.hephaestus.deckbuilder.util.DrawingUtil;
 import dev.hephaestus.deckbuilder.util.StatefulGraphics;
 
@@ -78,14 +76,14 @@ public final class Template {
 
         public Parser(Map<String, String> args) {
             // Default values
-            this.predicates.put("use-art", card -> true);
+            this.predicates.put("use_art", card -> true);
             this.predicates.put("border", card -> true);
 
             // Passed values
             for (var entry : args.entrySet()) {
                 if (entry.getValue().equalsIgnoreCase("true") || entry.getValue().equalsIgnoreCase("false")) {
                     boolean bl = Boolean.parseBoolean(entry.getValue());
-                    this.predicates.put(entry.getKey(), card -> bl);
+                    this.predicates.put(entry.getKey().replace("-", "_"), card -> bl);
                 }
             }
         }
@@ -243,15 +241,23 @@ public final class Template {
             return template -> (card, x, y) -> {
                 List<List<TextComponent>> text;
 
+                Alignment al = alignment;
+
                 if (string.equals("${card.cost}") && card instanceof Spell spell) {
                     text = Collections.singletonList(spell.manaCost());
                 } else if (string.equals("${card.oracle}")) {
-                    text = card.getOracle();
+                    OracleText oracle = card.getOracle();
+                    al = oracle.alignment();
+                    text = oracle.text();
+
+                    if (al == Alignment.CENTER && width != null) {
+                        x += width / 2;
+                    }
                 } else {
                     text = Collections.singletonList(Collections.singletonList(new TextComponent(substitute(string, card))));
                 }
 
-                return new TextLayer(alignment, template.getStyle(style), text, x, y, width != null && height != null ? new Rectangle(x, y, width, height) : null);
+                return new TextLayer(al, template.getStyle(style), text, x, y, width != null && height != null ? new Rectangle(x, y, width, height) : null);
             };
         }
 
@@ -272,7 +278,7 @@ public final class Template {
                     return Layer.EMPTY;
                 };
             } else {
-                throw new RuntimeException("Art layer requires at least one of 'width' and/or 'height'");
+                throw new RuntimeException("Art layer requires at least one color 'width' and/or 'height'");
             }
         }
 
@@ -314,11 +320,11 @@ public final class Template {
                     .replace("${card.type}", card.type());
         }
 
-        private String join(Iterable<Color> colors) {
+        private String join(Iterable<Symbol> symbols) {
             StringBuilder builder = new StringBuilder();
 
-            for (Color color : colors) {
-                builder.append(color.symbol());
+            for (Symbol symbol : symbols) {
+                builder.append(symbol.glyphs());
             }
 
             return builder.toString();

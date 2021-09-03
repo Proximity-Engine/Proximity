@@ -5,26 +5,29 @@ import dev.hephaestus.deckbuilder.templates.Template;
 
 import java.util.*;
 
-public final class Symbols {
+public record Symbol(String glyphs, int color) {
     private static final String[] COLORS = new String[] {"W", "U", "B", "R", "G"};
-    private static final Map<String, Integer> SYMBOL_DEFAULT_COLORS = new HashMap<>();
+
+    private static final Map<String, Symbol> DEFAULT_SYMBOLS = new HashMap<>();
 
     private static final int BLACK1 = 0xFF000000;
-    private static final int WHITE = 0xFFFFFDEA;
-    private static final int BLUE = 0xFFA7E0F9;
-    private static final int BLACK = 0xFFBEBCB5;
-    private static final int RED = 0xFFFFAA92;
-    private static final int GREEN = 0xFFA6DEBB;
-    private static final int GENERIC = 0xFFBEBCB5;
+
+    public static final int WHITE = 0xFFFFFDEA;
+    public static final int BLUE = 0xFFA7E0F9;
+    public static final int BLACK = 0xFFBEBCB5;
+    public static final int RED = 0xFFFFAA92;
+    public static final int GREEN = 0xFFA6DEBB;
+    public static final int GENERIC = 0xFFBEBCB5;
 
     private static final Map<String, Factory> SYMBOLS = new HashMap<>();
 
     static {
-        SYMBOL_DEFAULT_COLORS.put("W", WHITE);
-        SYMBOL_DEFAULT_COLORS.put("U", BLUE);
-        SYMBOL_DEFAULT_COLORS.put("B", BLACK);
-        SYMBOL_DEFAULT_COLORS.put("R", RED);
-        SYMBOL_DEFAULT_COLORS.put("G", GREEN);
+        symbol("W", WHITE);
+        symbol("U", BLUE);
+        symbol("B", BLACK);
+        symbol("R", RED);
+        symbol("G", GREEN);
+        symbol("C", GENERIC);
 
         // Phyrexian colored costs
         for (String color : COLORS) {
@@ -83,11 +86,17 @@ public final class Symbols {
         });
     }
 
-    private Symbols() {}
+    public static Symbol of(String symbol) {
+        return DEFAULT_SYMBOLS.get(symbol);
+    }
+
+    private static void symbol(String symbol, int color) {
+        DEFAULT_SYMBOLS.put(symbol, new Symbol(symbol, color));
+    }
 
     public static List<TextComponent> symbol(String symbol, Template template, Style base, Factory.Context context) {
         if (!SYMBOLS.containsKey(symbol)) {
-            System.out.printf("Unrecognized symbol '%s'%n", symbol);
+            System.out.printf("Unrecognized glyphs '%s'%n", symbol);
             return Collections.emptyList();
         }
 
@@ -99,19 +108,22 @@ public final class Symbols {
     }
 
     private static void phyrexian(String symbol) {
-        register(symbol + "/P", BLACK1, SYMBOL_DEFAULT_COLORS.get(symbol), true, "p");
+        register(symbol + "/P", BLACK1, DEFAULT_SYMBOLS.get(symbol).color, true, "p");
     }
 
     private static void normal(String symbol) {
-        register(symbol, BLACK1, SYMBOL_DEFAULT_COLORS.get(symbol), false, symbol.toLowerCase(Locale.ROOT));
+        register(symbol, BLACK1, DEFAULT_SYMBOLS.get(symbol).color, false, symbol.toLowerCase(Locale.ROOT));
     }
 
     private static void hybrid(String symbol1, String symbol2) {
+        Symbol color1 = DEFAULT_SYMBOLS.get(symbol1);
+        Symbol color2 = DEFAULT_SYMBOLS.get(symbol2);
+
         register(symbol1 + "/" + symbol2, new Hybrid(
                 symbol1,
-                SYMBOL_DEFAULT_COLORS.getOrDefault(symbol1, GENERIC),
+                color1 == null ? GENERIC : color1.color,
                 symbol2,
-                SYMBOL_DEFAULT_COLORS.getOrDefault(symbol2, GENERIC)
+                color2 == null ? GENERIC : color2.color
         ));
     }
 
