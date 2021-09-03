@@ -1,5 +1,8 @@
 package dev.hephaestus.deckbuilder.cards;
 
+import dev.hephaestus.deckbuilder.TextComponent;
+import dev.hephaestus.deckbuilder.templates.Template;
+
 import java.net.URL;
 import java.util.List;
 
@@ -9,24 +12,16 @@ public class Card {
     private final String type;
     private final URL image;
     private final TypeContainer types;
+    private final List<List<TextComponent>> oracle;
 
-    public Card(String name, String type, List<Color> colors, URL image, TypeContainer types) {
-//        this.name = new Text(new Style.Builder()
-//                .size(160F)
-//                .color(0x000000)
-//                .build(), new TextComponent(name));
-//
-//        this.type = new Text(new Style.Builder()
-//                .size(130F)
-//                .color(0x000000)
-//                .build(), new TextComponent(type));
-
+    public Card(Template template, String type, List<Color> colors, URL image, TypeContainer types, List<List<TextComponent>> oracle, String name) {
         this.name = name;
         this.type = type;
 
         this.colors = colors;
         this.types = types;
         this.image = image;
+        this.oracle = oracle;
 
         colors.sort((c1, c2) -> switch (c1.symbol()) {
             case 'W' -> switch (c2.symbol()) {
@@ -76,5 +71,9 @@ public class Card {
 
     public TypeContainer getTypes() {
         return this.types;
+    }
+
+    public List<List<TextComponent>> getOracle() {
+        return this.oracle;
     }
 }

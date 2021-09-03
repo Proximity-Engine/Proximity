@@ -9,70 +9,78 @@ import dev.hephaestus.deckbuilder.util.StatefulGraphics;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.*;
 
 public class TextLayer extends Layer {
     private final Alignment alignment;
     private final Style style;
-    private final List<TextComponent> text;
+    private final List<List<TextComponent>> text;
+    private final int originalTextBoxHeight;
+    private Rectangle textBox;
 
-    public TextLayer(Alignment alignment, Style style, List<TextComponent> text, int x, int y) {
+    public TextLayer(Alignment alignment, Style style, List<List<TextComponent>> text, int x, int y, Rectangle textBox) {
         super(x, y);
         this.alignment = alignment;
         this.style = style;
         this.text = text;
+        this.originalTextBoxHeight = textBox == null ? -1 : textBox.height;
+        this.textBox = textBox == null ? null : new Rectangle(
+                textBox.x,
+                this.y,
+                textBox.width,
+                (int) (textBox.height + text.get(0).get(0).style().size())
+        );
     }
 
-    public TextLayer(Alignment alignment, Style style, TextComponent[] text, int x, int y) {
-        this(alignment, style, new ArrayList<>(Arrays.asList(text)), x, y);
-    }
-
-    private int offset(StatefulGraphics graphics, float fontSizeChange, List<TextComponent> components) {
+    private int offset(StatefulGraphics graphics, float fontSizeChange, List<List<TextComponent>> components) {
         int x = 0;
 
         if (this.alignment == Alignment.RIGHT) {
-            for (TextComponent text : components) {
-                Style style = text.style() == null ? this.style : text.style();
+            for (List<TextComponent> text : components) {
+                for (TextComponent c : text) {
+                    Style style = c.style() == null ? this.style : c.style();
 
-                float size = (style.size() == null && this.style.size() == null
-                        ? graphics.getFont().getSize()
-                        : style.size() == null ? this.style.size() : style.size()) + fontSizeChange;
+                    float size = (style.size() == null && this.style.size() == null
+                            ? graphics.getFont().getSize()
+                            : style.size() == null ? this.style.size() : style.size()) + fontSizeChange;
 
-                Font font = style.fontName() == null && this.style.fontName() == null
-                        ? graphics.getFont().deriveFont(size)
-                        : DrawingUtil.getFont(style.fontName() == null
-                        ? this.style.fontName()
-                        : style.fontName(), size
-                );
+                    Font font = style.fontName() == null && this.style.fontName() == null
+                            ? graphics.getFont().deriveFont(size)
+                            : DrawingUtil.getFont(style.fontName() == null
+                            ? this.style.fontName()
+                            : style.fontName(), size
+                    );
 
-                graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
-                TextLayout textLayout = new TextLayout(text.string(), graphics.getFont(), graphics.getFontRenderContext());
-                x -= textLayout.getAdvance();
-                graphics.pop();
+                    graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
+                    TextLayout textLayout = new TextLayout(c.string(), graphics.getFont(), graphics.getFontRenderContext());
+                    x -= textLayout.getAdvance();
+                    graphics.pop();
+                }
             }
         } else if (this.alignment == Alignment.CENTER) {
             int width = 0;
 
-            for (TextComponent text : components) {
-                Style style = text.style() == null ? this.style : text.style();
+            for (List<TextComponent> text : components) {
+                for (TextComponent c : text) {
+                    Style style = c.style() == null ? this.style : c.style();
 
-                float size = (style.size() == null && this.style.size() == null
-                        ? graphics.getFont().getSize()
-                        : style.size() == null ? this.style.size() : style.size()) + fontSizeChange;
+                    float size = (style.size() == null && this.style.size() == null
+                            ? graphics.getFont().getSize()
+                            : style.size() == null ? this.style.size() : style.size()) + fontSizeChange;
 
-                Font font = style.fontName() == null && this.style.fontName() == null
-                        ? graphics.getFont().deriveFont(size)
-                        : DrawingUtil.getFont(style.fontName() == null
-                        ? this.style.fontName()
-                        : style.fontName(), size
-                );
+                    Font font = style.fontName() == null && this.style.fontName() == null
+                            ? graphics.getFont().deriveFont(size)
+                            : DrawingUtil.getFont(style.fontName() == null
+                            ? this.style.fontName()
+                            : style.fontName(), size
+                    );
 
-                graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
-                TextLayout textLayout = new TextLayout(text.string(), graphics.getFont(), graphics.getFontRenderContext());
-                width += textLayout.getAdvance();
-                graphics.pop();
+                    graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
+                    TextLayout textLayout = new TextLayout(c.string(), graphics.getFont(), graphics.getFontRenderContext());
+                    width += textLayout.getAdvance();
+                    graphics.pop();
+                }
             }
 
             x -= width / 2;
@@ -81,7 +89,7 @@ public class TextLayer extends Layer {
         return x;
     }
 
-    private Rectangle draw(StatefulGraphics graphics, TextComponent text, int x, float fontSizeChange) {
+    private Rectangle draw(StatefulGraphics graphics, TextComponent text, int x, float fontSizeChange, boolean draw) {
         graphics.push("TextComponent");
 
         Style style = text.style() == null ? this.style : text.style();
@@ -103,7 +111,7 @@ public class TextLayer extends Layer {
 
         graphics.push(textColor, Graphics2D::setColor, Graphics2D::getColor);
         graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
-        // Get shape of the text being drawn
+        // Get shape of the glyphs being drawn
         FontRenderContext fontRenderContext = graphics.getFontRenderContext();
         TextLayout textLayout = new TextLayout(text.string(), graphics.getFont(), fontRenderContext);
         Shape shape = textLayout.getOutline(null);
@@ -121,56 +129,155 @@ public class TextLayer extends Layer {
         if (style.shadow() != null) {
             graphics.push(style.shadow().dX(), style.shadow().dY());
             graphics.push(DrawingUtil.getColor(style.shadow().color()), Graphics2D::setColor, Graphics2D::getColor);
-            graphics.fill(shape);
+
+            if (draw) {
+                graphics.fill(shape);
+            }
+
             graphics.pop(2); // Pop shadow color and the translation
         }
 
         if (style.outline() != null) {
             // Draw outline
             graphics.push(DrawingUtil.getColor(style.outline().color()), Graphics2D::setColor, Graphics2D::getColor);
-            graphics.draw(shape);
+
+            if (draw) {
+                graphics.draw(shape);
+            }
+
             graphics.pop(2); // Pop outline color and the stroke
         }
 
         // Draw original shape
-        graphics.fill(shape);
+        if (draw) {
+            graphics.fill(shape);
+        }
 
         graphics.pop("TextComponent");
 
         return new Rectangle(
-                (int) graphics.getTransform().getTranslateX(),
+                (int) graphics.getTransform().getTranslateX() + x,
                 (int) graphics.getTransform().getTranslateY(),
                 (int) textLayout.getAdvance(),
                 (int) size
         );
     }
 
+    private Rectangle draw(StatefulGraphics graphics, List<TextComponent> text, int x, float fontSizeChange, boolean draw) {
+        Rectangle bounds = null;
+
+        for (TextComponent component : text) {
+            Rectangle componentBounds = this.draw(graphics, component, x, fontSizeChange, draw);
+
+            bounds = bounds == null ? componentBounds : DrawingUtil.encompassing(bounds, componentBounds);
+
+            x += componentBounds.width;
+        }
+
+        return bounds;
+    }
 
     @Override
     protected Rectangle draw(StatefulGraphics graphics, Rectangle wrap) {
-        graphics.push(this.x, this.y);
-        float fontSizeChange = 0F;
+        return this.draw(graphics, wrap, 0F, true);
+    }
+
+    protected Rectangle draw(StatefulGraphics graphics, Rectangle wrap, float fontSizeChange, boolean draw) {
         Rectangle bounds = null;
 
+        if (draw && this.textBox != null) {
+            if (false /* DEBUG */) {
+                graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
+                graphics.drawRect(this.x, this.y, this.textBox.width, this.textBox.height);
+                graphics.pop(2);
+            }
+
+            Rectangle drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
+
+            while(drawnBounds.height > this.textBox.height) {
+                this.textBox = new Rectangle(
+                        this.textBox.x,
+                        this.y,
+                        this.textBox.width,
+                        (int) (this.originalTextBoxHeight + this.text.get(0).get(0).style().size() + fontSizeChange)
+                );
+
+                fontSizeChange -= 5;
+                drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
+            }
+
+            graphics.push(0, (int) ((this.textBox.height - drawnBounds.height) / 2 + this.text.get(0).get(0).style().size() + fontSizeChange));
+        }
+
+        graphics.push("Text");
+        graphics.push(this.x, this.y);
+
         loop: for (int i = 0; i < 100; ++i) {
+
             int x = this.offset(graphics, fontSizeChange, this.text);
+            int minX = x;
 
-            for (TextComponent component : this.text) {
-                Rectangle rectangle = this.draw(graphics, component, x, fontSizeChange);
+            List<TextComponent> lastTextComponent = null;
+            Deque<List<TextComponent>> deque = new ArrayDeque<>();
+
+            for (List<TextComponent> text : this.text) {
+                deque.add(new ArrayList<>(text));
+            }
+
+            while(!deque.isEmpty()) {
+                List<TextComponent> text = deque.pop();
+
+                if (text.get(0).string().startsWith("\n")) {
+                    x = minX;
+                    graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 1.5));
+
+                    if (!deque.isEmpty()) {
+                        text = deque.pop();
+
+                        if (text.get(0).string().startsWith(" ")) {
+                            text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                        }
+                    }
+                }
+
+                Rectangle rectangle = this.draw(graphics, text, x, fontSizeChange, false);
                 bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
-                x += rectangle.width;
 
-                if (wrap != null && bounds.intersects(wrap)) {
+                if ((wrap != null && bounds.intersects(wrap))) {
                     bounds = null;
-                    fontSizeChange -= 0.5F;
+                    fontSizeChange -= 5;
                     continue loop;
                 }
+
+                if (this.textBox != null && !this.textBox.contains(rectangle) && text != lastTextComponent && rectangle.y + rectangle.height < this.y + this.textBox.height) {
+                    x = minX;
+                    graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
+
+
+                    if (text.get(0).string().startsWith(" ")) {
+                        List<TextComponent> list = new ArrayList<>(text);
+                        text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                    }
+
+                    deque.addFirst(text);
+                    lastTextComponent = text;
+                    continue;
+                }
+
+                if (draw) {
+                    this.draw(graphics, text, x, fontSizeChange, true);
+                }
+
+                x += rectangle.width;
+
+                lastTextComponent = text;
             }
 
             break;
         }
 
-        graphics.pop();
+        graphics.pop("Text");
 
         return bounds == null ? new Rectangle() : bounds;
     }

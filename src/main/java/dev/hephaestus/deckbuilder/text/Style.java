@@ -2,13 +2,59 @@ package dev.hephaestus.deckbuilder.text;
 
 import com.google.gson.JsonObject;
 
-public record Style(String fontName, Float size, Integer color,
+public record Style(String fontName, String italicFontName, Float size, Integer color,
                     Shadow shadow,
                     Outline outline) {
     public static final Style EMPTY = new Style.Builder().build();
 
+    public Style font(String fontName, String italicFontName) {
+        return new Style(
+                fontName,
+                italicFontName,
+                this.size,
+                this.color,
+                this.shadow,
+                this.outline
+        );
+    }
+
+    public Style shadow(Shadow shadow) {
+        return new Style(
+                this.fontName,
+                this.italicFontName,
+                this.size,
+                this.color,
+                shadow,
+                this.outline
+        );
+    }
+
+    public Style italic() {
+        if (this.italicFontName == null) return this;
+
+        return new Style(this.italicFontName, this.italicFontName, this.size, this.color, this.shadow, this.outline);
+    }
+
+    public Style color(Integer color) {
+        return new Style(this.fontName, this.italicFontName, this.size, color, this.shadow, this.outline);
+    }
+
+    public Style merge(Style modifications) {
+        if (modifications == null) return this;
+
+        return new Style(
+                modifications.fontName == null ? this.fontName : modifications.fontName,
+                modifications.italicFontName == null ? this.italicFontName : modifications.italicFontName,
+                modifications.size == null ? this.size : modifications.size,
+                modifications.color == null ? this.color : modifications.color,
+                modifications.shadow == null ? this.shadow : modifications.shadow,
+                modifications.outline == null ? this.outline : modifications.outline
+        );
+    }
+
     public static final class Builder {
         private String fontName;
+        private String italicFontName;
         private Float size;
         private Integer color;
         private Shadow shadow;
@@ -16,6 +62,11 @@ public record Style(String fontName, Float size, Integer color,
 
         public Builder font(String fontName) {
             this.fontName = fontName;
+            return this;
+        }
+
+        public Builder italics(String fontName) {
+            this.italicFontName = fontName;
             return this;
         }
 
@@ -40,7 +91,7 @@ public record Style(String fontName, Float size, Integer color,
         }
 
         public Style build() {
-            return new Style(this.fontName, this.size, this.color, this.shadow, this.outline);
+            return new Style(this.fontName, this.italicFontName, this.size, this.color, this.shadow, this.outline);
         }
     }
 

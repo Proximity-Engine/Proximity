@@ -1,0 +1,41 @@
+1x Emrakul, the Aeons Torn
+1x Optimus Prime, Inspiring Leader
+1x Reaper King
+1x Charix, the Raging Isle
+1x Twilight Prophet
+1x Broodhatch Nantuko
+1x Shu Yun, the Silent Tempest
+1x Jeweled Lotus (cmr)
+1x Kefnet's Monument (akh)
+1x Mana Crypt (2xm)
+1x Mana Drain (cmr)
+1x Molten Echoes (c20)
+1x Naban, Dean of Iteration (dom) [Maybeboard{noDeck}{noPrice}]
+1x Naban, Dean of Iteration (dom)
+1x Negate (plist)
+1x Flooded Strand (ktk)
+1x Graveshifter (mh1)
+1x Heap Doll (uma)
+1x Irregular Cohort (mh1)
+1x Jeweled Lotus (cmr)
+1x Leyline of Anticipation (m20)
+1x Lightning Greaves (afc)
+1x Mana Crypt (2xm)
+1x Marsh Flats (mh2)
+1x Maskwood Nexus (khm)
+1x Mirror Entity (tsr)
+1x Misty Rainforest (mh2)
+1x Padeem, Consul of Innovation (kld)
+1x Panharmonicon (tsr)
+1x Pili-Pala (shm)
+1x Plateau (olgc)
+1x Comet Storm (cmr) [Maybeboard{noDeck}{noPrice}]
+1x Command Tower (afc)
+1x Counterspell (sta)
+1x Crackle with Power (stx) [Maybeboard{noDeck}{noPrice}]
+1x Cyclonic Rift (2xm)
+1x Desperate Ritual (uma)
+1x Dockside Extortionist (c19)
+1x Double Vision (m21) [Maybeboard{noDeck}{noPrice}]
+1x Electrodominance (rna)
+1x Fabricate (plist)

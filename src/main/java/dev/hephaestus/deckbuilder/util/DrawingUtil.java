@@ -36,7 +36,7 @@ public final class DrawingUtil {
 
     public static Rectangle encompassing(Rectangle r1, Rectangle r2) {
         int x = Math.min(r1.x, r2.x);
-        int y = Math.min(r1.x, r2.x);
+        int y = Math.min(r1.y, r2.y);
 
         int width = Math.max(
                 r1.x + r1.width,

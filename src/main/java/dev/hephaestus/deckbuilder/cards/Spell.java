@@ -1,8 +1,9 @@
 package dev.hephaestus.deckbuilder.cards;
 
 import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.text.Alignment;
+import dev.hephaestus.deckbuilder.templates.Template;
 import dev.hephaestus.deckbuilder.text.Style;
+import dev.hephaestus.deckbuilder.text.Symbols;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,39 +12,24 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Spell extends Card {
-    private static final Pattern COST_SYMBOLS = Pattern.compile("\\G\\{([WUBGRxyz0-9])}");
-    private final List<TextComponent> manaCost;
+    private static final Pattern COST_SYMBOLS = Pattern.compile("\\G\\{([^}]*)}");
+    private final List<TextComponent> manaCost = new ArrayList<>();
 
-    public Spell(String name, List<Color> colors, String type, TypeContainer types, URL image, String manaCost) {
-        super(name, type, colors, image, types);
+    public Spell(Template template, String name, List<Color> colors, String type, TypeContainer types, URL image, String manaCost, List<List<TextComponent>> text) {
+        super(template, type, colors, image, types, text, name);
 
         Matcher matcher = COST_SYMBOLS.matcher(manaCost);
-        List<TextComponent> components = new ArrayList<>();
+
+        Style style = new Style.Builder()
+                .font("NDPMTG")
+                .size(175F)
+                .shadow(new Style.Shadow(0, -4, 11))
+                .build();
 
         while (matcher.find()) {
-            String group = matcher.group(1);
-            char c = group.charAt(0);
-            Color color = Color.of(c);
-
-            Style style = new Style.Builder()
-                    .font("NDPMTG")
-                    .size(175F)
-                    .shadow(new Style.Shadow(0, -4, 11))
-                    .color(color == null ? Color.BLACK.rgb() : color.rgb())
-                    .build();
-
-            components.add(new TextComponent(style, "o"));
-
-            style = new Style.Builder()
-                    .font("NDPMTG")
-                    .size(175F)
-                    .color(0)
-                    .build();
-
-            components.add(new TextComponent(style, "" + Character.toLowerCase(c)));
+            String symbol = matcher.group(1);
+            this.manaCost.addAll(Symbols.symbol(symbol, template, style, new Symbols.Factory.Context("cost")));
         }
-
-        this.manaCost = components;
     }
 
     public final List<TextComponent> manaCost() {

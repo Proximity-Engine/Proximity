@@ -6,29 +6,21 @@
             size: 160
         },
         type: {
-            font: "Beleren2016",
+            font: "Beleren2016-Bold",
             color: "#000000",
-            size: 130
+            size: 150
         },
-        // These are the styles to be used for symbols
-        white: "#FFFFFF",
-        blue: {
-            color: null,
-            outline: {
-                weight: 5,
-                color: "#000040"
-            }
+        pt: {
+            font: "Beleren2016-Bold",
+            color: "#000000",
+            size: 160
         },
-        black: "#000000",
-        red: "#FF0000",
-        green: "#00FF00",
-        // These are the styles to be used for symbols in the body of the card
-        // If this section is omitted, they will use the same style defined above
-        "symbols_body.white": "#FFFFFF",
-        "symbols_body.blue": "#0000FF",
-        "symbols_body.black": "#000000",
-        "symbols_body.red": "#FF0000",
-        "symbols_body.green": "#00FF00"
+        oracle: {
+            font: "MPlantin",
+            italic_font: "MPlantin-Italic",
+            color: "#000000",
+            size: 140
+        }
     },
     layers: [
         // If a layer is a list of layers, we'll render the first layer whose conditions match, if any
@@ -67,6 +59,14 @@
                 }
             },
             {
+                type: "spacer",
+                width: 0,
+                height: 0,
+                conditions: {
+                    colorCount: 0
+                }
+            },
+            {
                 type: "image",
                 src: "backgrounds/gold.png",
                 conditions: {
@@ -92,26 +92,35 @@
             // If only one is provided, the layer will be stretched or shrunk to fit that dimension
             // while keeping the image proportional with its original dimensions
             width: 2584,
-            height: 1882
+            height: 1882,
+            conditions: {
+                "use-art": true
+            }
         },
         // If a layer is just a string, we'll treat that as if it was the 'src' value for a layer with no conditions
         {
             type: "image",
             src: "pinlines/shadow.png"
         },
-        [
-            {
-                type: "image",
-                src: "borders/legendary.png",
-                conditions: {
-                    legendary: true
+        {
+            type: "compound",
+            children: [
+                {
+                    type: "image",
+                    src: "borders/legendary.png",
+                    conditions: {
+                        legendary: true
+                    }
+                },
+                {
+                    type: "image",
+                    src: "borders/default.png"
                 }
-            },
-            {
-                type: "image",
-                src: "borders/default.png"
+            ],
+            conditions: {
+                border: true
             }
-        ],
+        },
         [
             {
                 type: "compound",
@@ -212,14 +221,17 @@
                 },
                 {
                     type: "image",
-                    src: "pt/gold.png",
+                    src: "pt/colorless.png",
                     conditions: {
-                        hybrid: false
+                        colorCount: 0
                     }
                 },
                 {
                     type: "image",
-                    src: "pt/colorless.png"
+                    src: "pt/gold.png",
+                    conditions: {
+                        hybrid: false
+                    }
                 }
             ],
             conditions: {
@@ -327,6 +339,42 @@
                 x: 395,
                 y: 515
             }
+        },
+        {
+            type: "squish",
+            main: {
+                type: "spacer",
+                x: 2678,
+                y: 2553,
+                width: 212,
+                height: 156
+            },
+            flex: {
+                type: "text",
+                value: "${card.type}",
+                style: "name",
+                x: 375,
+                y: 2675
+            }
+        },
+        {
+            type: "text",
+            value: "${card.pt}",
+            style: "pt",
+            alignment: "center",
+            x: 2740,
+            y: 4062,
+            conditions: {
+                creature: true
+            }
+        },
+        {
+            type: "text",
+            value: "${card.oracle}",
+            x: 400,
+            y: 2800,
+            width: 2488,
+            height: 1050
         }
     ]
 }

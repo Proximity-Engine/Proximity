@@ -2,11 +2,10 @@ package dev.hephaestus.deckbuilder;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
-import dev.hephaestus.deckbuilder.cards.Card;
-import dev.hephaestus.deckbuilder.cards.Color;
-import dev.hephaestus.deckbuilder.cards.Creature;
-import dev.hephaestus.deckbuilder.cards.TypeContainer;
+import dev.hephaestus.deckbuilder.cards.*;
 import dev.hephaestus.deckbuilder.templates.Template;
+import dev.hephaestus.deckbuilder.text.Style;
+import dev.hephaestus.deckbuilder.text.Symbols;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,6 +19,11 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,13 +52,13 @@ public class Main {
         JsonReader templateReader = new JsonReader(new InputStreamReader(templateStream));
         templateReader.setLenient(true);
 
-        Template template = Template.parse(JsonParser.parseReader(templateReader).getAsJsonObject(), cache);
+        Template.Parser parser = new Template.Parser(args);
+        Template template = parser.parse(JsonParser.parseReader(templateReader).getAsJsonObject(), cache);
 
         Map<String, Pair<Integer, Card>> cards = new HashMap<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(args.get("cards")))) {
             Pattern pattern = Pattern.compile("([0-9]+)x (.+)");
-
 
             for (String line = reader.readLine(); line != null; line = reader.readLine()) {
                 Matcher matcher = pattern.matcher(line);
@@ -63,7 +67,7 @@ public class Main {
                     int count = matcher.groupCount() == 2 ? Integer.parseInt(matcher.group(1)) : 1;
                     String cardName = matcher.group(2);
 
-                    cards.put(cardName, new Pair<>(count, null));
+                    cards.put(cardName.contains("(") ? cardName.substring(0, cardName.indexOf('(') - 1) : cardName, new Pair<>(count, null));
                 } else {
                     System.out.printf("Could not parse line '%s'%n", line);
                 }
@@ -98,12 +102,12 @@ public class Main {
             lastRequest = System.currentTimeMillis();
 
             try {
-                for (JsonElement card : getCardInfo(cycleCards)) {
-                    JsonObject object = card.getAsJsonObject();
+                for (JsonElement cardJson : getCardInfo(cycleCards)) {
+                    JsonObject object = cardJson.getAsJsonObject();
                     String cardName = object.get("name").getAsString();
 
                     cards.computeIfPresent(cardName, (k, v) -> {
-                        Card c;
+                        Card card;
 
                         String typeLine = object.get("type_line").getAsString();
 
@@ -111,16 +115,6 @@ public class Main {
 
                         for (JsonElement element : object.get(typeLine.contains("Land") ? "color_identity" : "colors").getAsJsonArray()) {
                             colors.add(Color.of(element.getAsString().charAt(0)));
-                        }
-
-                        if (colors.isEmpty()) {
-                            colors.add(
-                                    typeLine.contains("Land")
-                                            ? Color.LAND
-                                            : typeLine.contains("Artifact")
-                                                ? Color.ARTIFACT
-                                                : Color.NONE
-                            );
                         }
 
                         Collection<String> typeStrings = new LinkedList<>();
@@ -142,13 +136,108 @@ public class Main {
                             e.printStackTrace();
                         }
 
-                        if (typeLine.contains("Creature")) {
-                            c = new Creature(cardName, colors, typeLine, types,image, object.get("mana_cost").getAsString(), object.get("power").getAsString(), object.get("toughness").getAsString());
-                        } else {
-                            c = new Card(cardName, typeLine, colors, image, types);
+                        List<List<TextComponent>> text = new ArrayList<>();
+
+                        String oracle = object.get("oracle_text").getAsString();
+
+                        boolean italic = false;
+
+                        StringBuilder currentString = new StringBuilder();
+
+                        Style oracleStyle = template.getStyle("oracle");
+
+                        for (int i = 0; i < oracle.length(); ++i) {
+                            char c = oracle.charAt(i);
+
+                            switch (c) {
+                                case '(' -> {
+                                    italic = true;
+                                    currentString.append(c);
+                                }
+                                case ')' -> {
+                                    currentString.append(c);
+                                    text.add(Collections.singletonList(
+                                            new TextComponent(
+                                                    oracleStyle.italic(),
+                                                    currentString.toString()
+                                            )
+                                    ));
+
+                                    currentString = new StringBuilder();
+                                    italic = false;
+                                }
+                                case '\n' -> {
+                                    if (!currentString.isEmpty()) {
+
+                                        text.add(Collections.singletonList(
+                                                new TextComponent(
+                                                        italic ? oracleStyle.italic() : oracleStyle,
+                                                        currentString.toString()
+                                                )
+                                        ));
+
+                                        currentString = new StringBuilder();
+                                    }
+
+                                    text.add(Collections.singletonList(
+                                            new TextComponent(
+                                                    italic ? oracleStyle.italic() : oracleStyle,
+                                                    "\n"
+                                            )
+                                    ));
+                                }
+                                case '{' -> {
+                                    if (!currentString.isEmpty()) {
+                                        text.add(Collections.singletonList(
+                                                new TextComponent(
+                                                        italic ? oracleStyle.italic() : oracleStyle,
+                                                        currentString.toString()
+                                                )
+                                        ));
+                                        currentString = new StringBuilder();
+                                    }
+
+                                    StringBuilder symbolBuilder = new StringBuilder();
+                                    ++i;
+                                    while (oracle.charAt(i) != '}') {
+                                        symbolBuilder.append(oracle.charAt(i++));
+                                    }
+                                    String symbol = symbolBuilder.toString();
+                                    text.add(Symbols.symbol(symbol, template, oracleStyle.color(null).font("NDPMTG", null), new Symbols.Factory.Context("oracle")));
+                                }
+                                case ' ' -> {
+                                    currentString.append(c);
+                                    text.add(Collections.singletonList(
+                                            new TextComponent(
+                                                    italic ? oracleStyle.italic() : oracleStyle,
+                                                    currentString.toString()
+                                            )
+                                    ));
+                                    currentString = new StringBuilder();
+                                }
+                                default -> currentString.append(c);
+                            }
                         }
 
-                        return new Pair<>(v.left(), c);
+                        if (!currentString.isEmpty()) {
+                            text.add(Collections.singletonList(
+                                    new TextComponent(
+                                            italic ? oracleStyle.italic() : oracleStyle,
+                                            currentString.toString()
+                                    )
+                            ));
+                            currentString = new StringBuilder();
+                        }
+
+                        if (typeLine.contains("Creature")) {
+                            card = new Creature(template, cardName, colors, typeLine, types,image, object.get("mana_cost").getAsString(), object.get("power").getAsString(), object.get("toughness").getAsString(), text);
+                        } else if (typeLine.contains("Land")) {
+                            card = new Card(template, typeLine, colors, image, types, text, cardName);
+                        } else {
+                            card = new Spell(template, cardName, colors, typeLine, types,image, object.get("mana_cost").getAsString(), text);
+                        }
+
+                        return new Pair<>(v.left(), card);
                     });
 
                     if (!cards.containsKey(cardName)) {
@@ -160,19 +249,50 @@ public class Main {
             }
         }
 
+        AtomicInteger progress = new AtomicInteger(0);
+
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+
+        System.out.printf("|%100s|   0%c\r", "=".repeat(0), '%');
+
+        Deque<String> finishedCards = new ConcurrentLinkedDeque<>();
+
         for (Map.Entry<String, Pair<Integer, Card>> entry : cards.entrySet()) {
             Card card = entry.getValue().right();
-            BufferedImage out = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
+//            executor.submit(() -> {
+                BufferedImage out = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
 
-            template.draw(card, out);
+                template.draw(card, out);
 
-            Path path = Path.of("images", entry.getKey().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+                Path path = Path.of("images", entry.getKey().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
 
-            if (!Files.isDirectory(path.getParent())) {
-                Files.createDirectories(path.getParent());
-            }
+                try {
+                    if (!Files.isDirectory(path.getParent())) {
+                        Files.createDirectories(path.getParent());
+                    }
 
-            ImageIO.write(out, "png", Files.newOutputStream(path));
+                    OutputStream stream = Files.newOutputStream(path);
+                    ImageIO.write(out, "png", stream);
+                    stream.close();
+
+                    finishedCards.add(card.name());
+
+                    int p = progress.getAndIncrement();
+
+                    System.out.printf("Saved '%s'%n", card.name());
+                    System.out.printf("|%-100s| %3d%c\r", "█".repeat(Math.max(0, (int) (100 * ((float) p) / cards.size()))), (int) (100 * ((float) p) / cards.size()), '%');
+                } catch (IOException exception) {
+                    exception.printStackTrace();
+                }
+//            });
+        }
+
+        try {
+            executor.shutdown();
+            executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.NANOSECONDS);
+            System.out.printf("|%100s| 100%c\r", "█".repeat(100), '%');
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

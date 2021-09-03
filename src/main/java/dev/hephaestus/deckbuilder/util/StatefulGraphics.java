@@ -17,11 +17,17 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class StatefulGraphics extends Graphics2D {
+    private final BufferedImage image;
     private final Graphics2D wrapped;
     private final Deque<Frame> frames = new ArrayDeque<>();
 
-    public StatefulGraphics(Graphics2D wrapped) {
-        this.wrapped = wrapped;
+    public StatefulGraphics(BufferedImage image) {
+        this.image = image;
+        this.wrapped = image.createGraphics();
+    }
+
+    public BufferedImage getImage() {
+        return this.image;
     }
 
     public <T> void push(T value, BiConsumer<Graphics2D, T> setter, Function<Graphics2D, T> getter) {
