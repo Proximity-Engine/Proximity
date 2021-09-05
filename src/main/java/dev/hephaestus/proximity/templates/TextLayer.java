@@ -1,10 +1,12 @@
 package dev.hephaestus.proximity.templates;
 
+import dev.hephaestus.proximity.Pair;
 import dev.hephaestus.proximity.TextComponent;
 import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.DrawingUtil;
 import dev.hephaestus.proximity.util.StatefulGraphics;
+import org.w3c.dom.css.Rect;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -13,24 +15,28 @@ import java.util.List;
 import java.util.*;
 
 public class TextLayer extends Layer {
+    private static final boolean DEBUG = true;
+
+    private final Template template;
     private final Alignment alignment;
     private final Style style;
     private final List<List<TextComponent>> text;
-    private final int originalTextBoxHeight;
-    private Rectangle textBox;
+    private final Rectangle wrap;
+    private final Rectangle textBox;
 
-    public TextLayer(Alignment alignment, Style style, List<List<TextComponent>> text, int x, int y, Rectangle textBox) {
+    public TextLayer(Template template, Style style, List<List<TextComponent>> text, int x, int y, Alignment alignment, Rectangle textBox, Rectangle wrap) {
         super(x, y);
+        this.template = template;
         this.alignment = alignment;
         this.style = style;
         this.text = text;
-        this.originalTextBoxHeight = textBox == null ? -1 : textBox.height;
         this.textBox = textBox == null ? null : new Rectangle(
                 textBox.x,
                 this.y,
                 textBox.width,
-                (int) (textBox.height + text.get(0).get(0).style().size())
+                textBox.height
         );
+        this.wrap = wrap;
     }
 
     private int offset(StatefulGraphics graphics, float fontSizeChange, List<List<TextComponent>> components) {
@@ -47,7 +53,7 @@ public class TextLayer extends Layer {
 
                     Font font = style.fontName() == null && this.style.fontName() == null
                             ? graphics.getFont().deriveFont(size)
-                            : DrawingUtil.getFont(style.fontName() == null
+                            : DrawingUtil.getFont(this.template, style.fontName() == null
                             ? this.style.fontName()
                             : style.fontName(), size
                     );
@@ -71,7 +77,7 @@ public class TextLayer extends Layer {
 
                     Font font = style.fontName() == null && this.style.fontName() == null
                             ? graphics.getFont().deriveFont(size)
-                            : DrawingUtil.getFont(style.fontName() == null
+                            : DrawingUtil.getFont(this.template, style.fontName() == null
                             ? this.style.fontName()
                             : style.fontName(), size
                     );
@@ -89,7 +95,7 @@ public class TextLayer extends Layer {
         return x;
     }
 
-    private Rectangle draw(StatefulGraphics graphics, TextComponent text, int x, float fontSizeChange, boolean draw) {
+    private Pair<Rectangle, Integer> draw(StatefulGraphics graphics, TextComponent text, int x, float fontSizeChange, boolean draw) {
         graphics.push("TextComponent");
 
         Style style = text.style() == null ? this.style : text.style();
@@ -100,7 +106,7 @@ public class TextLayer extends Layer {
 
         Font font = style.fontName() == null && this.style.fontName() == null
                 ? graphics.getFont().deriveFont(size)
-                : DrawingUtil.getFont(style.fontName() == null
+                : DrawingUtil.getFont(this.template, style.fontName() == null
                 ? this.style.fontName()
                 : style.fontName(), size
         );
@@ -157,69 +163,79 @@ public class TextLayer extends Layer {
 
         graphics.pop("TextComponent");
 
-        return new Rectangle(
+        return new Pair<>(new Rectangle(
                 (int) graphics.getTransform().getTranslateX() + x,
-                (int) (graphics.getTransform().getTranslateY() - shape.getBounds().height),
+                (int) (graphics.getTransform().getTranslateY()) + shape.getBounds().y,
                 (int) textLayout.getAdvance(),
                 shape.getBounds().height
-        );
+        ), (int) textLayout.getAscent());
     }
 
-    private Rectangle draw(StatefulGraphics graphics, List<TextComponent> text, int x, float fontSizeChange, boolean draw) {
+    private Pair<Rectangle, Integer> draw(StatefulGraphics graphics, List<TextComponent> text, int x, float fontSizeChange, boolean draw) {
         Rectangle bounds = null;
+        Integer height = null;
 
         for (TextComponent component : text) {
-            Rectangle componentBounds = this.draw(graphics, component, x, fontSizeChange, draw);
+            Pair<Rectangle, Integer> pair = this.draw(graphics, component, x, fontSizeChange, draw);
+            Rectangle componentBounds = pair.left();
 
             bounds = bounds == null ? componentBounds : DrawingUtil.encompassing(bounds, componentBounds);
+            height = height == null ? pair.right() : Math.max(height, pair.right());
 
             x += componentBounds.width;
         }
 
-        return bounds;
+        return new Pair<>(bounds, height);
     }
 
     @Override
     protected Rectangle draw(StatefulGraphics graphics, Rectangle wrap) {
-        return this.draw(graphics, wrap, 0F, true);
+        return this.draw(graphics, wrap == null ? this.wrap : wrap, 0F, true).left();
     }
 
-    protected Rectangle draw(StatefulGraphics graphics, Rectangle wrap, float fontSizeChange, boolean draw) {
+    protected Pair<Rectangle, Integer> draw(StatefulGraphics graphics, Rectangle wrap, float fontSizeChange, boolean draw) {
         Rectangle bounds = null;
+        int firstRowHeight = 0;
+        boolean firstRow;
 
         graphics.push("Text");
 
         if (draw && this.textBox != null) {
-            Rectangle drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
+            Pair<Rectangle, Integer> pair = this.draw(graphics, wrap, fontSizeChange, false);
+            Rectangle drawnBounds = pair.left();
+            Integer drawnFirstRowHeight = pair.right();
 
-            while(drawnBounds.height > this.textBox.height) {
-                this.textBox = new Rectangle(
-                        this.textBox.x,
-                        this.y,
-                        this.textBox.width,
-                        (int) (this.originalTextBoxHeight + this.text.get(0).get(0).style().size() + fontSizeChange)
-                );
-
+            while(this.textBox.height < drawnBounds.height) {
                 fontSizeChange -= 5;
-                drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
+                graphics.push(0, drawnFirstRowHeight + (drawnBounds.height - this.textBox.height) / 2);
+                pair = this.draw(graphics, wrap, fontSizeChange, false);
+                drawnBounds = pair.left();
+                drawnFirstRowHeight = pair.right();
+                graphics.pop();
             }
 
-            if (false /* DEBUG */) {
+            if (DEBUG /* DEBUG */) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
                 graphics.drawRect(this.x, this.y, this.textBox.width, this.textBox.height);
                 graphics.pop(2);
             }
 
-            graphics.push(0, (int) ((this.textBox.height - drawnBounds.height) / 2 + this.text.get(0).get(0).style().size() + fontSizeChange));
+            graphics.push(0, drawnFirstRowHeight + (this.textBox.height - drawnBounds.height) / 2);
         }
 
         graphics.push(this.x, this.y);
+
+        List<Rectangle> textBounds = new ArrayList<>();
 
         loop: for (int i = 0; i < 100; ++i) {
             graphics.push("Loop");
             int x = this.offset(graphics, fontSizeChange, this.text);
             int minX = x;
+
+            firstRowHeight = 0;
+            firstRow = true;
+
 
             List<TextComponent> lastTextComponent = null;
             Deque<List<TextComponent>> deque = new ArrayDeque<>();
@@ -233,7 +249,7 @@ public class TextLayer extends Layer {
 
                 if (text.get(0).string().startsWith("\n")) {
                     x = minX;
-                    graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 1.5));
+                    graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 1.325));
 
                     if (!deque.isEmpty()) {
                         text = deque.pop();
@@ -244,7 +260,12 @@ public class TextLayer extends Layer {
                     }
                 }
 
-                Rectangle rectangle = this.draw(graphics, text, x, fontSizeChange, false);
+                Pair<Rectangle, Integer> pair = this.draw(graphics, text, x, fontSizeChange, false);
+                Rectangle rectangle = pair.left();
+
+                if (firstRow) {
+                    firstRowHeight = Integer.max(firstRowHeight, pair.right());
+                }
 
                 if (this.textBox != null && rectangle.x + rectangle.width > this.textBox.x + this.textBox.width && text != lastTextComponent) {
                     x = minX;
@@ -256,15 +277,32 @@ public class TextLayer extends Layer {
 
                     deque.addFirst(text);
                     lastTextComponent = text;
+                    firstRow = false;
                     continue;
                 }
 
-                bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
+                if (wrap != null) {
+                    if (this.textBox == null) {
+                        bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
 
-                if ((wrap != null && bounds.intersects(wrap))) {
-                    bounds = null;
-                    fontSizeChange -= 5;
-                    continue loop;
+                        if (bounds.intersects(wrap)) {
+                            bounds = null;
+                            fontSizeChange -= 5;
+                            continue loop;
+                        }
+                    } else if (rectangle.intersects(wrap)) {
+                        x = minX;
+                        graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
+
+                        if (text.get(0).string().startsWith(" ")) {
+                            text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                        }
+
+                        deque.addFirst(text);
+                        lastTextComponent = text;
+                        firstRow = false;
+                        continue;
+                    }
                 }
 
                 if (draw) {
@@ -272,8 +310,9 @@ public class TextLayer extends Layer {
                 }
 
                 x += rectangle.width;
-
+                textBounds.add(rectangle);
                 lastTextComponent = text;
+                bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
             }
 
             break;
@@ -281,13 +320,20 @@ public class TextLayer extends Layer {
 
         graphics.pop("Text");
 
-        if (draw && bounds != null && false /* DEBUG */) {
+        if (draw && bounds != null && DEBUG /* DEBUG */) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
             graphics.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
             graphics.pop(2);
+
+            for (Rectangle rectangle : textBounds) {
+                graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                graphics.push(DrawingUtil.getColor(0xFF00FF00), Graphics2D::setColor, Graphics2D::getColor);
+                graphics.drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+                graphics.pop(2);
+            }
         }
 
-        return bounds == null ? new Rectangle() : bounds;
+        return new Pair<>(bounds, firstRowHeight);
     }
 }

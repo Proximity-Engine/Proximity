@@ -23,11 +23,15 @@ public class Spell extends Card {
 
         Matcher matcher = COST_SYMBOLS.matcher(manaCost);
 
-        Style style = new Style.Builder()
-                .font("NDPMTG")
-                .size(175F)
-                .shadow(new Style.Shadow(0, -4, 11))
-                .build();
+        Style style = template.getStyle("mana_cost");
+
+        if (style == Style.EMPTY) {
+            style = new Style.Builder()
+                    .font("NDPMTG")
+                    .size(175F)
+                    .shadow(new Style.Shadow(0, -4, 11))
+                    .build();
+        }
 
         while (matcher.find()) {
             String symbol = matcher.group(1);

@@ -1,6 +1,6 @@
 package dev.hephaestus.proximity.util;
 
-import dev.hephaestus.proximity.Main;
+import dev.hephaestus.proximity.TemplateFiles;
 
 import java.awt.*;
 import java.io.IOException;
@@ -15,10 +15,10 @@ public final class DrawingUtil {
     private DrawingUtil() {}
 
     // TODO: Allow loading fonts from template zip files
-    public static Font getFont(String fontName, float size) {
+    public static Font getFont(TemplateFiles files, String fontName, float size) {
         Font font = FONTS.computeIfAbsent(fontName, name -> {
             try {
-                InputStream stream = Main.class.getResourceAsStream("/fonts/" + fontName + ".ttf");
+                InputStream stream = files.getInputStream("fonts/" + fontName + ".ttf");
 
                 return stream != null ? Font.createFont(Font.TRUETYPE_FONT, stream) : null;
             } catch (FontFormatException | IOException e) {

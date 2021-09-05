@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import dev.hephaestus.proximity.ImageCache;
+import dev.hephaestus.proximity.TemplateFiles;
 import dev.hephaestus.proximity.TextComponent;
 import dev.hephaestus.proximity.cards.*;
 import dev.hephaestus.proximity.text.Alignment;
@@ -19,16 +19,19 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
 
-public final class Template implements OptionContainer {
+public final class Template implements OptionContainer, TemplateFiles  {
     private final Map<String, Style> styles;
     private final List<LayerFactory> layers = new ArrayList<>();
     private final OptionContainer wrappedOptions;
+    private final TemplateFiles files;
 
-    private Template(Map<String, Style> styles, List<LayerFactoryFactory> factories, OptionContainer options) {
+    private Template(TemplateFiles files, List<LayerFactoryFactory> factories, OptionContainer options, Map<String, Style> styles) {
+        this.files = files;
         this.styles = Map.copyOf(styles);
         this.wrappedOptions = options;
 
@@ -65,10 +68,25 @@ public final class Template implements OptionContainer {
         return this.wrappedOptions.getMap();
     }
 
+    @Override
+    public BufferedImage getImage(String... images) {
+        return this.files.getImage(images);
+    }
+
+    @Override
+    public InputStream getInputStream(String first, String... more) throws IOException {
+        return this.files.getInputStream(first, more);
+    }
+
     public static final class Builder {
+        private final TemplateFiles files;
         private final Map<String, Style> styles = new HashMap<>();
         private final List<LayerFactoryFactory> factories = new ArrayList<>();
         private final Map<String, Object> options = new HashMap<>();
+
+        public Builder(TemplateFiles files) {
+            this.files = files;
+        }
 
         public Builder layer(LayerFactoryFactory factory) {
             this.factories.add(factory);
@@ -89,7 +107,7 @@ public final class Template implements OptionContainer {
         }
 
         public Template build() {
-            return new Template(this.styles, this.factories, new Implementation(this.options));
+            return new Template(this.files, this.factories, new OptionContainer.Implementation(this.options), this.styles);
         }
     }
 
@@ -105,8 +123,8 @@ public final class Template implements OptionContainer {
             }
         }
 
-        public Template parse(JsonObject object, ImageCache cache) {
-            Template.Builder builder = new Template.Builder();
+        public Template parse(JsonObject object, TemplateFiles files) {
+            Template.Builder builder = new Template.Builder(files);
 
             builder.option(Option.USE_OFFICIAL_ART, true);
             this.predicates.put("use_official_art", card -> card.getOption(Option.USE_OFFICIAL_ART));
@@ -139,7 +157,7 @@ public final class Template implements OptionContainer {
 
             if (object.has("layers")) {
                 for (JsonElement layer : object.getAsJsonArray("layers")) {
-                    builder.layer(parseLayer(layer, cache));
+                    builder.layer(parseLayer(layer, files));
                 }
             }
 
@@ -165,7 +183,7 @@ public final class Template implements OptionContainer {
             return styleBuilder.build();
         }
 
-        private LayerFactoryFactory parseLayer(JsonElement element, ImageCache cache) {
+        private LayerFactoryFactory parseLayer(JsonElement element, TemplateFiles cache) {
             if (element.isJsonArray()) {
                 return parseArray(element.getAsJsonArray(), cache);
             } else if (element.isJsonObject()) {
@@ -175,7 +193,7 @@ public final class Template implements OptionContainer {
             }
         }
 
-        private LayerFactoryFactory parseArray(JsonArray array, ImageCache cache) {
+        private LayerFactoryFactory parseArray(JsonArray array, TemplateFiles cache) {
             List<LayerFactoryFactory> factories = new ArrayList<>();
 
             for (JsonElement element : array) {
@@ -201,7 +219,7 @@ public final class Template implements OptionContainer {
             };
         }
 
-        private LayerFactoryFactory parseLayerFromObject(JsonObject object, ImageCache cache) {
+        private LayerFactoryFactory parseLayerFromObject(JsonObject object, TemplateFiles cache) {
             List<Predicate<Card>> predicates = parseConditions(object.getAsJsonObject("conditions"));
 
             int dX = object.has("x") ? object.get("x").getAsInt() : 0;
@@ -231,7 +249,7 @@ public final class Template implements OptionContainer {
             };
         }
 
-        private LayerFactoryFactory parseGroup(JsonObject object, ImageCache cache) {
+        private LayerFactoryFactory parseGroup(JsonObject object, TemplateFiles cache) {
             List<LayerFactoryFactory> factories = new ArrayList<>();
 
             for (JsonElement element : object.getAsJsonArray("children")) {
@@ -285,7 +303,7 @@ public final class Template implements OptionContainer {
             };
         }
 
-        private LayerFactoryFactory parseSquish(JsonObject object, ImageCache cache) {
+        private LayerFactoryFactory parseSquish(JsonObject object, TemplateFiles cache) {
             LayerFactoryFactory main = parseLayer(object.get("main").getAsJsonObject(), cache);
             LayerFactoryFactory flex = parseLayer(object.get("flex").getAsJsonObject(), cache);
 
@@ -318,6 +336,7 @@ public final class Template implements OptionContainer {
             String string = object.get("value").getAsString();
             Integer width = object.has("width") ? object.get("width").getAsInt() : null;
             Integer height = object.has("height") ? object.get("height").getAsInt() : null;
+            Rectangle wrap = object.has("wrap") ? parseRectangle(object.get("wrap").getAsJsonObject()) : null;
 
             return template -> {
                 Style style = object.has("style") && object.get("style").isJsonObject()
@@ -349,9 +368,18 @@ public final class Template implements OptionContainer {
 
                     text = applyCapitalization(text, style.capitalization(), style.size());
 
-                    return new TextLayer(al, style, text, x, y, width != null && height != null ? new Rectangle(x, y, width, height) : null);
+                    return new TextLayer(template, style, text, x, y, al, width != null && height != null ? new Rectangle(x, y, width, height) : null, wrap);
                 };
             };
+        }
+
+        private static Rectangle parseRectangle(JsonObject object) {
+            return new Rectangle(
+                    object.get("x").getAsInt(),
+                    object.get("y").getAsInt(),
+                    object.get("width").getAsInt(),
+                    object.get("height").getAsInt()
+            );
         }
 
         private static List<List<TextComponent>> applyCapitalization(List<List<TextComponent>> text, Style.Capitalization caps, Float fontSize) {
@@ -411,10 +439,10 @@ public final class Template implements OptionContainer {
             }
         }
 
-        private LayerFactoryFactory parseImage(JsonObject object, ImageCache cache) {
+        private LayerFactoryFactory parseImage(JsonObject object, TemplateFiles cache) {
             return template -> (card, x, y) -> {
                 String sub = substitute(object.get("src").getAsString(), card);
-                BufferedImage image = cache.get(sub);
+                BufferedImage image = cache.getImage(sub);
                 return new ImageLayer(sub, image, image.getWidth(), image.getHeight(), x, y);
             };
         }
@@ -428,7 +456,7 @@ public final class Template implements OptionContainer {
                 String key = entry.getKey().toLowerCase(Locale.ROOT);
 
                 switch (key) {
-                    case "colorcount" -> predicates.add(card -> card.colors().size() == entry.getValue().getAsInt());
+                    case "color_count" -> predicates.add(card -> card.colors().size() == entry.getValue().getAsInt());
                     case "hybrid" -> predicates.add(card -> {
                         if (card instanceof Spell spell && spell.colors().size() == 2) {
                             for (TextComponent component : spell.manaCost()) {
@@ -445,7 +473,7 @@ public final class Template implements OptionContainer {
                             return entry.getValue().getAsBoolean();
                         }
 
-                        return false;
+                        return !entry.getValue().getAsBoolean();
                     });
                     case "or" -> {
                         List<List<Predicate<Card>>> orPredicates = new ArrayList<>();

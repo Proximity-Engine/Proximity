@@ -1,0 +1,177 @@
+{
+  width: 3288,
+  height: 4488,
+  options: {
+    border: "black"
+  },
+  styles: {
+    mana_cost: {
+      font: "NDPMTG",
+      size: 175
+    },
+    oracle: {
+      font: "MPlantin",
+      italic_font: "MPlantin-Italic",
+      color: "#000000",
+      size: 140
+    }
+  },
+  layers: [
+    {
+      type: "art",
+      // Any layer can contain x and y offsets
+      x: 476,
+      y: 549,
+      width: 2337,
+      height: 1875,
+      conditions: {
+        options: {
+          use_official_art: true
+        }
+      }
+    },
+    {
+      type: "compound",
+      children: [
+        {
+          type: "image",
+          src: "backgrounds/artifact.png",
+          conditions: {
+            types: {
+              artifact: true
+            }
+          }
+        },
+        {
+          type: "image",
+          src: "backgrounds/land/${card.color}.png",
+          conditions: {
+            types: {
+              land: true
+            },
+            or: [
+              {
+                color_count: 1
+              },
+              {
+                color_count: 2
+              }
+            ]
+          }
+        },
+        {
+          type: "image",
+          src: "backgrounds/${card.color}.png",
+          conditions: {
+            color_count: 1
+          }
+        },
+        {
+          type: "image",
+          src: "backgrounds/land/colorless.png",
+          conditions: {
+            types: {
+              land: true
+            },
+            color_count: 0
+          }
+        },
+        {
+          type: "image",
+          src: "backgrounds/land/gold.png",
+          conditions: {
+            types: {
+              land: true
+            }
+          }
+        },
+        {
+          type: "image",
+          src: "backgrounds/gold.png"
+        }
+      ]
+    },
+    {
+      type: "squish",
+      main: {
+        type: "text",
+        value: "${card.cost}",
+        alignment: "right",
+        x: 2915,
+        y: 470
+      },
+      flex: {
+        type: "text",
+        value: "${card.name}",
+        style: {
+          font: "Goudy Medieval Alternate",
+          color: "#FFFFFF",
+          size: 160,
+          shadow: {
+            color: 0x000000,
+            dX: 10,
+            dY: 10
+          }
+        },
+        x: 461,
+        y: 475
+      }
+    },
+    {
+      type: "squish",
+      main: {
+        type: "spacer",
+        x: 2678,
+        y: 2553,
+        width: 212,
+        height: 156
+      },
+      flex: {
+        type: "text",
+        value: "${card.type}",
+        style: {
+          font: "MPlantin",
+          color: "#FFFFFF",
+          size: 150,
+          shadow: {
+            color: "#000000",
+            dX: 8,
+            dY: 8
+          }
+        },
+        x: 453,
+        y: 2608
+      }
+    },
+    {
+      type: "text",
+      value: "${card.oracle}",
+      x: 456,
+      y: 2666,
+      width: 2376,
+      height: 1200
+    },
+    {
+      type: "text",
+      value: "${card.pt}",
+      style:  {
+        font: "MPlantin-Bold",
+        color: "#FFFFFF",
+        size: 129,
+        shadow: {
+          color: "#000000",
+          dX: 15,
+          dY: 10
+        }
+      },
+      alignment: "center",
+      x: 2773,
+      y: 4077,
+      conditions: {
+        types: {
+          creature: true
+        }
+      }
+    }
+  ]
+}

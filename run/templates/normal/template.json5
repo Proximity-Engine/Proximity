@@ -25,6 +25,23 @@
     },
     layers: [
         {
+            type: "art",
+            // Any layer can contain x and y offsets
+            x: 352,
+            y: 605,
+            // The art layer is special in that it can also contain a width and/or height
+            // If both are provided, the layer will be stretched or shrunk to cover that area
+            // If only one is provided, the layer will be stretched or shrunk to fit that dimension
+            // while keeping the image proportional with its original dimensions
+            width: 2584,
+            height: 1882,
+            conditions: {
+                options: {
+                    use_official_art: true
+                }
+            }
+        },
+        {
             type: "compound",
             children: [
                 // If a layer is a list of layers, we'll render the first layer whose conditions match, if any
@@ -44,14 +61,14 @@
                             type: "image",
                             src: "backgrounds/nyx/colorless.png",
                             conditions: {
-                                colorcount: 0
+                                color_count: 0
                             }
                         },
                         {
                             type: "image",
                             src: "backgrounds/nyx/${card.color}.png",
                             conditions: {
-                                colorCount: 1
+                                color_count: 1
                             }
                         },
                         {
@@ -100,7 +117,7 @@
                     // There are certain placeholders defined for image paths
                     src: "backgrounds/${card.color}.png",
                     conditions: {
-                        colorCount: 1
+                        color_count: 1
                     }
                 },
                 {
@@ -108,7 +125,7 @@
                     width: 0,
                     height: 0,
                     conditions: {
-                        colorCount: 0
+                        color_count: 0
                     }
                 },
                 {
@@ -134,30 +151,13 @@
             }
         },
         {
-            type: "art",
-            // Any layer can contain x and y offsets
-            x: 352,
-            y: 605,
-            // The art layer is special in that it can also contain a width and/or height
-            // If both are provided, the layer will be stretched or shrunk to cover that area
-            // If only one is provided, the layer will be stretched or shrunk to fit that dimension
-            // while keeping the image proportional with its original dimensions
-            width: 2584,
-            height: 1882,
-            conditions: {
-                options: {
-                    use_official_art: true
-                }
-            }
-        },
-        {
             type: "compound",
             children: [
                 {
                     type: "image",
                     src: "pinlines/shadow.png",
                     conditions: {
-                        frame_effects: {
+                        types: {
                             legendary: false
                         }
                     }
@@ -175,7 +175,7 @@
                     type: "image",
                     src: "borders/legendary.png",
                     conditions: {
-                        frame_effects: {
+                        types: {
                             legendary: true
                         }
                     }
@@ -202,7 +202,7 @@
                             types: {
                                 artifact: true
                             },
-                            colorCount: 0
+                            color_count: 0
                         }
                     },
                     {
@@ -212,21 +212,21 @@
                             types: {
                                 artifact: false
                             },
-                            colorCount: 0
+                            color_count: 0
                         }
                     },
                     {
                         type: "image",
                         src: "pinlines/land/${card.color}.png",
                         conditions: {
-                            colorCount: 1
+                            color_count: 1
                         }
                     },
                     {
                         type: "image",
                         src: "pinlines/land/${card.color}.png",
                         conditions: {
-                            colorCount: 2
+                            color_count: 2
                         }
                     },
                     {
@@ -248,7 +248,7 @@
                         types: {
                             artifact: true
                         },
-                        colorCount: 0
+                        color_count: 0
                     }
                 },
                 {
@@ -258,21 +258,21 @@
                         types: {
                             artifact: false
                         },
-                        colorCount: 0
+                        color_count: 0
                     }
                 },
                 {
                     type: "image",
                     src: "pinlines/standard/${card.color}.png",
                     conditions: {
-                        colorCount: 1
+                        color_count: 1
                     }
                 },
                 {
                     type: "image",
                     src: "pinlines/standard/${card.color}.png",
                     conditions: {
-                        colorCount: 2
+                        color_count: 2
                     }
                 },
                 {
@@ -297,14 +297,14 @@
                     type: "image",
                     src: "pt/${card.color}.png",
                     conditions: {
-                        colorCount: 1
+                        color_count: 1
                     }
                 },
                 {
                     type: "image",
                     src: "pt/artifact.png",
                     conditions: {
-                        colorCount: 0,
+                        color_count: 0,
                         types: {
                             artifact: true
                         }
@@ -314,7 +314,7 @@
                     type: "image",
                     src: "pt/colorless.png",
                     conditions: {
-                        colorCount: 0
+                        color_count: 0
                     }
                 },
                 {
@@ -366,7 +366,7 @@
                                 types: {
                                     artifact: true
                                 },
-                                colorCount: 0
+                                color_count: 0
                             }
                         },
                         {
@@ -385,7 +385,7 @@
                                 types: {
                                     artifact: false
                                 },
-                                colorCount: 0
+                                color_count: 0
                             }
                         },
                         {
@@ -401,7 +401,7 @@
                                 }
                             ],
                             conditions: {
-                                colorCount: 1
+                                color_count: 1
                             }
                         },
                         {
@@ -417,7 +417,7 @@
                                 }
                             ],
                             conditions: {
-                                colorCount: 2
+                                color_count: 2
                             }
                         },
                         {
@@ -450,7 +450,7 @@
                                 types: {
                                     artifact: true
                                 },
-                                colorCount: 0
+                                color_count: 0
                             }
                         },
                         {
@@ -460,21 +460,21 @@
                                 types: {
                                     artifact: false
                                 },
-                                colorCount: 0
+                                color_count: 0
                             }
                         },
                         {
                             type: "image",
                             src: "crowns/legendary/${card.color}.png",
                             conditions: {
-                                colorCount: 1
+                                color_count: 1
                             }
                         },
                         {
                             type: "image",
                             src: "crowns/legendary/${card.color}.png",
                             conditions: {
-                                colorCount: 2
+                                color_count: 2
                             }
                         },
                         {
@@ -485,7 +485,7 @@
                 }
             ],
             conditions: {
-                frame_effects: {
+                types: {
                     legendary: true
                 }
             }
@@ -507,7 +507,7 @@
                     types: {
                         artifact: true
                     },
-                    colorCount: 0
+                    color_count: 0
                 }
             },
             {
@@ -517,14 +517,14 @@
                     types: {
                         artifact: false
                     },
-                    colorCount: 0
+                    color_count: 0
                 }
             },
             {
                 type: "image",
                 src: "plates/${card.color}.png",
                 conditions: {
-                    colorCount: 1
+                    color_count: 1
                 }
             },
             {
@@ -568,7 +568,7 @@
             flex: {
                 type: "text",
                 value: "${card.type}",
-                style: "name",
+                style: "type",
                 x: 375,
                 y: 2675
             }
@@ -608,13 +608,47 @@
             }
         },
         {
-            type: "text",
-            value: "${card.oracle}",
-            x: 400,
-            y: 2800,
-            width: 2488,
-            height: 1047
+            type: "compound",
+            children: [
+                {
+                    type: "text",
+                    value: "${card.oracle}",
+                    x: 400,
+                    y: 2795,
+                    width: 2488,
+                    height: 1200,
+                    wrap: {
+                        x: 2472,
+                        y: 3869,
+                        width: 535,
+                        height: 315
+                    },
+                    conditions: {
+                        or: [
+                            {
+                                types: {
+                                    creature: true
+                                }
+                            },
+                            {
+                                types: {
+                                    vehicle: true
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    type: "text",
+                    value: "${card.oracle}",
+                    x: 400,
+                    y: 2795,
+                    width: 2488,
+                    height: 1200
+                }
+            ]
         },
+
         {
             // Groups let you apply conditions to a set of layers
             type: "group",

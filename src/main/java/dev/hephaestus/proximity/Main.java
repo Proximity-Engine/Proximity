@@ -18,6 +18,8 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -42,7 +44,7 @@ public class Main {
     private static final Gson GSON = new GsonBuilder().setLenient().setPrettyPrinting().create();
 
     // TODO: Break this method up
-    public static void main(String[] argArray) {
+    public static void main(String[] argArray) throws IOException {
         Map<String, String> args = parseArgs(argArray);
 
         if (!args.containsKey("cards")) {
@@ -50,7 +52,12 @@ public class Main {
             return;
         }
 
-        ImageCache cache = new ImageCache();
+        if (!args.containsKey("template")) {
+            System.out.println("Please provide a template.");
+            return;
+        }
+
+        TemplateFiles cache = new TemplateFiles.Implementation(Path.of("templates", args.get("template")));
 
         Result<Template> templateResult = parseTemplate(args, cache);
 
@@ -345,11 +352,16 @@ public class Main {
     }
 
     // TODO: Allow loading templates from external zip files
-    private static Result<Template> parseTemplate(Map<String, String> args, ImageCache cache) {
-        InputStream templateStream = Main.class.getResourceAsStream("/template.json5");
+    private static Result<Template> parseTemplate(Map<String, String> args, TemplateFiles cache) throws IOException {
+        InputStream templateStream;
 
-        if (templateStream == null) {
-            return Result.error("template.json not found");
+        if (args.get("template").endsWith(".zip")) {
+            FileSystem fileSystem = FileSystems.newFileSystem(Path.of("templates", args.get("template")));
+            templateStream = Files.newInputStream(fileSystem.getPath("template.json5"));
+        } else if (Files.isDirectory(Path.of("templates", args.get("template")))) {
+            templateStream = Files.newInputStream(Path.of("templates", args.get("template"), "template.json5"));
+        } else {
+            throw new RuntimeException("Template must be either a zip file or a directory!");
         }
 
         JsonReader templateReader = new JsonReader(new InputStreamReader(templateStream));
