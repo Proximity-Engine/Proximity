@@ -1,16 +1,19 @@
-package dev.hephaestus.deckbuilder.templates;
+package dev.hephaestus.proximity.templates;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import dev.hephaestus.deckbuilder.ImageCache;
-import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.cards.*;
-import dev.hephaestus.deckbuilder.text.Alignment;
-import dev.hephaestus.deckbuilder.text.Style;
-import dev.hephaestus.deckbuilder.text.Symbol;
-import dev.hephaestus.deckbuilder.util.DrawingUtil;
-import dev.hephaestus.deckbuilder.util.StatefulGraphics;
+import com.google.gson.JsonPrimitive;
+import dev.hephaestus.proximity.ImageCache;
+import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.cards.*;
+import dev.hephaestus.proximity.text.Alignment;
+import dev.hephaestus.proximity.text.Style;
+import dev.hephaestus.proximity.text.Symbol;
+import dev.hephaestus.proximity.util.DrawingUtil;
+import dev.hephaestus.proximity.util.Option;
+import dev.hephaestus.proximity.util.OptionContainer;
+import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -20,12 +23,14 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
 
-public final class Template {
+public final class Template implements OptionContainer {
     private final Map<String, Style> styles;
     private final List<LayerFactory> layers = new ArrayList<>();
+    private final OptionContainer wrappedOptions;
 
-    private Template(Map<String, Style> styles, List<LayerFactoryFactory> factories) {
+    private Template(Map<String, Style> styles, List<LayerFactoryFactory> factories, OptionContainer options) {
         this.styles = Map.copyOf(styles);
+        this.wrappedOptions = options;
 
         for (LayerFactoryFactory factory : factories) {
             this.layers.add(factory.create(this));
@@ -50,9 +55,20 @@ public final class Template {
         }
     }
 
+    @Override
+    public <T> T getOption(String name) {
+        return this.wrappedOptions.getOption(name);
+    }
+
+    @Override
+    public Map<String, Object> getMap() {
+        return this.wrappedOptions.getMap();
+    }
+
     public static final class Builder {
         private final Map<String, Style> styles = new HashMap<>();
         private final List<LayerFactoryFactory> factories = new ArrayList<>();
+        private final Map<String, Object> options = new HashMap<>();
 
         public Builder layer(LayerFactoryFactory factory) {
             this.factories.add(factory);
@@ -66,8 +82,14 @@ public final class Template {
             return this;
         }
 
+        public <T> Builder option(String name, T value) {
+            this.options.put(name, value);
+
+            return this;
+        }
+
         public Template build() {
-            return new Template(this.styles, this.factories);
+            return new Template(this.styles, this.factories, new Implementation(this.options));
         }
     }
 
@@ -75,11 +97,6 @@ public final class Template {
         private final Map<String, Predicate<Card>> predicates = new HashMap<>();
 
         public Parser(Map<String, String> args) {
-            // Default values
-            this.predicates.put("use_art", card -> true);
-            this.predicates.put("border", card -> true);
-
-            // Passed values
             for (var entry : args.entrySet()) {
                 if (entry.getValue().equalsIgnoreCase("true") || entry.getValue().equalsIgnoreCase("false")) {
                     boolean bl = Boolean.parseBoolean(entry.getValue());
@@ -90,6 +107,27 @@ public final class Template {
 
         public Template parse(JsonObject object, ImageCache cache) {
             Template.Builder builder = new Template.Builder();
+
+            builder.option(Option.USE_OFFICIAL_ART, true);
+            this.predicates.put("use_official_art", card -> card.getOption(Option.USE_OFFICIAL_ART));
+
+            if (object.has("options")) {
+                for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("options").entrySet()) {
+                    if (entry.getValue().isJsonPrimitive()) {
+                        String key = entry.getKey();
+                        JsonPrimitive value = entry.getValue().getAsJsonPrimitive();
+
+                        if (value.isString()) {
+                            String stringValue = value.getAsString();
+                            builder.option(key, stringValue);
+                            this.predicates.put(key, card -> card.getOption(key).equals(stringValue));
+                        } else if (value.isBoolean()) {
+                            builder.option(entry.getKey(), value.getAsBoolean());
+                            this.predicates.put(entry.getKey(), card -> card.getOption(entry.getKey()));
+                        }
+                    }
+                }
+            }
 
             if (object.has("styles")) {
                 for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("styles").entrySet()) {
@@ -119,6 +157,7 @@ public final class Template {
                     case "shadow" -> styleBuilder.shadow(Style.Shadow.parse(styleEntry.getValue().getAsJsonObject()));
                     case "outline" -> styleBuilder.outline(Style.Outline.parse(styleEntry.getValue().getAsJsonObject()));
                     case "italic_font" -> styleBuilder.italics(styleEntry.getValue().getAsString());
+                    case "capitalization" -> styleBuilder.capitalization(Style.Capitalization.valueOf(styleEntry.getValue().getAsString().toUpperCase(Locale.ROOT)));
                     default -> throw new IllegalStateException("Unexpected value: " + styleEntry.getKey().toLowerCase(Locale.ROOT));
                 }
             }
@@ -175,6 +214,7 @@ public final class Template {
                 case "squish" -> parseSquish(object, cache);
                 case "text" -> parseText(object);
                 case "spacer" -> parseSpacer(object);
+                case "group" -> parseGroup(object, cache);
                 default -> throw new IllegalStateException("Unexpected value: " + object.get("type").getAsString());
             };
 
@@ -187,6 +227,48 @@ public final class Template {
                     }
 
                     return function.create(card, dX, dY);
+                };
+            };
+        }
+
+        private LayerFactoryFactory parseGroup(JsonObject object, ImageCache cache) {
+            List<LayerFactoryFactory> factories = new ArrayList<>();
+
+            for (JsonElement element : object.getAsJsonArray("children")) {
+                factories.add(parseLayer(element, cache));
+            }
+
+            return template -> {
+                List<LayerFactory> layers = new ArrayList<>();
+
+                for (LayerFactoryFactory factory : factories) {
+                    layers.add(factory.create(template));
+                }
+
+                return (card, x, y) -> {
+                    List<Layer> children = new ArrayList<>();
+
+                    for (LayerFactory factory : layers) {
+                        Layer layer = factory.create(card, x, y);
+
+                        if (layer != Layer.EMPTY) children.add(layer);
+                    }
+
+                    return new Layer(x, y) {
+                        @Override
+                        protected Rectangle draw(StatefulGraphics out, Rectangle wrap) {
+                            Rectangle bounds = null;
+
+                            for (Layer layer : children) {
+                                Rectangle rectangle = layer.draw(out, wrap);
+                                bounds = bounds != null ?
+                                        DrawingUtil.encompassing(bounds, rectangle)
+                                        : rectangle;
+                            }
+
+                            return bounds;
+                        }
+                    };
                 };
             };
         }
@@ -233,32 +315,79 @@ public final class Template {
                     Alignment.valueOf(object.get("alignment").getAsString().toUpperCase(Locale.ROOT))
                     : Alignment.LEFT;
 
-            String style = object.has("style") ? object.get("style").getAsString() : null;
             String string = object.get("value").getAsString();
             Integer width = object.has("width") ? object.get("width").getAsInt() : null;
             Integer height = object.has("height") ? object.get("height").getAsInt() : null;
 
-            return template -> (card, x, y) -> {
-                List<List<TextComponent>> text;
+            return template -> {
+                Style style = object.has("style") && object.get("style").isJsonObject()
+                        ? parseStyle(object.getAsJsonObject("style"))
+                        : object.has("style") && object.get("style").isJsonPrimitive()
+                                ? template.getStyle(object.get("style").getAsString())
+                                : Style.EMPTY;
 
-                Alignment al = alignment;
+                return (card, x, y) -> {
+                    List<List<TextComponent>> text;
 
-                if (string.equals("${card.cost}") && card instanceof Spell spell) {
-                    text = Collections.singletonList(spell.manaCost());
-                } else if (string.equals("${card.oracle}")) {
-                    OracleText oracle = card.getOracle();
-                    al = oracle.alignment();
-                    text = oracle.text();
+                    Alignment al = alignment;
 
-                    if (al == Alignment.CENTER && width != null) {
-                        x += width / 2;
+                    if (string.equals("${card.cost}") && card instanceof Spell spell) {
+                        text = Collections.singletonList(spell.manaCost());
+                    } else if (string.equals("${card.oracle}")) {
+                        OracleText oracle = card.getOracle();
+                        al = oracle.alignment();
+                        text = oracle.text();
+
+                        if (al == Alignment.CENTER && width != null) {
+                            x += width / 2;
+                        }
+                    } else if (string.equals("${card.artist}")) {
+                        text = Collections.singletonList(Collections.singletonList(new TextComponent(card.getOption(Option.ARTIST))));
+                    } else {
+                        text = Collections.singletonList(Collections.singletonList(new TextComponent(substitute(string, card))));
                     }
-                } else {
-                    text = Collections.singletonList(Collections.singletonList(new TextComponent(substitute(string, card))));
+
+                    text = applyCapitalization(text, style.capitalization(), style.size());
+
+                    return new TextLayer(al, style, text, x, y, width != null && height != null ? new Rectangle(x, y, width, height) : null);
+                };
+            };
+        }
+
+        private static List<List<TextComponent>> applyCapitalization(List<List<TextComponent>> text, Style.Capitalization caps, Float fontSize) {
+            if (caps == null || fontSize == null) return text;
+
+            List<List<TextComponent>> result = new ArrayList<>();
+
+            for (List<TextComponent> list : text) {
+                List<TextComponent> level = new ArrayList<>();
+
+                for (TextComponent component : list) {
+                    switch (caps) {
+                        case ALL_CAPS -> level.add(new TextComponent(component.string().toUpperCase(Locale.ROOT)));
+                        case NO_CAPS -> level.add(new TextComponent(component.string().toLowerCase(Locale.ROOT)));
+                        case SMALL_CAPS -> {
+                            Style uppercase = component.style() == null
+                                    ? new Style.Builder().size(fontSize).build()
+                                    : component.style().size(fontSize);
+
+                            Style lowercase = component.style() == null
+                                    ? new Style.Builder().size(fontSize * 0.75F).build()
+                                    : component.style().size(fontSize * 0.75F);
+
+                            for (char c : component.string().toCharArray()) {
+                                boolean bl = Character.isUpperCase(c);
+
+                                level.add(new TextComponent(bl ? uppercase : lowercase, Character.toUpperCase(c)));
+                            }
+                        }
+                    }
                 }
 
-                return new TextLayer(al, template.getStyle(style), text, x, y, width != null && height != null ? new Rectangle(x, y, width, height) : null);
-            };
+                result.add(level);
+            }
+
+            return result;
         }
 
         private LayerFactoryFactory parseArt(JsonObject object) {
@@ -267,7 +396,7 @@ public final class Template {
 
             if (width != null || height != null) {
                 return template -> (card, x, y) -> {
-                    if (card.image() == null) return Layer.EMPTY;
+                    if (card.image() == null || !(boolean) card.getOption(Option.USE_OFFICIAL_ART)) return Layer.EMPTY;
 
                     try {
                         return new ImageLayer(card.image().toString(), ImageIO.read(card.image().openStream()), width, height, x, y);
@@ -300,10 +429,70 @@ public final class Template {
 
                 switch (key) {
                     case "colorcount" -> predicates.add(card -> card.colors().size() == entry.getValue().getAsInt());
-                    case "hybrid" -> predicates.add(card -> false == entry.getValue().getAsBoolean()); // TODO
-                    default -> predicates.add(this.predicates.containsKey(key)
-                            ? card -> this.predicates.get(key).test(card) == entry.getValue().getAsBoolean()
-                            : card -> card.getTypes().has(entry.getKey().toLowerCase(Locale.ROOT)) == entry.getValue().getAsBoolean());
+                    case "hybrid" -> predicates.add(card -> {
+                        if (card instanceof Spell spell && spell.colors().size() == 2) {
+                            for (TextComponent component : spell.manaCost()) {
+                                switch (component.string()) {
+                                    case "w":
+                                    case "u":
+                                    case "b":
+                                    case "r":
+                                    case "g":
+                                        return !entry.getValue().getAsBoolean();
+                                }
+                            }
+
+                            return entry.getValue().getAsBoolean();
+                        }
+
+                        return false;
+                    });
+                    case "or" -> {
+                        List<List<Predicate<Card>>> orPredicates = new ArrayList<>();
+
+                        for (JsonElement element : entry.getValue().getAsJsonArray()) {
+                            orPredicates.add(parseConditions(element.getAsJsonObject()));
+                        }
+
+                        predicates.add(card -> {
+                            boolean result = false;
+
+                            for (List<Predicate<Card>> list : orPredicates) {
+                                boolean bl = true;
+
+                                for (Predicate<Card> predicate : list) {
+                                    bl &= predicate.test(card);
+                                }
+
+                                result |= bl;
+                            }
+
+                            return result;
+                        });
+                    }
+                    case "types" -> predicates.add(card -> {
+                        for (Map.Entry<String, JsonElement> type : entry.getValue().getAsJsonObject().entrySet()) {
+                            if (card.getTypes().has(type.getKey()) != type.getValue().getAsBoolean()) return false;
+                        }
+
+                        return true;
+                    });
+                    case "frame_effects" -> predicates.add(card -> {
+                        for (Map.Entry<String, JsonElement> effect : entry.getValue().getAsJsonObject().entrySet()) {
+                            if (card.hasFrameEffect(effect.getKey()) != effect.getValue().getAsBoolean()) return false;
+                        }
+
+                        return true;
+                    });
+                    case "options" -> predicates.add(card -> {
+                        for (Map.Entry<String, JsonElement> option : entry.getValue().getAsJsonObject().entrySet()) {
+                            if (option.getValue().getAsJsonPrimitive().isString() && !this.predicates.get(option.getKey()).test(card)) return false;
+                            if (this.predicates.get(option.getKey()).test(card) != option.getValue().getAsBoolean()) return false;
+                        }
+
+                        return true;
+                    });
+                    default -> throw new RuntimeException("Unexpected condition: " + entry.getKey());
                 }
             }
 

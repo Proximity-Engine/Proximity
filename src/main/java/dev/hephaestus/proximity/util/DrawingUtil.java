@@ -1,6 +1,6 @@
-package dev.hephaestus.deckbuilder.util;
+package dev.hephaestus.proximity.util;
 
-import dev.hephaestus.deckbuilder.Main;
+import dev.hephaestus.proximity.Main;
 
 import java.awt.*;
 import java.io.IOException;

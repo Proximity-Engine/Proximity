@@ -1,4 +1,4 @@
-package dev.hephaestus.deckbuilder.cards;
+package dev.hephaestus.proximity.cards;
 
 import java.util.Arrays;
 import java.util.Collection;

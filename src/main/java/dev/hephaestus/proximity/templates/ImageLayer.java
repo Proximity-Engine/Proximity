@@ -1,6 +1,6 @@
-package dev.hephaestus.deckbuilder.templates;
+package dev.hephaestus.proximity.templates;
 
-import dev.hephaestus.deckbuilder.util.StatefulGraphics;
+import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;

@@ -1,10 +1,10 @@
-package dev.hephaestus.deckbuilder.text;
+package dev.hephaestus.proximity.text;
 
 import com.google.gson.JsonObject;
 
 public record Style(String fontName, String italicFontName, Float size, Integer color,
                     Shadow shadow,
-                    Outline outline) {
+                    Outline outline, Capitalization capitalization) {
     public static final Style EMPTY = new Style.Builder().build();
 
     public Style font(String fontName, String italicFontName) {
@@ -14,7 +14,8 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
                 this.size,
                 this.color,
                 this.shadow,
-                this.outline
+                this.outline,
+                null
         );
     }
 
@@ -25,18 +26,19 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
                 this.size,
                 this.color,
                 shadow,
-                this.outline
+                this.outline,
+                this.capitalization
         );
     }
 
     public Style italic() {
         if (this.italicFontName == null) return this;
 
-        return new Style(this.italicFontName, this.italicFontName, this.size, this.color, this.shadow, this.outline);
+        return new Style(this.italicFontName, this.italicFontName, this.size, this.color, this.shadow, this.outline, this.capitalization);
     }
 
     public Style color(Integer color) {
-        return new Style(this.fontName, this.italicFontName, this.size, color, this.shadow, this.outline);
+        return new Style(this.fontName, this.italicFontName, this.size, color, this.shadow, this.outline, this.capitalization);
     }
 
     public Style merge(Style modifications) {
@@ -48,8 +50,13 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
                 modifications.size == null ? this.size : modifications.size,
                 modifications.color == null ? this.color : modifications.color,
                 modifications.shadow == null ? this.shadow : modifications.shadow,
-                modifications.outline == null ? this.outline : modifications.outline
+                modifications.outline == null ? this.outline : modifications.outline,
+                modifications.capitalization == null ? this.capitalization : modifications.capitalization
         );
+    }
+
+    public Style size(float fontSize) {
+        return new Style(this.fontName, this.italicFontName, fontSize, this.color, this.shadow, this.outline, this.capitalization);
     }
 
     public static final class Builder {
@@ -59,6 +66,7 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
         private Integer color;
         private Shadow shadow;
         private Outline outline;
+        private Capitalization capitalization;
 
         public Builder font(String fontName) {
             this.fontName = fontName;
@@ -90,8 +98,13 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
             return this;
         }
 
+        public Builder capitalization(Capitalization capitalization) {
+            this.capitalization = capitalization;
+            return this;
+        }
+
         public Style build() {
-            return new Style(this.fontName, this.italicFontName, this.size, this.color, this.shadow, this.outline);
+            return new Style(this.fontName, this.italicFontName, this.size, this.color, this.shadow, this.outline, this.capitalization);
         }
     }
 
@@ -103,7 +116,11 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
 
     public static record Outline(int color, int weight) {
         public static Outline parse(JsonObject object) {
-            return new Outline(object.get("weight").getAsInt(), Integer.decode(object.get("color").getAsString()));
+            return new Outline(Integer.decode(object.get("color").getAsString()), object.get("weight").getAsInt());
         }
+    }
+
+    public enum Capitalization {
+        ALL_CAPS, NO_CAPS, SMALL_CAPS
     }
 }

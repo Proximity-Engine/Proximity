@@ -1,10 +1,10 @@
-package dev.hephaestus.deckbuilder.templates;
+package dev.hephaestus.proximity.templates;
 
-import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.text.Alignment;
-import dev.hephaestus.deckbuilder.text.Style;
-import dev.hephaestus.deckbuilder.util.DrawingUtil;
-import dev.hephaestus.deckbuilder.util.StatefulGraphics;
+import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.text.Alignment;
+import dev.hephaestus.proximity.text.Style;
+import dev.hephaestus.proximity.util.DrawingUtil;
+import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -109,6 +109,8 @@ public class TextLayer extends Layer {
                 ? graphics.getColor()
                 : DrawingUtil.getColor(style.color() == null ? this.style.color() : style.color());
 
+        Style.Outline outline = style.outline() == null ? this.style.outline() : style.outline();
+
         graphics.push(textColor, Graphics2D::setColor, Graphics2D::getColor);
         graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
         // Get shape color the glyphs being drawn
@@ -121,8 +123,8 @@ public class TextLayer extends Layer {
         graphics.push(x, 0);
 
         // Stroke needs to apply to shadow as well, so we have to set it before shadow drawing
-        if (style.outline() != null) {
-            graphics.push(new BasicStroke(style.outline().weight()), Graphics2D::setStroke, Graphics2D::getStroke);
+        if (outline != null) {
+            graphics.push(new BasicStroke(outline.weight()), Graphics2D::setStroke, Graphics2D::getStroke);
         }
 
         // Actually
@@ -137,9 +139,9 @@ public class TextLayer extends Layer {
             graphics.pop(2); // Pop shadow color and the translation
         }
 
-        if (style.outline() != null) {
+        if (outline != null) {
             // Draw outline
-            graphics.push(DrawingUtil.getColor(style.outline().color()), Graphics2D::setColor, Graphics2D::getColor);
+            graphics.push(DrawingUtil.getColor(outline.color()), Graphics2D::setColor, Graphics2D::getColor);
 
             if (draw) {
                 graphics.draw(shape);
@@ -185,6 +187,8 @@ public class TextLayer extends Layer {
     protected Rectangle draw(StatefulGraphics graphics, Rectangle wrap, float fontSizeChange, boolean draw) {
         Rectangle bounds = null;
 
+        graphics.push("Text");
+
         if (draw && this.textBox != null) {
             Rectangle drawnBounds = this.draw(graphics, wrap, fontSizeChange, false);
 
@@ -210,7 +214,6 @@ public class TextLayer extends Layer {
             graphics.push(0, (int) ((this.textBox.height - drawnBounds.height) / 2 + this.text.get(0).get(0).style().size() + fontSizeChange));
         }
 
-        graphics.push("Text");
         graphics.push(this.x, this.y);
 
         loop: for (int i = 0; i < 100; ++i) {

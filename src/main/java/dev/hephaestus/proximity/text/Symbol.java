@@ -1,7 +1,7 @@
-package dev.hephaestus.deckbuilder.text;
+package dev.hephaestus.proximity.text;
 
-import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.templates.Template;
+import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.templates.Template;
 
 import java.util.*;
 
@@ -18,6 +18,8 @@ public record Symbol(String glyphs, int color) {
     public static final int RED = 0xFFFFAA92;
     public static final int GREEN = 0xFFA6DEBB;
     public static final int GENERIC = 0xFFBEBCB5;
+
+    public static final int BLACK_HYBRID_2 = 0xAB9E9A;
 
     private static final Map<String, Factory> SYMBOLS = new HashMap<>();
 
@@ -123,7 +125,7 @@ public record Symbol(String glyphs, int color) {
                 symbol1,
                 color1 == null ? GENERIC : color1.color,
                 symbol2,
-                color2 == null ? GENERIC : color2.color
+                color2 == null ? GENERIC : symbol1.equals("2") && symbol2.equals("B") ? BLACK_HYBRID_2 : color2.color
         ));
     }
 
@@ -242,7 +244,8 @@ public record Symbol(String glyphs, int color) {
                 base.size(),
                 base.color() == null ? color : base.color(),
                 base.shadow(),
-                base.outline()
+                base.outline(),
+                base.capitalization()
         );
     }
 

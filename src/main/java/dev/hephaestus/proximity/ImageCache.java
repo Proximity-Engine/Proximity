@@ -1,4 +1,4 @@
-package dev.hephaestus.deckbuilder;
+package dev.hephaestus.proximity;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

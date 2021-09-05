@@ -1,10 +1,10 @@
-package dev.hephaestus.deckbuilder.cards;
+package dev.hephaestus.proximity.cards;
 
-import dev.hephaestus.deckbuilder.TextComponent;
-import dev.hephaestus.deckbuilder.templates.Template;
-import dev.hephaestus.deckbuilder.text.Alignment;
-import dev.hephaestus.deckbuilder.text.Style;
-import dev.hephaestus.deckbuilder.text.Symbol;
+import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.templates.Template;
+import dev.hephaestus.proximity.text.Alignment;
+import dev.hephaestus.proximity.text.Style;
+import dev.hephaestus.proximity.text.Symbol;
 
 import java.util.ArrayList;
 import java.util.Collections;

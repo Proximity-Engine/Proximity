@@ -1,6 +1,10 @@
 {
     width: 3288,
     height: 4488,
+    options: {
+        border: true,
+        artist_outline: false
+    },
     styles: {
         name: {
             font: "Beleren2016-Bold",
@@ -12,11 +16,6 @@
             color: "#000000",
             size: 150
         },
-        pt: {
-            font: "Beleren2016-Bold",
-            color: "#000000",
-            size: 160
-        },
         oracle: {
             font: "MPlantin",
             italic_font: "MPlantin-Italic",
@@ -25,65 +24,115 @@
         }
     },
     layers: [
-        // If a layer is a list color layers, we'll render the first layer whose conditions match, if any
-        [
-            [
+        {
+            type: "compound",
+            children: [
+                // If a layer is a list of layers, we'll render the first layer whose conditions match, if any
+                {
+                    type: "compound",
+                    children: [
+                        {
+                            type: "image",
+                            src: "backgrounds/nyx/artifact.png",
+                            conditions: {
+                                types: {
+                                    artifact: true
+                                }
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "backgrounds/nyx/colorless.png",
+                            conditions: {
+                                colorcount: 0
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "backgrounds/nyx/${card.color}.png",
+                            conditions: {
+                                colorCount: 1
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "backgrounds/nyx/gold.png"
+                        }
+                    ],
+                    conditions: {
+                        frame_effects: {
+                            nyxtouched: true
+                        }
+                    }
+                },
+                [
+                    {
+                        type: "image",
+                        src: "backgrounds/vehicle.png",
+                        conditions: {
+                            // You can check for any type/supertype/subtype
+                            types: {
+                                vehicle: true
+                            }
+                        }
+                    },
+                    {
+                        type: "image",
+                        src: "backgrounds/artifact.png",
+                        conditions: {
+                            types: {
+                                artifact: true
+                            }
+                        }
+                    }
+                ],
                 {
                     type: "image",
-                    src: "backgrounds/artifact.png",
+                    src: "backgrounds/land.png",
                     conditions: {
-                        // You can check for any type/supertype
-                        // Subtypes are not currently supported
-                        vehicle: true
+                        types: {
+                            land: true
+                        }
                     }
                 },
                 {
                     type: "image",
-                    src: "backgrounds/artifact.png",
+                    // There are certain placeholders defined for image paths
+                    src: "backgrounds/${card.color}.png",
                     conditions: {
-                        artifact: true
+                        colorCount: 1
+                    }
+                },
+                {
+                    type: "spacer",
+                    width: 0,
+                    height: 0,
+                    conditions: {
+                        colorCount: 0
+                    }
+                },
+                {
+                    type: "image",
+                    src: "backgrounds/gold.png",
+                    conditions: {
+                        hybrid: false
+                    }
+                },
+                {
+                    type: "image",
+                    // Some placeholders can even be used multiple times!
+                    src: "backgrounds/${card.color}.png",
+                    conditions: {
+                        hybrid: true
                     }
                 }
             ],
-            {
-                type: "image",
-                src: "backgrounds/land.png",
-                conditions: {
-                    land: true
-                }
-            },
-            {
-                type: "image",
-                // There are certain placeholders defined for image paths
-                src: "backgrounds/${card.color}.png",
-                conditions: {
-                    colorCount: 1
-                }
-            },
-            {
-                type: "spacer",
-                width: 0,
-                height: 0,
-                conditions: {
-                    colorCount: 0
-                }
-            },
-            {
-                type: "image",
-                src: "backgrounds/gold.png",
-                conditions: {
-                    hybrid: false
-                }
-            },
-            {
-                type: "image",
-                // Some placeholders can even be used multiple times!
-                src: "backgrounds/${card.color}.png",
-                conditions: {
-                    hybrid: true
+            conditions: {
+                options: {
+                    border: true
                 }
             }
-        ],
+        },
         {
             type: "art",
             // Any layer can contain x and y offsets
@@ -96,13 +145,28 @@
             width: 2584,
             height: 1882,
             conditions: {
-                use_art: true
+                options: {
+                    use_official_art: true
+                }
             }
         },
-        // If a layer is just a string, we'll treat that as if it was the 'src' value for a layer with no conditions
         {
-            type: "image",
-            src: "pinlines/shadow.png"
+            type: "compound",
+            children: [
+                {
+                    type: "image",
+                    src: "pinlines/shadow.png",
+                    conditions: {
+                        frame_effects: {
+                            legendary: false
+                        }
+                    }
+                },
+                {
+                    type: "image",
+                    src: "pinlines/legend_shadow.png"
+                }
+            ]
         },
         {
             type: "compound",
@@ -111,7 +175,9 @@
                     type: "image",
                     src: "borders/legendary.png",
                     conditions: {
-                        legendary: true
+                        frame_effects: {
+                            legendary: true
+                        }
                     }
                 },
                 {
@@ -120,7 +186,9 @@
                 }
             ],
             conditions: {
-                border: true
+                options: {
+                    border: true
+                }
             }
         },
         [
@@ -131,7 +199,9 @@
                         type: "image",
                         src: "pinlines/land/artifact.png",
                         conditions: {
-                            artifact: true,
+                            types: {
+                                artifact: true
+                            },
                             colorCount: 0
                         }
                     },
@@ -139,7 +209,9 @@
                         type: "image",
                         src: "pinlines/land/colorless.png",
                         "conditions": {
-                            artifact: false,
+                            types: {
+                                artifact: false
+                            },
                             colorCount: 0
                         }
                     },
@@ -163,7 +235,9 @@
                     }
                 ],
                 conditions: {
-                    land: true
+                    types: {
+                        land: true
+                    }
                 }
             },
             [
@@ -171,7 +245,9 @@
                     type: "image",
                     src: "pinlines/standard/artifact.png",
                     conditions: {
-                        artifact: true,
+                        types: {
+                            artifact: true
+                        },
                         colorCount: 0
                     }
                 },
@@ -179,7 +255,9 @@
                     type: "image",
                     src: "pinlines/standard/colorless.png",
                     "conditions": {
-                        artifact: false,
+                        types: {
+                            artifact: false
+                        },
                         colorCount: 0
                     }
                 },
@@ -210,7 +288,9 @@
                     type: "image",
                     src: "pt/vehicle.png",
                     conditions: {
-                        vehicle: true
+                        types: {
+                            vehicle: true
+                        }
                     }
                 },
                 {
@@ -225,7 +305,9 @@
                     src: "pt/artifact.png",
                     conditions: {
                         colorCount: 0,
-                        artifact: true
+                        types: {
+                            artifact: true
+                        }
                     }
                 },
                 {
@@ -241,52 +323,171 @@
                     conditions: {
                         hybrid: false
                     }
+                },
+                {
+                    type: "image",
+                    src: "pt/colorless.png"
                 }
             ],
             conditions: {
-                creature: true
+                or: [
+                    {
+                        types: {
+                            creature: true
+                        }
+                    },
+                    {
+                        types: {
+                            vehicle: true
+                        }
+                    }
+                ]
             }
         },
         {
             type: "compound",
             children: [
                 {
-                    type: "image",
-                    src: "crowns/legendary/artifact.png",
+                    type: "compound",
+                    children: [
+                        {
+                            type: "group",
+                            children: [
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/artifact.png"
+                                },
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/gems/colorless.png"
+                                }
+                            ],
+                            conditions: {
+                                types: {
+                                    artifact: true
+                                },
+                                colorCount: 0
+                            }
+                        },
+                        {
+                            type: "group",
+                            children: [
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/colorless.png"
+                                },
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/gems/colorless.png"
+                                }
+                            ],
+                            conditions: {
+                                types: {
+                                    artifact: false
+                                },
+                                colorCount: 0
+                            }
+                        },
+                        {
+                            type: "group",
+                            children: [
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/${card.color}.png"
+                                },
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/gems/${card.color}.png"
+                                }
+                            ],
+                            conditions: {
+                                colorCount: 1
+                            }
+                        },
+                        {
+                            type: "group",
+                            children: [
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/${card.color}.png"
+                                },
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/gems/${card.color}.png"
+                                }
+                            ],
+                            conditions: {
+                                colorCount: 2
+                            }
+                        },
+                        {
+                            type: "group",
+                            children: [
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/gold.png"
+                                },
+                                {
+                                    type: "image",
+                                    src: "crowns/companion/gems/gold.png"
+                                }
+                            ]
+                        }
+                    ],
                     conditions: {
-                        artifact: true,
-                        colorCount: 0
+                        frame_effects: {
+                            "companion": true
+                        }
                     }
                 },
                 {
-                    type: "image",
-                    src: "crowns/legendary/colorless.png",
-                    "conditions": {
-                        artifact: false,
-                        colorCount: 0
-                    }
-                },
-                {
-                    type: "image",
-                    src: "crowns/legendary/${card.color}.png",
-                    conditions: {
-                        colorCount: 1
-                    }
-                },
-                {
-                    type: "image",
-                    src: "crowns/legendary/${card.color}.png",
-                    conditions: {
-                        colorCount: 2
-                    }
-                },
-                {
-                    type: "image",
-                    src: "crowns/legendary/gold.png"
+                    type: "compound",
+                    children: [
+                        {
+                            type: "image",
+                            src: "crowns/legendary/artifact.png",
+                            conditions: {
+                                types: {
+                                    artifact: true
+                                },
+                                colorCount: 0
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "crowns/legendary/colorless.png",
+                            "conditions": {
+                                types: {
+                                    artifact: false
+                                },
+                                colorCount: 0
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "crowns/legendary/${card.color}.png",
+                            conditions: {
+                                colorCount: 1
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "crowns/legendary/${card.color}.png",
+                            conditions: {
+                                colorCount: 2
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "crowns/legendary/gold.png"
+                        }
+                    ]
                 }
             ],
             conditions: {
-                legendary: true
+                frame_effects: {
+                    legendary: true
+                }
             }
         },
         [
@@ -294,14 +495,18 @@
                 type: "image",
                 src: "plates/land.png",
                 conditions: {
-                    land: true
+                    types: {
+                        land: true
+                    }
                 }
             },
             {
                 type: "image",
                 src: "plates/artifact.png",
                 conditions: {
-                    artifact: true,
+                    types: {
+                        artifact: true
+                    },
                     colorCount: 0
                 }
             },
@@ -309,7 +514,9 @@
                 type: "image",
                 src: "plates/colorless.png",
                 "conditions": {
-                    artifact: false,
+                    types: {
+                        artifact: false
+                    },
                     colorCount: 0
                 }
             },
@@ -339,7 +546,7 @@
                 value: "${card.cost}",
                 alignment: "right",
                 x: 2925,
-                y: 515
+                y: 503
             },
             flex: {
                 type: "text",
@@ -369,12 +576,35 @@
         {
             type: "text",
             value: "${card.pt}",
-            style: "pt",
+            style:  {
+                font: "Beleren2016-Bold",
+                color: "#000000",
+                size: 160
+            },
             alignment: "center",
             x: 2740,
             y: 4062,
             conditions: {
-                creature: true
+                types: {
+                    creature: true
+                }
+            }
+        },
+        {
+            type: "text",
+            value: "${card.pt}",
+            style:  {
+                font: "Beleren2016-Bold",
+                color: "#FFFFFF",
+                size: 160
+            },
+            alignment: "center",
+            x: 2740,
+            y: 4062,
+            conditions: {
+                types: {
+                    vehicle: true
+                }
             }
         },
         {
@@ -384,6 +614,81 @@
             y: 2800,
             width: 2488,
             height: 1047
+        },
+        {
+            // Groups let you apply conditions to a set of layers
+            type: "group",
+            children: [
+                {
+                    type: "text",
+                    value: "${card.artist}",
+                    style: {
+                        font: "MatrixBold",
+                        color: "#FFFFFF",
+                        capitalization: "SMALL_CAPS",
+                        size: 103
+                    },
+                    x: 485,
+                    y: 4134
+                },
+                {
+                    type: "text",
+                    value: "a",
+                    x: 340,
+                    y: 4145,
+                    style: {
+                        font: "NDPMTG",
+                        color: "#FFFFFF",
+                        size: 100
+                    }
+                }
+            ],
+            conditions: {
+                options: {
+                    artist_outline: false
+                }
+            }
+        },
+        {
+            type: "group",
+            children: [
+                {
+                    type: "text",
+                    value: "${card.artist}",
+                    style: {
+                        font: "MatrixBold",
+                        color: "#FFFFFF",
+                        capitalization: "SMALL_CAPS",
+                        size: 103,
+                        outline: {
+                            weight: 5,
+                            color: "0x000000"
+                        }
+                    },
+                    x: 485,
+                    y: 4134
+                },
+                {
+                    type: "text",
+                    value: "a",
+                    x: 340,
+                    y: 4145,
+                    style: {
+                        font: "NDPMTG",
+                        color: "#FFFFFF",
+                        size: 100,
+                        outline: {
+                            weight: 5,
+                            color: "0x000000"
+                        }
+                    }
+                }
+            ],
+            conditions: {
+                options: {
+                    artist_outline: true
+                }
+            }
         }
     ]
 }

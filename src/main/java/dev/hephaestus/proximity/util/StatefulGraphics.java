@@ -1,4 +1,4 @@
-package dev.hephaestus.deckbuilder.util;
+package dev.hephaestus.proximity.util;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;

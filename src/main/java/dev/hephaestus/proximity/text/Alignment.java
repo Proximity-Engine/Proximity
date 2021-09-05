@@ -1,4 +1,4 @@
-package dev.hephaestus.deckbuilder.text;
+package dev.hephaestus.proximity.text;
 
 public enum Alignment {
     LEFT, CENTER, RIGHT
