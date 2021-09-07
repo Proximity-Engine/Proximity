@@ -5,19 +5,42 @@ import dev.hephaestus.proximity.util.OptionContainer;
 
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Card implements OptionContainer {
+    private static final String[] MAIN_TYPES = new String[] {
+            "enchantment",
+            "artifact",
+            "land",
+            "creature",
+            "conspiracy",
+            "instant",
+            "phenomenon",
+            "plane",
+            "planeswalker",
+            "scheme",
+            "sorcery",
+            "tribal",
+            "vanguard"
+    };
+
     private final int number;
     private final String name;
     private final List<Symbol> colors;
     private final String type;
     private final URL image;
     private final TypeContainer types;
-    private final OracleText oracle;
+    private final TextBody oracle;
     private final OptionContainer wrappedOptions;
     private final Set<String> frameEffects;
+    private final boolean isFrontFace;
+    private final Set<String> keywords;
+    private final String layout;
+    private final String mainTypes;
+    private final TextBody flavorText;
+    private Card otherSide;
 
-    public Card(int number, String name, Collection<Symbol> colors, URL image, TypeContainer types, OracleText oracle, String type, OptionContainer options, Set<String> frameEffects) {
+    public Card(int number, String name, Collection<Symbol> colors, URL image, TypeContainer types, TextBody oracle, String type, OptionContainer options, Set<String> frameEffects, boolean isFrontFace, Card otherSide, Set<String> keywords, String layout, TextBody flavorText) {
         this.number = number;
         this.name = name;
         this.type = type;
@@ -28,6 +51,15 @@ public class Card implements OptionContainer {
         this.oracle = oracle;
         this.wrappedOptions = options;
         this.frameEffects = frameEffects;
+        this.isFrontFace = isFrontFace;
+        this.otherSide = otherSide;
+        this.keywords = keywords;
+        this.layout = layout;
+        this.flavorText = flavorText;
+
+        this.mainTypes = this.type.contains(Character.toString(8212))
+                ? this.type.substring(this.type.indexOf(Character.toString(8212)) + 2)
+                : Arrays.stream(this.type.split(" ")).filter(s -> Arrays.stream(MAIN_TYPES).anyMatch(s::equalsIgnoreCase)).collect(Collectors.joining(" "));
 
         this.colors.sort((c1, c2) -> switch (c1.glyphs()) {
             case "W" -> switch (c2.glyphs()) {
@@ -59,8 +91,32 @@ public class Card implements OptionContainer {
         });
     }
 
+    public void setOtherSide(Card card) {
+        this.otherSide = card;
+    }
+
     public final int number() {
         return this.number;
+    }
+
+    public final boolean isFrontFace() {
+        return this.isFrontFace;
+    }
+
+    public final boolean isSingleSided() {
+        return this.otherSide == null;
+    }
+
+    public final Card getOtherSide() {
+        if (this.isSingleSided()) {
+            throw new RuntimeException("Cannot get back side of single sided card");
+        }
+
+        return this.otherSide;
+    }
+
+    public final String getLayout() {
+        return this.layout;
     }
 
     public final String name() {
@@ -83,12 +139,20 @@ public class Card implements OptionContainer {
         return this.types;
     }
 
-    public OracleText getOracle() {
+    public TextBody getOracle() {
         return this.oracle;
+    }
+
+    public TextBody getFlavor() {
+        return this.flavorText;
     }
 
     public boolean hasFrameEffect(String effect) {
         return this.frameEffects.contains(effect);
+    }
+
+    public boolean hasKeyword(String keyword) {
+        return this.keywords.contains(keyword);
     }
 
     @Override
@@ -101,7 +165,11 @@ public class Card implements OptionContainer {
         return this.wrappedOptions.getMap();
     }
 
-    public record Prototype(String name, int number, OptionContainer options) implements OptionContainer {
+    public String getMainTypes() {
+        return this.mainTypes;
+    }
+
+    public record Prototype(String scryfallName, String name, int number, OptionContainer options) implements OptionContainer {
         @Override
         public <T> T getOption(String name) {
             return this.options.getOption(name);

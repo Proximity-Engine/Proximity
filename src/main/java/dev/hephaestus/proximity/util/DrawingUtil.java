@@ -5,12 +5,12 @@ import dev.hephaestus.proximity.TemplateFiles;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class DrawingUtil {
-    private static final Map<String, Font> FONTS = new HashMap<>();
-    private static final Map<Integer, Color> COLORS = new HashMap<>();
+    private static final Map<String, Font> FONTS = new ConcurrentHashMap<>();
+    private static final Map<Integer, Color> COLORS = new ConcurrentHashMap<>();
 
     private DrawingUtil() {}
 

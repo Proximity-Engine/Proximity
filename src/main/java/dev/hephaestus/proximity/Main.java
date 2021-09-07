@@ -18,10 +18,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
@@ -32,6 +29,7 @@ import java.util.regex.Pattern;
 
 public class Main {
     private static final Map<String, Symbol> LAND_TYPES = new HashMap<>();
+    private static final Pattern COST_SYMBOLS = Pattern.compile("\\G\\{([^}]*)}");
 
     static {
         LAND_TYPES.put("Plains", Symbol.of("W"));
@@ -88,6 +86,10 @@ public class Main {
                                     ? cardName.substring(0, cardName.indexOf("--") - 1)
                                     : cardName;
 
+                    String scryfallName = cardName.contains("//")
+                            ? cardName.substring(0, cardName.indexOf("//") - 1)
+                            : cardName;
+
                     Map<String, Object> options = new HashMap<>();
 
                     options.put(Option.COUNT, count);
@@ -128,7 +130,7 @@ public class Main {
                         }
                     }
 
-                    cardPrototypes.add(new Card.Prototype(cardName, number, new OptionContainer.Implementation(template, options)));
+                    cardPrototypes.add(new Card.Prototype(scryfallName, cardName, number, new OptionContainer.Implementation(template, options)));
 
                     number += count;
                 } else {
@@ -201,81 +203,9 @@ public class Main {
             }
 
             JsonObject object = cardInfo.get(prototype.name()).get(setCode);
-            String typeLine = object.get("type_line").getAsString();
-            String oracle = object.get("oracle_text").getAsString();
 
-            Set<Symbol> colors = new HashSet<>();
 
-            for (JsonElement element : object.get(typeLine.contains("Land") ? "color_identity" : "colors").getAsJsonArray()) {
-                colors.add(Symbol.of(element.getAsString()));
-            }
-
-            if (typeLine.contains("Land")) {
-                if (object.has("produced_mana")) {
-                    for (JsonElement element : object.get("produced_mana").getAsJsonArray()) {
-                        colors.add(Symbol.of(element.getAsString()));
-                    }
-                }
-
-                Set<Symbol> landColors = new HashSet<>();
-
-                for (var entry : LAND_TYPES.entrySet()) {
-                    if (oracle.contains(entry.getKey())) landColors.add(entry.getValue());
-                }
-
-                if (landColors.size() < 3) {
-                    colors.addAll(landColors);
-                }
-            }
-
-            Collection<String> typeStrings = new LinkedList<>();
-
-            for (String string : typeLine.split("—")[0].split(" ")) {
-                typeStrings.add(string.toLowerCase(Locale.ROOT));
-            }
-
-            TypeContainer types = new TypeContainer(typeStrings);
-
-            // TODO: Allow users to supply images in a folder
-            URL image = null;
-
-            try {
-                image = object.has("image_uris") && object.getAsJsonObject("image_uris").has("art_crop")
-                        ? new URL(object.getAsJsonObject("image_uris").get("art_crop").getAsString())
-                        : null;
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-
-            OracleText text = new OracleParser(oracle, template).parse();
-
-            Card card;
-
-            Map<String, Object> optionMap = prototype.options().getMap();
-
-            if ((boolean) prototype.getOption(Option.USE_OFFICIAL_ART)) {
-                optionMap.put(Option.ARTIST, object.get("artist").getAsString());
-            }
-
-            OptionContainer options = new OptionContainer.Implementation(template, optionMap);
-
-            Set<String> frameEffects = new HashSet<>();
-
-            if (object.has("frame_effects")) {
-                for (JsonElement effect : object.get("frame_effects").getAsJsonArray()) {
-                    frameEffects.add(effect.getAsString());
-                }
-            }
-
-            if (typeLine.contains("Creature") || typeLine.contains("Vehicle")) {
-                card = new Creature(prototype.number(), prototype.name(), template, colors, typeLine, types,image, object.get("mana_cost").getAsString(), object.get("power").getAsString(), object.get("toughness").getAsString(), text, options, frameEffects);
-            } else if (typeLine.contains("Land")) {
-                card = new Card(prototype.number(), prototype.name(), colors, image, types, text, typeLine, options, frameEffects);
-            } else {
-                card = new Spell(prototype.number(), prototype.name(), template, colors, typeLine, types,image, object.get("mana_cost").getAsString(), text, options, frameEffects);
-            }
-
-            cards.add(card);
+            cards.add(parseCard(prototype, template, object));
         }
 
         System.out.printf("Done! Took %dms%n", System.currentTimeMillis() - runTime);
@@ -296,31 +226,62 @@ public class Main {
         for (Card card : cards) {
             executor.submit(() -> {
                 long cardTime = System.currentTimeMillis();
-                BufferedImage out = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage frontImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
+                BufferedImage backImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
 
-                template.draw(card, out);
+                try {
+                    template.draw(card, frontImage);
 
-                for (int i = 0; i < (int) card.getOption(Option.COUNT); ++i) {
-                    Path path = Path.of("images", card.number() + i + " " + card.name().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
-
-                    try {
-                        if (!Files.isDirectory(path.getParent())) {
-                            Files.createDirectories(path.getParent());
-                        }
-
-                        OutputStream stream = Files.newOutputStream(path);
-
-                        ImageIO.write(out, "png", stream);
-                        stream.close();
-                        finishedCards.add(card.name());
-                        System.out.printf("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s \u001B[32mSAVED\u001B[0m%n", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.name());
-                    } catch (Throwable throwable) {
-                        finishedCards.add(card.name());
-                        System.out.printf("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s \u001B[31mFAILED\u001B[0m%n", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.name());
-                        System.out.println(throwable.getMessage());
+                    if (!card.isSingleSided()) {
+                        template.draw(card.getOtherSide(), backImage);
                     }
 
-                    cardTime = System.currentTimeMillis();
+                    for (int i = 0; i < (int) card.getOption(Option.COUNT); ++i) {
+                        Path front = Path.of("images", "fronts", card.number() + i + " " + card.name().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+                        Path back = Path.of("images", "backs", card.number() + i + " " + (card.isSingleSided() ? card.name() : card.getOtherSide().name()).replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+
+                        try {
+                            if (!Files.isDirectory(front.getParent())) {
+                                Files.createDirectories(front.getParent());
+                            }
+
+                            OutputStream stream = Files.newOutputStream(front);
+
+                            ImageIO.write(frontImage, "png", stream);
+                            stream.close();
+
+                            if (!Files.isDirectory(back.getParent())) {
+                                Files.createDirectories(back.getParent());
+                            }
+
+                            if (card.isSingleSided()) {
+                                Files.copy(args.containsKey("cardback")
+                                        ? Files.newInputStream(Path.of(args.get("cardback")))
+                                        : cache.getInputStream("back.png"), back, StandardCopyOption.REPLACE_EXISTING);
+                            } else {
+                                stream = Files.newOutputStream(back);
+
+                                ImageIO.write(backImage, "png", stream);
+                                stream.close();
+                            }
+
+                            finishedCards.add(card.name());
+                            System.out.printf("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s \u001B[32mSAVED\u001B[0m%n", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.name());
+                        } catch (Throwable throwable) {
+                            finishedCards.add(card.name());
+                            System.out.printf("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s \u001B[31mFAILED\u001B[0m%n", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.name());
+                            System.out.println(throwable.getMessage());
+                        }
+
+                        cardTime = System.currentTimeMillis();
+                    }
+                } catch (Throwable throwable) {
+                    for (int i = 0; i < (int) card.getOption(Option.COUNT); ++i) {
+                        finishedCards.add(card.name());
+                        System.out.printf("%" + countStrLen + "d/%" + countStrLen + "d           %-45s \u001B[31mFAILED\u001B[0m%n", finishedCards.size(), cardCount, card.name());
+                    }
+
+                    System.out.println(throwable.getMessage());
                 }
             });
         }
@@ -335,6 +296,143 @@ public class Main {
             System.out.printf("Done! Took %dms%n", System.currentTimeMillis() - runTime);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static Card parseCard(Card.Prototype prototype, Template template, JsonObject object) {
+        if (object.has("card_faces")) {
+            JsonArray faces = object.getAsJsonArray("card_faces");
+
+            for (JsonElement element : faces) {
+                JsonObject face = element.getAsJsonObject();
+
+                face.add("layout", object.get("layout"));
+
+                if (object.has("frame_effects")) {
+                    face.add("frame_effects", object.get("frame_effects"));
+                }
+            }
+
+            Card backSide = parseCard(prototype, template, faces.get(1).getAsJsonObject(), false, null);
+            Card frontSide = parseCard(prototype, template, faces.get(0).getAsJsonObject(), true, backSide);
+
+            backSide.setOtherSide(frontSide);
+
+            return frontSide;
+        } else {
+            return parseCard(prototype, template, object, true, null);
+        }
+    }
+
+    private static Card parseCard(Card.Prototype prototype, Template template, JsonObject object, boolean isFrontFace, Card backSide) {
+        String name = object.get("name").getAsString();
+        String typeLine = object.get("type_line").getAsString();
+        String oracle = object.get("oracle_text").getAsString();
+
+        Set<Symbol> colors = new HashSet<>();
+
+        String colorsKey = typeLine.contains("Land") ? "color_identity" : "colors";
+
+        if (object.has(colorsKey)) {
+            for (JsonElement element : object.get(colorsKey).getAsJsonArray()) {
+                colors.add(Symbol.of(element.getAsString()));
+            }
+        }
+
+        if (typeLine.contains("Land")) {
+            if (object.has("produced_mana")) {
+                for (JsonElement element : object.get("produced_mana").getAsJsonArray()) {
+                    colors.add(Symbol.of(element.getAsString()));
+                }
+            }
+
+            Set<Symbol> landColors = new HashSet<>();
+
+            for (var entry : LAND_TYPES.entrySet()) {
+                if (oracle.contains(entry.getKey())) landColors.add(entry.getValue());
+            }
+
+            if (oracle.contains("Add")) {
+                String s = oracle.substring(oracle.indexOf("Add"));
+
+                for (String color : Symbol.COLORS) {
+                    if (s.contains("{" + color + "}")) {
+                        landColors.add(Symbol.of(color));
+                    }
+                }
+            }
+
+            if (landColors.size() < 3) {
+                colors.addAll(landColors);
+            }
+        }
+
+        Collection<String> typeStrings = new LinkedList<>();
+
+        for (String string : typeLine.split("—")[0].split(" ")) {
+            typeStrings.add(string.toLowerCase(Locale.ROOT));
+        }
+
+        TypeContainer types = new TypeContainer(typeStrings);
+
+        URL image = null;
+
+        try {
+            image = object.has("image_uris") && object.getAsJsonObject("image_uris").has("art_crop")
+                    ? new URL(object.getAsJsonObject("image_uris").get("art_crop").getAsString())
+                    : null;
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        Set<String> keywords = new HashSet<>();
+
+        if (object.has("keywords")) {
+            for (JsonElement keyword : object.get("keywords").getAsJsonArray()) {
+                keywords.add(keyword.getAsString().toLowerCase(Locale.ROOT));
+            }
+        }
+
+        String mutateText = "";
+
+        if (keywords.contains("mutate")) {
+            String[] split = oracle.split("\n", 2);
+            oracle = split[1];
+            mutateText = split[0];
+        }
+
+        TextBody text = new TextParser(oracle, template, template.getStyle("oracle"), "\n\n").parseOracle();
+
+        Map<String, Object> optionMap = prototype.options().getMap();
+
+        if ((boolean) prototype.getOption(Option.USE_OFFICIAL_ART)) {
+            optionMap.put(Option.ARTIST, object.get("artist").getAsString());
+        }
+
+        OptionContainer options = new OptionContainer.Implementation(template, optionMap);
+
+        Set<String> frameEffects = new HashSet<>();
+
+        if (object.has("frame_effects")) {
+            for (JsonElement effect : object.get("frame_effects").getAsJsonArray()) {
+                frameEffects.add(effect.getAsString().toLowerCase(Locale.ROOT));
+            }
+        }
+
+        TextBody flavorText = object.has("flavor_text")
+                ? new TextParser(object.get("flavor_text").getAsString(), template, template.getStyle("flavor"), "\n").parseFlavor()
+                : null;
+
+        String layout = object.get("layout").getAsString();
+
+        if (keywords.contains("mutate")) {
+            return new Mutate(prototype.number(), name, template, colors, typeLine, types,image, object.get("mana_cost").getAsString(), object.get("power").getAsString(), object.get("toughness").getAsString(), text, options, frameEffects, isFrontFace, backSide, keywords, new TextParser(mutateText, template, template.getStyle("oracle"), "\n\n").parseOracle(), layout, flavorText);
+        } else if (typeLine.contains("Creature") || typeLine.contains("Vehicle")) {
+            return new Creature(prototype.number(), name, template, colors, typeLine, types,image, object.get("mana_cost").getAsString(), object.get("power").getAsString(), object.get("toughness").getAsString(), text, options, frameEffects, isFrontFace, backSide, keywords, layout, flavorText);
+        } else if (typeLine.contains("Land")) {
+            return new Card(prototype.number(), name, colors, image, types, text, typeLine, options, frameEffects, isFrontFace, backSide, keywords, layout, flavorText);
+        } else {
+            return new Spell(prototype.number(), name, template, colors, typeLine, types,image, object.get("mana_cost").getAsString(), text, options, frameEffects, isFrontFace, backSide, keywords, layout, flavorText);
         }
     }
 
@@ -377,7 +475,7 @@ public class Main {
         for (Card.Prototype prototype : cards) {
             JsonObject object = new JsonObject();
 
-            object.add("name", new JsonPrimitive(prototype.name()));
+            object.add("name", new JsonPrimitive(prototype.scryfallName()));
 
             if (prototype.getOption(Option.SET_CODE) != null) {
                 object.add("set", new JsonPrimitive((String) prototype.getOption(Option.SET_CODE)));

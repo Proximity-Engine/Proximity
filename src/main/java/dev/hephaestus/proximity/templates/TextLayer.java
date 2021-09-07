@@ -6,16 +6,17 @@ import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.DrawingUtil;
 import dev.hephaestus.proximity.util.StatefulGraphics;
-import org.w3c.dom.css.Rect;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
-import java.util.*;
 
 public class TextLayer extends Layer {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private final Template template;
     private final Alignment alignment;
@@ -247,9 +248,19 @@ public class TextLayer extends Layer {
             while(!deque.isEmpty()) {
                 List<TextComponent> text = deque.pop();
 
+                if (text.isEmpty()) continue;
+
                 if (text.get(0).string().startsWith("\n")) {
                     x = minX;
-                    graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 1.325));
+                    graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
+
+                    if (text.get(0).string().startsWith("\n\n")) {
+                        graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 0.325));
+                    }
+
+                    if (text.get(0).string().startsWith("\n\n\n")) {
+                        graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 0.325));
+                    }
 
                     if (!deque.isEmpty()) {
                         text = deque.pop();

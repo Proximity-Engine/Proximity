@@ -18,8 +18,8 @@ public class Spell extends Card {
     private static final Pattern COST_SYMBOLS = Pattern.compile("\\G\\{([^}]*)}");
     private final List<TextComponent> manaCost = new ArrayList<>();
 
-    public Spell(int number, String name, Template template, Collection<Symbol> colors, String type, TypeContainer types, URL image, String manaCost, OracleText text, OptionContainer options, Set<String> frameEffects) {
-        super(number, name, colors, image, types, text, type, options, frameEffects);
+    public Spell(int number, String name, Template template, Collection<Symbol> colors, String type, TypeContainer types, URL image, String manaCost, TextBody text, OptionContainer options, Set<String> frameEffects, boolean isFrontFace, Card backSide, Set<String> keywords, String layout, TextBody flavorText) {
+        super(number, name, colors, image, types, text, type, options, frameEffects, isFrontFace, backSide, keywords, layout, flavorText);
 
         Matcher matcher = COST_SYMBOLS.matcher(manaCost);
 

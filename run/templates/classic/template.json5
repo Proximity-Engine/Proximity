@@ -14,6 +14,12 @@
       italic_font: "MPlantin-Italic",
       color: "#000000",
       size: 140
+    },
+    flavor: {
+      font: "MPlantin",
+      italic_font: "MPlantin-Italic",
+      color: "#000000",
+      size: 130
     }
   },
   layers: [
@@ -145,10 +151,10 @@
     },
     {
       type: "text",
-      value: "${card.oracle}",
-      x: 456,
+      value: "${card.oracle_and_flavor}",
+      x: 495,
       y: 2666,
-      width: 2376,
+      width: 2298,
       height: 1200
     },
     {
@@ -157,20 +163,164 @@
       style:  {
         font: "MPlantin-Bold",
         color: "#FFFFFF",
-        size: 129,
+        size: 180,
         shadow: {
           color: "#000000",
-          dX: 15,
-          dY: 10
+          dX: 10,
+          dY: 5
         }
       },
       alignment: "center",
-      x: 2773,
+      x: 2790,
       y: 4077,
       conditions: {
         types: {
           creature: true
         }
+      }
+    },
+    {
+      type: "compound",
+      children: [
+        {
+          type: "group",
+          children: [
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/artifact.png",
+                  conditions: {
+                    color_count: 0,
+                    types: {
+                      artifact: true
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/colorless.png",
+                  conditions: {
+                    color_count: 0
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/${card.color}.png",
+                  conditions: {
+                    color_count: 1
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/gold.png"
+                }
+              ]
+            },
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/bottom/colorless.png",
+                  conditions: {
+                    flipped: {
+                      color_count: 0
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/bottom/${other.card.color}.png",
+                  conditions: {
+                    flipped: {
+                      color_count: 1
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/bottom/gold.png"
+                }
+              ]
+            }
+          ],
+          conditions: {
+            front: true
+          }
+        },
+        {
+          type: "group",
+          children: [
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/artifact.png",
+                  conditions: {
+                    color_count: 0,
+                    types: {
+                      artifact: true
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/colorless.png",
+                  conditions: {
+                    color_count: 0
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/${card.color}.png",
+                  conditions: {
+                    color_count: 1
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/gold.png"
+                }
+              ]
+            },
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/bottom/colorless.png",
+                  conditions: {
+                    flipped: {
+                      color_count: 0
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/bottom/${other.card.color}.png",
+                  conditions: {
+                    flipped: {
+                      color_count: 1
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/bottom/gold.png"
+                }
+              ]
+            }
+          ],
+          conditions: {
+            front: false
+          }
+        }
+      ],
+      conditions: {
+        layout: "modal_dfc"
       }
     }
   ]

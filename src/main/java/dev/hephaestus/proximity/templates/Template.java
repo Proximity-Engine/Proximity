@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public final class Template implements OptionContainer, TemplateFiles  {
@@ -220,7 +221,7 @@ public final class Template implements OptionContainer, TemplateFiles  {
         }
 
         private LayerFactoryFactory parseLayerFromObject(JsonObject object, TemplateFiles cache) {
-            List<Predicate<Card>> predicates = parseConditions(object.getAsJsonObject("conditions"));
+            List<Predicate<Card>> predicates = parseConditions(object.getAsJsonObject("conditions"), card -> card);
 
             int dX = object.has("x") ? object.get("x").getAsInt() : 0;
             int dY = object.has("y") ? object.get("y").getAsInt() : 0;
@@ -321,7 +322,9 @@ public final class Template implements OptionContainer, TemplateFiles  {
                             Rectangle mainLayerBounds = mainLayer.draw(out, wrap);
                             Rectangle flexLayerBounds = flexLayer.draw(out, mainLayerBounds);
 
-                            return DrawingUtil.encompassing(mainLayerBounds, flexLayerBounds);
+                            return mainLayerBounds != null && flexLayerBounds != null
+                                    ? DrawingUtil.encompassing(mainLayerBounds, flexLayerBounds)
+                                    : mainLayerBounds == null ? flexLayerBounds : mainLayerBounds;
                         }
                     };
                 };
@@ -353,13 +356,29 @@ public final class Template implements OptionContainer, TemplateFiles  {
                     if (string.equals("${card.cost}") && card instanceof Spell spell) {
                         text = Collections.singletonList(spell.manaCost());
                     } else if (string.equals("${card.oracle}")) {
-                        OracleText oracle = card.getOracle();
+                        TextBody oracle = card.getOracle();
                         al = oracle.alignment();
                         text = oracle.text();
 
                         if (al == Alignment.CENTER && width != null) {
                             x += width / 2;
                         }
+                    } else if (string.equals("${card.oracle_and_flavor}")) {
+                        TextBody oracle = card.getOracle();
+                        TextBody flavor = card.getFlavor();
+                        al = oracle.alignment();
+                        text = oracle.text();
+
+                        if (flavor != null && !flavor.text().isEmpty() && !flavor.text().get(0).isEmpty()) {
+                            text.add(Collections.singletonList(new TextComponent(flavor.text().get(0).get(0).style(), "\n\n\n")));
+                            text.addAll(card.getFlavor().text());
+                        } else if (al == Alignment.CENTER && width != null) {
+                            x += width / 2;
+                        }
+                    } else if (string.equals("${card.flavor}")) {
+                        text = card.getFlavor().text();
+                    } else if (string.equals("${card.mutate}") && card instanceof Mutate mutate) {
+                        text = mutate.getMutateText().text();
                     } else if (string.equals("${card.artist}")) {
                         text = Collections.singletonList(Collections.singletonList(new TextComponent(card.getOption(Option.ARTIST))));
                     } else {
@@ -447,7 +466,7 @@ public final class Template implements OptionContainer, TemplateFiles  {
             };
         }
 
-        private List<Predicate<Card>> parseConditions(JsonObject conditions) {
+        private List<Predicate<Card>> parseConditions(JsonObject conditions, Function<Card, Card> modifier) {
             if (conditions == null) return Collections.emptyList();
 
             List<Predicate<Card>> predicates = new ArrayList<>();
@@ -456,9 +475,9 @@ public final class Template implements OptionContainer, TemplateFiles  {
                 String key = entry.getKey().toLowerCase(Locale.ROOT);
 
                 switch (key) {
-                    case "color_count" -> predicates.add(card -> card.colors().size() == entry.getValue().getAsInt());
+                    case "color_count" -> predicates.add(card -> modifier.apply(card).colors().size() == entry.getValue().getAsInt());
                     case "hybrid" -> predicates.add(card -> {
-                        if (card instanceof Spell spell && spell.colors().size() == 2) {
+                        if (modifier.apply(card) instanceof Spell spell && spell.colors().size() == 2) {
                             for (TextComponent component : spell.manaCost()) {
                                 switch (component.string()) {
                                     case "w":
@@ -475,11 +494,13 @@ public final class Template implements OptionContainer, TemplateFiles  {
 
                         return !entry.getValue().getAsBoolean();
                     });
+                    case "front" -> predicates.add(card -> modifier.apply(card).isFrontFace() == entry.getValue().getAsBoolean());
+                    case "layout" -> predicates.add(card -> modifier.apply(card).getLayout().equalsIgnoreCase(entry.getValue().getAsString()));
                     case "or" -> {
                         List<List<Predicate<Card>>> orPredicates = new ArrayList<>();
 
                         for (JsonElement element : entry.getValue().getAsJsonArray()) {
-                            orPredicates.add(parseConditions(element.getAsJsonObject()));
+                            orPredicates.add(parseConditions(element.getAsJsonObject(), card -> card));
                         }
 
                         predicates.add(card -> {
@@ -489,7 +510,7 @@ public final class Template implements OptionContainer, TemplateFiles  {
                                 boolean bl = true;
 
                                 for (Predicate<Card> predicate : list) {
-                                    bl &= predicate.test(card);
+                                    bl &= predicate.test(modifier.apply(card));
                                 }
 
                                 result |= bl;
@@ -500,19 +521,29 @@ public final class Template implements OptionContainer, TemplateFiles  {
                     }
                     case "types" -> predicates.add(card -> {
                         for (Map.Entry<String, JsonElement> type : entry.getValue().getAsJsonObject().entrySet()) {
-                            if (card.getTypes().has(type.getKey()) != type.getValue().getAsBoolean()) return false;
+                            if (modifier.apply(card).getTypes().has(type.getKey()) != type.getValue().getAsBoolean()) return false;
                         }
 
                         return true;
                     });
                     case "frame_effects" -> predicates.add(card -> {
                         for (Map.Entry<String, JsonElement> effect : entry.getValue().getAsJsonObject().entrySet()) {
-                            if (card.hasFrameEffect(effect.getKey()) != effect.getValue().getAsBoolean()) return false;
+                            if (modifier.apply(card).hasFrameEffect(effect.getKey().toLowerCase(Locale.ROOT)) != effect.getValue().getAsBoolean()) return false;
                         }
 
                         return true;
                     });
+                    case "keywords" -> predicates.add(card -> {
+                        for (Map.Entry<String, JsonElement> effect : entry.getValue().getAsJsonObject().entrySet()) {
+                            if (modifier.apply(card).hasKeyword(effect.getKey().toLowerCase(Locale.ROOT)) != effect.getValue().getAsBoolean()) return false;
+                        }
+
+                        return true;
+                    });
+                    case "flipped" -> predicates.addAll(this.parseConditions(entry.getValue().getAsJsonObject(), Card::getOtherSide));
                     case "options" -> predicates.add(card -> {
+                        card = modifier.apply(card);
+
                         for (Map.Entry<String, JsonElement> option : entry.getValue().getAsJsonObject().entrySet()) {
                             if (option.getValue().getAsJsonPrimitive().isString() && !this.predicates.get(option.getKey()).test(card)) return false;
                             if (this.predicates.get(option.getKey()).test(card) != option.getValue().getAsBoolean()) return false;
@@ -529,7 +560,16 @@ public final class Template implements OptionContainer, TemplateFiles  {
 
         private String substitute(String src, Card card) {
             if (card instanceof Creature creature) {
-                src = src.replace("${card.pt}", creature.power() + "/" + ((Creature) card).toughness());
+                src = src.replace("${card.pt}", creature.power() + "/" + creature.toughness());
+            }
+
+            if (!card.isSingleSided()) {
+                if (card.getOtherSide() instanceof Creature creature) {
+                    src = src.replace("${other.card.pt}", creature.power() + "/" + creature.toughness());
+                }
+
+                src = src.replace("${other.card.color}", join(card.getOtherSide().colors()))
+                        .replace("${other.card.main_types}", card.getOtherSide().getMainTypes());
             }
 
             return src.replace("${card.color}", join(card.colors()))

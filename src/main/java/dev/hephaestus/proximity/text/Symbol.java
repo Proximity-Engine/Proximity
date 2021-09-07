@@ -6,7 +6,7 @@ import dev.hephaestus.proximity.templates.Template;
 import java.util.*;
 
 public record Symbol(String glyphs, int color) {
-    private static final String[] COLORS = new String[] {"W", "U", "B", "R", "G"};
+    public static final String[] COLORS = new String[] {"W", "U", "B", "R", "G"};
 
     private static final Map<String, Symbol> DEFAULT_SYMBOLS = new HashMap<>();
 

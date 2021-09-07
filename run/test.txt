@@ -1,15 +1,7 @@
-1x Emrakul, the Aeons Torn --use_official_art=false --artist="Santa Fung" --border=false --artist_outline=true
-1x Tormod, the Desecrator --use_official_art=false --artist="Yu Cheng Hong" --border=false
-1x Helm of the Ghastlord
-7x Sol Ring (C17)
-3x Sol Ring (MPS)
-2x Llanowar Elves (9ED)
-2x Llanowar Elves (MB1)
-1x Daredevil Dragster
-1x Mizzium Tank
-2x Parhelion II
-1x Lurrus of the Dream-Den
-1x Whip of Erebos
-1x Archetype of Aggression
-1x Athreos, God of Passage
-1x Arcanist's Owl
+1x Tergrid, God of Fright // Tergrid's Lantern
+1x Civilized Scholar // Homicidal Brute
+1x Pious Evangel // Wayward Disciple
+1x Branchloft Pathway // Boulderloft Pathway
+1x Flamescroll Celebrant // Revel in Silence
+1x Cryptolith Fragment // Aurora of Emrakul
+1x Boneyard Lurker
