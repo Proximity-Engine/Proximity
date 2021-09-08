@@ -1,0 +1,169 @@
+package dev.hephaestus.proximity.cards;
+
+
+import dev.hephaestus.proximity.json.JsonArray;
+import dev.hephaestus.proximity.json.JsonElement;
+import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.json.JsonPrimitive;
+import dev.hephaestus.proximity.util.Keys;
+
+import java.util.*;
+
+public record CardPrototype(String scryfallName, String cardName, int number, JsonObject options) {
+    private static final Map<String, String> LAND_TYPES = new HashMap<>();
+
+    static {
+        LAND_TYPES.put("Plains", "W");
+        LAND_TYPES.put("Island", "U");
+        LAND_TYPES.put("Swamp", "B");
+        LAND_TYPES.put("Mountain", "R");
+        LAND_TYPES.put("Forest", "G");
+    }
+
+    private static final Set<String> MAIN_TYPES = new HashSet<>() {{
+        add("enchantment");
+        add("artifact");
+        add("land");
+        add("creature");
+        add("conspiracy");
+        add("instant");
+        add("phenomenon");
+        add("plane");
+        add("planeswalker");
+        add("scheme");
+        add("sorcery");
+        add("tribal");
+        add("vanguard");
+    }};
+
+    public JsonObject parse(JsonObject raw) {
+        return raw.has("card_faces")
+                ? parseTwoSidedCard(raw)
+                : this.process(raw.deepCopy());
+    }
+
+    private JsonObject parseTwoSidedCard(JsonObject raw) {
+        JsonArray faces = raw.getAsJsonArray("card_faces");
+        JsonObject front = this.process(parseFace(raw, faces.get(0).getAsJsonObject()));
+        JsonObject back = this.process(parseFace(raw, faces.get(1).getAsJsonObject()));
+
+        JsonObject frontCopy = front.deepCopy();
+
+        front.add(Keys.FLIPPED, back.deepCopy());
+        front.add(Keys.FRONT_FACE, true);
+
+        back.add(Keys.FLIPPED, frontCopy);
+        back.add(Keys.FRONT_FACE, false);
+
+        return front;
+    }
+
+    private static JsonObject parseFace(JsonObject raw, JsonObject face) {
+        JsonObject result = raw.deepCopy();
+
+        for (var entry : face.entrySet()) {
+            result.add(entry.getKey(), entry.getValue().deepCopy());
+        }
+
+        return result;
+    }
+
+    private JsonObject process(JsonObject card) {
+        processTypes(card);
+        processColors(card);
+
+        card.add(Keys.CARD_NUMBER, this.number);
+        card.add(Keys.DOUBLE_SIDED, card.has("card_faces"));
+        card.add(Keys.OPTIONS, this.options.deepCopy());
+
+        if (card.getAsJsonArray("keywords").contains("mutate")) {
+            String[] split = card.getAsString("oracle_text").split("\n", 2);
+            card.addProperty("oracle_text", split[1]);
+            card.add(Keys.MUTATE_TEXT, split[0]);
+
+        }
+
+        return card;
+    }
+
+    private static void processTypes(JsonObject card) {
+        JsonArray types = card.getAsJsonArray(Keys.TYPES);
+        StringBuilder mainTypes = new StringBuilder();
+
+        for (String string : card.get("type_line").getAsString().split(" ")) {
+            String type = string.toLowerCase(Locale.ROOT);
+            types.add(type);
+
+            if (MAIN_TYPES.contains(type)) {
+                mainTypes.append(string);
+            }
+        }
+
+        card.add(Keys.MAIN_TYPES, mainTypes.toString());
+    }
+
+    private static void processColors(JsonObject card) {
+        Set<JsonElement> colors = new HashSet<>(card.get("colors", JsonArray::new));
+
+        if (card.getAsJsonArray(Keys.TYPES).contains("land")) {
+            colors.addAll(card.get("produced_mana", JsonArray::new));
+
+            card.getIfPresent("oracle_text")
+                    .map(JsonElement::getAsString)
+                    .ifPresent(oracle -> {
+                        for (var entry : LAND_TYPES.entrySet()) {
+                            if (oracle.contains(entry.getKey())) colors.add(new JsonPrimitive(entry.getValue()));
+                        }
+                    });
+        }
+
+        if (colors.size() == 2 && card.has("mana_cost") && !card.getAsString("mana_cost").isEmpty()) {
+            String manaCost = card.getAsString("mana_cost");
+            boolean hybrid = true;
+
+            for (String string : manaCost.substring(1, manaCost.length() - 1).split("}\\{")) {
+                switch (string.toLowerCase(Locale.ROOT)) {
+                    case "w", "u", "b", "r", "g" -> hybrid = false;
+                }
+
+                if (!hybrid) break;
+            }
+
+            card.add(Keys.HYBRID, hybrid);
+        }
+
+        List<JsonElement> colorList = new ArrayList<>(colors);
+
+        colorList.sort((c1, c2) -> switch (c1.getAsString()) {
+            case "W" -> switch (c2.getAsString()) {
+                case "U", "B" -> -1;
+                case "R", "G" -> 1;
+                default -> 0;
+            };
+            case "U" -> switch (c2.getAsString()) {
+                case "B", "R" -> -1;
+                case "W", "G" -> 1;
+                default -> 0;
+            };
+            case "B" -> switch (c2.getAsString()) {
+                case "R", "G" -> -1;
+                case "W", "U" -> 1;
+                default -> 0;
+            };
+            case "G" -> switch (c2.getAsString()) {
+                case "W", "U" -> -1;
+                case "B", "R" -> 1;
+                default -> 0;
+            };
+            case "R" -> switch (c2.getAsString()) {
+                case "G", "W" -> -1;
+                case "B", "U" -> 1;
+                default -> 0;
+            };
+            default -> 0;
+        });
+
+        card.add("colors", new JsonArray(colorList));
+        card.add(Keys.COLOR_COUNT, colors.size());
+    }
+}

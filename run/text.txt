@@ -1,4 +1,1 @@
-1x Emrakul, the Aeons Torn --use_official_art=false --artist="Santa Fung" --border=false --artist_outline=true
-1x Daredevil Dragster
-1x Mizzium Tank
-1x Yidris, Maelstrom Wielder
+1x Indatha Triome

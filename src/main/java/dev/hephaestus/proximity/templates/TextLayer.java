@@ -46,6 +46,8 @@ public class TextLayer extends Layer {
         if (this.alignment == Alignment.RIGHT) {
             for (List<TextComponent> text : components) {
                 for (TextComponent c : text) {
+                    if (c.string().isEmpty()) continue;
+
                     Style style = c.style() == null ? this.style : c.style();
 
                     float size = (style.size() == null && this.style.size() == null
@@ -177,6 +179,8 @@ public class TextLayer extends Layer {
         Integer height = null;
 
         for (TextComponent component : text) {
+            if (component.string().isEmpty()) continue;
+
             Pair<Rectangle, Integer> pair = this.draw(graphics, component, x, fontSizeChange, draw);
             Rectangle componentBounds = pair.left();
 
@@ -252,14 +256,17 @@ public class TextLayer extends Layer {
 
                 if (text.get(0).string().startsWith("\n")) {
                     x = minX;
-                    graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
+
+                    float size = text.get(0).style().size() == null ? this.style.size() : text.get(0).style().size();
+
+                    graphics.push(0, (int) (size + fontSizeChange));
 
                     if (text.get(0).string().startsWith("\n\n")) {
-                        graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 0.325));
+                        graphics.push(0, (int) ((size + fontSizeChange) * 0.325));
                     }
 
                     if (text.get(0).string().startsWith("\n\n\n")) {
-                        graphics.push(0, (int) ((text.get(0).style().size() + fontSizeChange) * 0.325));
+                        graphics.push(0, (int) ((size + fontSizeChange) * 0.325));
                     }
 
                     if (!deque.isEmpty()) {
@@ -272,6 +279,9 @@ public class TextLayer extends Layer {
                 }
 
                 Pair<Rectangle, Integer> pair = this.draw(graphics, text, x, fontSizeChange, false);
+
+                if (pair.left() == null || pair.right() == null) continue;
+
                 Rectangle rectangle = pair.left();
 
                 if (firstRow) {
@@ -345,6 +355,6 @@ public class TextLayer extends Layer {
             }
         }
 
-        return new Pair<>(bounds, firstRowHeight);
+        return new Pair<>(bounds == null ? new Rectangle() : bounds, firstRowHeight);
     }
 }

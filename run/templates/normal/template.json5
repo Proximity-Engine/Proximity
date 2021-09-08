@@ -10,13 +10,38 @@
             font: "MPlantin",
             italic_font: "MPlantin-Italic",
             color: "#000000",
-            size: 140
+            size: 135
         },
         flavor: {
             font: "MPlantin",
             italic_font: "MPlantin-Italic",
             color: "#000000",
-            size: 130
+            size: 125
+        }
+    },
+    conditions: {
+        // You can define shorthand for conditions here to make the template shorter and easier to read
+        colorless_artifact: {
+            proximity: {
+                types: {
+                    artifact: true
+                },
+                color_count: 0
+            }
+        },
+        one_or_two_colors: {
+            or: [
+                {
+                    proximity: {
+                        color_count: 1
+                    }
+                },
+                {
+                    proximity: {
+                        color_count: 2
+                    }
+                }
+            ]
         }
     },
     layers: [
@@ -32,8 +57,10 @@
             width: 2584,
             height: 1882,
             conditions: {
-                options: {
-                    use_official_art: true
+                proximity: {
+                    options: {
+                        use_official_art: true
+                    }
                 }
             }
         },
@@ -48,8 +75,10 @@
                             type: "image",
                             src: "backgrounds/nyx/artifact.png",
                             conditions: {
-                                types: {
-                                    artifact: true
+                                proximity: {
+                                    types: {
+                                        artifact: true
+                                    }
                                 }
                             }
                         },
@@ -57,14 +86,18 @@
                             type: "image",
                             src: "backgrounds/nyx/colorless.png",
                             conditions: {
-                                color_count: 0
+                                proximity: {
+                                    color_count: 0,
+                                }
                             }
                         },
                         {
                             type: "image",
-                            src: "backgrounds/nyx/${card.color}.png",
+                            src: "backgrounds/nyx/${colors}.png",
                             conditions: {
-                                color_count: 1
+                                proximity: {
+                                    color_count: 1,
+                                }
                             }
                         },
                         {
@@ -84,8 +117,10 @@
                         src: "backgrounds/vehicle.png",
                         conditions: {
                             // You can check for any type/supertype/subtype
-                            types: {
-                                vehicle: true
+                            proximity: {
+                                types: {
+                                    vehicle: true
+                                }
                             }
                         }
                     },
@@ -93,8 +128,10 @@
                         type: "image",
                         src: "backgrounds/artifact.png",
                         conditions: {
-                            types: {
-                                artifact: true
+                            proximity: {
+                                types: {
+                                    artifact: true
+                                }
                             }
                         }
                     }
@@ -103,17 +140,21 @@
                     type: "image",
                     src: "backgrounds/land.png",
                     conditions: {
-                        types: {
-                            land: true
+                        proximity: {
+                            types: {
+                                land: true
+                            }
                         }
                     }
                 },
                 {
                     type: "image",
                     // There are certain placeholders defined for image paths
-                    src: "backgrounds/${card.color}.png",
+                    src: "backgrounds/${colors}.png",
                     conditions: {
-                        color_count: 1
+                        proximity: {
+                            color_count: 1
+                        }
                     }
                 },
                 {
@@ -121,28 +162,35 @@
                     width: 0,
                     height: 0,
                     conditions: {
-                        color_count: 0
+                        proximity: {
+                            color_count: 0
+                        }
                     }
                 },
                 {
                     type: "image",
                     src: "backgrounds/gold.png",
                     conditions: {
-                        hybrid: false
+                        proximity: {
+                            hybrid: false
+                        }
                     }
                 },
                 {
                     type: "image",
-                    // Some placeholders can even be used multiple times!
-                    src: "backgrounds/${card.color}.png",
+                    src: "backgrounds/${colors}.png",
                     conditions: {
-                        hybrid: true
+                        proximity: {
+                            hybrid: true
+                        }
                     }
                 }
             ],
             conditions: {
-                options: {
-                    border: true
+                proximity: {
+                    options: {
+                        border: true
+                    }
                 }
             }
         },
@@ -153,8 +201,10 @@
                     type: "image",
                     src: "pinlines/shadows/legendary.png",
                     conditions: {
-                        types: {
-                            legendary: true
+                        proximity: {
+                            types: {
+                                legendary: true
+                            }
                         }
                     }
                 },
@@ -192,34 +242,23 @@
                                         type: "image",
                                         src: "pinlines/mdfc/front/land/artifact.png",
                                         conditions: {
-                                            types: {
-                                                artifact: true
-                                            },
-                                            color_count: 0
+                                            colorless_artifact: true
                                         }
                                     },
                                     {
                                         type: "image",
                                         src: "pinlines/mdfc/front/land/colorless.png",
-                                        "conditions": {
-                                            types: {
-                                                artifact: false
-                                            },
-                                            color_count: 0
+                                        conditions: {
+                                            proximity: {
+                                                color_count: 0
+                                            }
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/front/land/${card.color}.png",
+                                        src: "pinlines/mdfc/front/land/${colors}.png",
                                         conditions: {
-                                            color_count: 1
-                                        }
-                                    },
-                                    {
-                                        type: "image",
-                                        src: "pinlines/mdfc/front/land/${card.color}.png",
-                                        conditions: {
-                                            color_count: 2
+                                            one_or_two_colors: true
                                         }
                                     },
                                     {
@@ -228,7 +267,9 @@
                                     }
                                 ],
                                 conditions: {
-                                    front: true
+                                    proximity: {
+                                        front_face: true
+                                    }
                                 }
                             },
                             {
@@ -238,34 +279,23 @@
                                         type: "image",
                                         src: "pinlines/mdfc/back/land/artifact.png",
                                         conditions: {
-                                            types: {
-                                                artifact: true
-                                            },
-                                            color_count: 0
+                                            colorless_artifact: true
                                         }
                                     },
                                     {
                                         type: "image",
                                         src: "pinlines/mdfc/back/land/colorless.png",
-                                        "conditions": {
-                                            types: {
-                                                artifact: false
-                                            },
-                                            color_count: 0
+                                        conditions: {
+                                            proximity: {
+                                                color_count: 0
+                                            }
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/land/${card.color}.png",
+                                        src: "pinlines/mdfc/back/land/${colors}.png",
                                         conditions: {
-                                            color_count: 1
-                                        }
-                                    },
-                                    {
-                                        type: "image",
-                                        src: "pinlines/mdfc/back/land/${card.color}.png",
-                                        conditions: {
-                                            color_count: 2
+                                            one_or_two_colors: true
                                         }
                                     },
                                     {
@@ -274,7 +304,9 @@
                                     }
                                 ],
                                 conditions: {
-                                    front: false
+                                    proximity: {
+                                        front_face: false,
+                                    }
                                 }
                             }
                         ],
@@ -292,41 +324,23 @@
                                         type: "image",
                                         src: "pinlines/mdfc/front/land/artifact.png",
                                         conditions: {
-                                            types: {
-                                                artifact: true
-                                            },
-                                            color_count: 0
+                                            colorless_artifact: true
                                         }
                                     },
                                     {
                                         type: "image",
                                         src: "pinlines/mdfc/front/land/colorless.png",
-                                        "conditions": {
-                                            types: {
-                                                artifact: false
-                                            },
-                                            color_count: 0
+                                        conditions: {
+                                            proximity: {
+                                                color_count: 0
+                                            }
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/front/land.png",
+                                        src: "pinlines/mdfc/front/${colors}.png",
                                         conditions: {
-                                            color_count: 0
-                                        }
-                                    },
-                                    {
-                                        type: "image",
-                                        src: "pinlines/mdfc/front/${card.color}.png",
-                                        conditions: {
-                                            or: [
-                                                {
-                                                    color_count: 1
-                                                },
-                                                {
-                                                    color_count: 2
-                                                }
-                                            ]
+                                            one_or_two_colors: true
                                         }
                                     },
                                     {
@@ -335,7 +349,9 @@
                                     }
                                 ],
                                 conditions: {
-                                    front: true
+                                    proximity: {
+                                        front_face: true
+                                    }
                                 }
                             },
                             {
@@ -345,41 +361,32 @@
                                         type: "image",
                                         src: "pinlines/mdfc/back/land/artifact.png",
                                         conditions: {
-                                            types: {
-                                                artifact: true
-                                            },
-                                            color_count: 0
+                                            colorless_artifact: true
                                         }
                                     },
                                     {
                                         type: "image",
                                         src: "pinlines/mdfc/back/land/colorless.png",
-                                        "conditions": {
-                                            types: {
-                                                artifact: false
-                                            },
-                                            color_count: 0
+                                        conditions: {
+                                            proximity: {
+                                                color_count: 0
+                                            }
                                         }
                                     },
                                     {
                                         type: "image",
                                         src: "pinlines/mdfc/back/land.png",
                                         conditions: {
-                                            color_count: 0
+                                            proximity: {
+                                                color_count: 0
+                                            }
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/${card.color}.png",
+                                        src: "pinlines/mdfc/back/${colors}.png",
                                         conditions: {
-                                            or: [
-                                                {
-                                                    color_count: 1
-                                                },
-                                                {
-                                                    color_count: 2
-                                                }
-                                            ]
+                                            one_or_two_colors: true
                                         }
                                     },
                                     {
@@ -388,7 +395,9 @@
                                     }
                                 ],
                                 conditions: {
-                                    front: false
+                                    proximity: {
+                                        front_face: false
+                                    }
                                 }
                             }
                         ],
@@ -400,34 +409,23 @@
                         type: "image",
                         src: "pinlines/land/artifact.png",
                         conditions: {
-                            types: {
-                                artifact: true
-                            },
-                            color_count: 0
+                            colorless_artifact: true
                         }
                     },
                     {
                         type: "image",
                         src: "pinlines/land/colorless.png",
-                        "conditions": {
-                            types: {
-                                artifact: false
-                            },
-                            color_count: 0
+                        conditions: {
+                            proximity: {
+                                color_count: 0
+                            }
                         }
                     },
                     {
                         type: "image",
-                        src: "pinlines/land/${card.color}.png",
+                        src: "pinlines/land/${colors}.png",
                         conditions: {
-                            color_count: 1
-                        }
-                    },
-                    {
-                        type: "image",
-                        src: "pinlines/land/${card.color}.png",
-                        conditions: {
-                            color_count: 2
+                            one_or_two_colors: true
                         }
                     },
                     {
@@ -436,19 +434,23 @@
                     }
                 ],
                 conditions: {
-                    types: {
-                        land: true
+                    proximity: {
+                        types: {
+                            land: true
+                        }
                     }
                 }
             },
             {
                 type: "image",
-                src: "pinlines/miracle/${card.color}.png",
+                src: "pinlines/miracle/${colors}.png",
                 conditions: {
                     frame_effects: {
                         miracle: true
                     },
-                    color_count: 1
+                    proximity: {
+                        color_count: 1
+                    }
                 }
             },
             {
@@ -461,34 +463,23 @@
                                 type: "image",
                                 src: "pinlines/mdfc/front/artifact.png",
                                 conditions: {
-                                    types: {
-                                        artifact: true
-                                    },
-                                    color_count: 0
+                                    colorless_artifact: true
                                 }
                             },
                             {
                                 type: "image",
                                 src: "pinlines/mdfc/front/colorless.png",
-                                "conditions": {
-                                    types: {
-                                        artifact: false
-                                    },
-                                    color_count: 0
+                                conditions: {
+                                    proximity: {
+                                        color_count: 0,
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "pinlines/mdfc/front/${card.color}.png",
+                                src: "pinlines/mdfc/front/${colors}.png",
                                 conditions: {
-                                    color_count: 1
-                                }
-                            },
-                            {
-                                type: "image",
-                                src: "pinlines/mdfc/front/${card.color}.png",
-                                conditions: {
-                                    color_count: 2
+                                    one_or_two_colors: true
                                 }
                             },
                             {
@@ -497,7 +488,9 @@
                             }
                         ],
                         conditions: {
-                            front: true
+                            proximity: {
+                                front_face: true,
+                            }
                         }
                     },
                     {
@@ -507,34 +500,23 @@
                                 type: "image",
                                 src: "pinlines/mdfc/back/artifact.png",
                                 conditions: {
-                                    types: {
-                                        artifact: true
-                                    },
-                                    color_count: 0
+                                    colorless_artifact: true
                                 }
                             },
                             {
                                 type: "image",
                                 src: "pinlines/mdfc/back/colorless.png",
-                                "conditions": {
-                                    types: {
-                                        artifact: false
-                                    },
-                                    color_count: 0
+                                conditions: {
+                                    proximity: {
+                                        color_count: 0
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "pinlines/mdfc/back/${card.color}.png",
+                                src: "pinlines/mdfc/back/${colors}.png",
                                 conditions: {
-                                    color_count: 1
-                                }
-                            },
-                            {
-                                type: "image",
-                                src: "pinlines/mdfc/back/${card.color}.png",
-                                conditions: {
-                                    color_count: 2
+                                    one_or_two_colors: true
                                 }
                             },
                             {
@@ -543,7 +525,9 @@
                             }
                         ],
                         conditions: {
-                            front: false
+                            proximity: {
+                                front_face: false
+                            }
                         }
                     }
                 ],
@@ -561,34 +545,23 @@
                                 type: "image",
                                 src: "pinlines/transform/front/artifact.png",
                                 conditions: {
-                                    types: {
-                                        artifact: true
-                                    },
-                                    color_count: 0
+                                    colorless_artifact: true
                                 }
                             },
                             {
                                 type: "image",
                                 src: "pinlines/transform/front/colorless.png",
-                                "conditions": {
-                                    types: {
-                                        artifact: false
-                                    },
-                                    color_count: 0
+                                conditions: {
+                                    proximity: {
+                                        color_count: 0
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "pinlines/transform/front/${card.color}.png",
+                                src: "pinlines/transform/front/${colors}.png",
                                 conditions: {
-                                    color_count: 1
-                                }
-                            },
-                            {
-                                type: "image",
-                                src: "pinlines/transform/front/${card.color}.png",
-                                conditions: {
-                                    color_count: 2
+                                    one_or_two_colors: true
                                 }
                             },
                             {
@@ -597,7 +570,9 @@
                             }
                         ],
                         conditions: {
-                            front: true
+                            proximity: {
+                                front_face: true
+                            }
                         }
                     },
                     {
@@ -607,34 +582,23 @@
                                 type: "image",
                                 src: "pinlines/transform/back/artifact.png",
                                 conditions: {
-                                    types: {
-                                        artifact: true
-                                    },
-                                    color_count: 0
+                                    colorless_artifact: true
                                 }
                             },
                             {
                                 type: "image",
                                 src: "pinlines/transform/back/colorless.png",
-                                "conditions": {
-                                    types: {
-                                        artifact: false
-                                    },
-                                    color_count: 0
+                                conditions: {
+                                    proximity: {
+                                        color_count: 0
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "pinlines/transform/back/${card.color}.png",
+                                src: "pinlines/transform/back/${colors}.png",
                                 conditions: {
-                                    color_count: 1
-                                }
-                            },
-                            {
-                                type: "image",
-                                src: "pinlines/transform/back/${card.color}.png",
-                                conditions: {
-                                    color_count: 2
+                                    one_or_two_colors: true
                                 }
                             },
                             {
@@ -643,7 +607,9 @@
                             }
                         ],
                         conditions: {
-                            front: false
+                            proximity: {
+                                front_face: false
+                            }
                         }
                     }
                 ],
@@ -657,25 +623,15 @@
                     {
                         type: "image",
                         src: "pinlines/mutate/colorless.png",
-                        "conditions": {
-                            types: {
-                                artifact: false
-                            },
-                            color_count: 0
+                        conditions: {
+                            colorless_artifact: true
                         }
                     },
                     {
                         type: "image",
-                        src: "pinlines/mutate/${card.color}.png",
+                        src: "pinlines/mutate/${colors}.png",
                         conditions: {
-                            color_count: 1
-                        }
-                    },
-                    {
-                        type: "image",
-                        src: "pinlines/mutate/${card.color}.png",
-                        conditions: {
-                            color_count: 2
+                            one_or_two_colors: true
                         }
                     },
                     {
@@ -694,34 +650,23 @@
                     type: "image",
                     src: "pinlines/standard/artifact.png",
                     conditions: {
-                        types: {
-                            artifact: true
-                        },
-                        color_count: 0
+                        colorless_artifact: true
                     }
                 },
                 {
                     type: "image",
                     src: "pinlines/standard/colorless.png",
-                    "conditions": {
-                        types: {
-                            artifact: false
-                        },
-                        color_count: 0
+                    conditions: {
+                        proximity: {
+                            color_count: 0
+                        }
                     }
                 },
                 {
                     type: "image",
-                    src: "pinlines/standard/${card.color}.png",
+                    src: "pinlines/standard/${colors}.png",
                     conditions: {
-                        color_count: 1
-                    }
-                },
-                {
-                    type: "image",
-                    src: "pinlines/standard/${card.color}.png",
-                    conditions: {
-                        color_count: 2
+                        one_or_two_colors: true
                     }
                 },
                 {
@@ -737,8 +682,10 @@
                     type: "image",
                     src: "borders/legendary.png",
                     conditions: {
-                        types: {
-                            legendary: true
+                        proximity: {
+                            types: {
+                                legendary: true
+                            }
                         }
                     }
                 },
@@ -762,8 +709,10 @@
                 }
             ],
             conditions: {
-                options: {
-                    border: true
+                proximity: {
+                    options: {
+                        border: true
+                    }
                 }
             }
         },
@@ -774,40 +723,45 @@
                     type: "image",
                     src: "pt/vehicle.png",
                     conditions: {
-                        types: {
-                            vehicle: true
+                        proximity: {
+                            types: {
+                                vehicle: true
+                            }
                         }
                     }
                 },
                 {
                     type: "image",
-                    src: "pt/${card.color}.png",
+                    src: "pt/${colors}.png",
                     conditions: {
-                        color_count: 1
+                        proximity: {
+                            color_count: 1
+                        }
                     }
                 },
                 {
                     type: "image",
                     src: "pt/artifact.png",
                     conditions: {
-                        color_count: 0,
-                        types: {
-                            artifact: true
-                        }
+                        colorless_artifact: true
                     }
                 },
                 {
                     type: "image",
                     src: "pt/colorless.png",
                     conditions: {
-                        color_count: 0
+                        proximity: {
+                            color_count: 0
+                        }
                     }
                 },
                 {
                     type: "image",
                     src: "pt/gold.png",
                     conditions: {
-                        hybrid: false
+                        proximity: {
+                            hybrid: false
+                        }
                     }
                 },
                 {
@@ -818,13 +772,17 @@
             conditions: {
                 or: [
                     {
-                        types: {
-                            creature: true
+                        proximity: {
+                            types: {
+                                creature: true
+                            }
                         }
                     },
                     {
-                        types: {
-                            vehicle: true
+                        proximity: {
+                            types: {
+                                vehicle: true
+                            }
                         }
                     }
                 ]
@@ -849,10 +807,7 @@
                                 }
                             ],
                             conditions: {
-                                types: {
-                                    artifact: true
-                                },
-                                color_count: 0
+                                colorless_artifact: true
                             }
                         },
                         {
@@ -868,10 +823,9 @@
                                 }
                             ],
                             conditions: {
-                                types: {
-                                    artifact: false
-                                },
-                                color_count: 0
+                                proximity: {
+                                    color_count: 0
+                                }
                             }
                         },
                         {
@@ -879,31 +833,15 @@
                             children: [
                                 {
                                     type: "image",
-                                    src: "crowns/companion/${card.color}.png"
+                                    src: "crowns/companion/${colors}.png"
                                 },
                                 {
                                     type: "image",
-                                    src: "crowns/companion/gems/${card.color}.png"
+                                    src: "crowns/companion/gems/${colors}.png"
                                 }
                             ],
                             conditions: {
-                                color_count: 1
-                            }
-                        },
-                        {
-                            type: "group",
-                            children: [
-                                {
-                                    type: "image",
-                                    src: "crowns/companion/${card.color}.png"
-                                },
-                                {
-                                    type: "image",
-                                    src: "crowns/companion/gems/${card.color}.png"
-                                }
-                            ],
-                            conditions: {
-                                color_count: 2
+                                one_or_two_colors: true
                             }
                         },
                         {
@@ -933,34 +871,23 @@
                             type: "image",
                             src: "crowns/legendary/artifact.png",
                             conditions: {
-                                types: {
-                                    artifact: true
-                                },
-                                color_count: 0
+                                colorless_artifact: true
                             }
                         },
                         {
                             type: "image",
                             src: "crowns/legendary/colorless.png",
-                            "conditions": {
-                                types: {
-                                    artifact: false
-                                },
-                                color_count: 0
+                            conditions: {
+                                proximity: {
+                                    color_count: 0
+                                }
                             }
                         },
                         {
                             type: "image",
-                            src: "crowns/legendary/${card.color}.png",
+                            src: "crowns/legendary/${colors}.png",
                             conditions: {
-                                color_count: 1
-                            }
-                        },
-                        {
-                            type: "image",
-                            src: "crowns/legendary/${card.color}.png",
-                            conditions: {
-                                color_count: 2
+                                one_or_two_colors: true
                             }
                         },
                         {
@@ -971,9 +898,11 @@
                 }
             ],
             conditions: {
-                types: {
-                    legendary: true
-                }
+                proximity: {
+                    types: {
+                        legendary: true
+                    }
+                },
             }
         },
         [
@@ -987,8 +916,10 @@
                                 type: "image",
                                 src: "plates/mdfc/front/land.png",
                                 conditions: {
-                                    types: {
-                                        land: true
+                                    proximity: {
+                                        types: {
+                                            land: true
+                                        }
                                     }
                                 }
                             },
@@ -996,44 +927,46 @@
                                 type: "image",
                                 src: "plates/mdfc/front/artifact.png",
                                 conditions: {
-                                    types: {
-                                        artifact: true
-                                    },
-                                    color_count: 0
+                                    colorless_artifact: true
                                 }
                             },
                             {
                                 type: "image",
                                 src: "plates/mdfc/front/colorless.png",
-                                "conditions": {
-                                    types: {
-                                        artifact: false
-                                    },
-                                    color_count: 0
+                                conditions: {
+                                    proximity: {
+                                        color_count: 0
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "plates/mdfc/front/miracle/${card.color}.png",
+                                src: "plates/mdfc/front/miracle/${colors}.png",
                                 conditions: {
                                     frame_effects: {
                                         miracle: true
                                     },
-                                    color_count: 1
+                                    proximity: {
+                                        color_count: 1
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "plates/mdfc/front/${card.color}.png",
+                                src: "plates/mdfc/front/${colors}.png",
                                 conditions: {
-                                    color_count: 1
+                                    proximity: {
+                                        color_count: 1
+                                    }
                                 }
                             },
                             {
                                 type: "image",
                                 src: "plates/mdfc/front/colorless.png",
-                                "conditions": {
-                                    hybrid: true
+                                conditions: {
+                                    proximity: {
+                                        hybrid: true
+                                    }
                                 }
                             },
                             {
@@ -1042,7 +975,9 @@
                             }
                         ],
                         conditions: {
-                            front: true
+                            proximity: {
+                                front_face: true
+                            }
                         }
                     },
                     {
@@ -1052,8 +987,10 @@
                                 type: "image",
                                 src: "plates/mdfc/back/land.png",
                                 conditions: {
-                                    types: {
-                                        land: true
+                                    proximity: {
+                                        types: {
+                                            land: true
+                                        }
                                     }
                                 }
                             },
@@ -1061,44 +998,46 @@
                                 type: "image",
                                 src: "plates/mdfc/back/artifact.png",
                                 conditions: {
-                                    types: {
-                                        artifact: true
-                                    },
-                                    color_count: 0
+                                    colorless_artifact: true
                                 }
                             },
                             {
                                 type: "image",
                                 src: "plates/mdfc/back/colorless.png",
-                                "conditions": {
-                                    types: {
-                                        artifact: false
-                                    },
-                                    color_count: 0
+                                conditions: {
+                                    proximity: {
+                                        color_count: 0
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "plates/mdfc/back/miracle/${card.color}.png",
+                                src: "plates/mdfc/back/miracle/${colors}.png",
                                 conditions: {
                                     frame_effects: {
                                         miracle: true
                                     },
-                                    color_count: 1
+                                    proximity: {
+                                        color_count: 1
+                                    }
                                 }
                             },
                             {
                                 type: "image",
-                                src: "plates/mdfc/back/${card.color}.png",
+                                src: "plates/mdfc/back/${colors}.png",
                                 conditions: {
-                                    color_count: 1
+                                    proximity: {
+                                        color_count: 1
+                                    }
                                 }
                             },
                             {
                                 type: "image",
                                 src: "plates/mdfc/back/colorless.png",
-                                "conditions": {
-                                    hybrid: true
+                                conditions: {
+                                    proximity: {
+                                        hybrid: true
+                                    }
                                 }
                             },
                             {
@@ -1107,7 +1046,9 @@
                             }
                         ],
                         conditions: {
-                            front: false
+                            proximity: {
+                                front_face: false
+                            }
                         }
                     }
                 ],
@@ -1124,55 +1065,71 @@
             },
             {
                 type: "image",
-                src: "plates/land.png",
+                src: "plates/artifact.png",
                 conditions: {
-                    types: {
-                        land: true
+                    colorless_artifact: true
+                }
+            },
+            {
+                type: "image",
+                src: "plates/colorless.png",
+                conditions: {
+                    proximity: {
+                        color_count: 0
                     }
                 }
             },
             {
                 type: "image",
-                src: "plates/artifact.png",
+                src: "plates/land.png",
                 conditions: {
-                    types: {
-                        artifact: true
+                    proximity: {
+                        types: {
+                            land: true
+                        }
                     },
-                    color_count: 0
+                    or: [
+                        {
+                            proximity: {
+                                color_count: 0
+                            }
+                        },
+                        {
+                            proximity: {
+                                color_count: 2
+                            }
+                        }
+                    ]
                 }
             },
             {
                 type: "image",
-                src: "plates/colorless.png",
-                "conditions": {
-                    types: {
-                        artifact: false
-                    },
-                    color_count: 0
-                }
-            },
-            {
-                type: "image",
-                src: "plates/miracle/${card.color}.png",
+                src: "plates/miracle/${colors}.png",
                 conditions: {
                     frame_effects: {
                         miracle: true
                     },
-                    color_count: 1
+                    proximity: {
+                        color_count: 1
+                    }
                 }
             },
             {
                 type: "image",
-                src: "plates/${card.color}.png",
+                src: "plates/${colors}.png",
                 conditions: {
-                    color_count: 1
+                    proximity: {
+                        color_count: 1
+                    }
                 }
             },
             {
                 type: "image",
                 src: "plates/colorless.png",
-                "conditions": {
-                    hybrid: true
+                conditions: {
+                    proximity: {
+                        hybrid: true
+                    }
                 }
             },
             {
@@ -1193,24 +1150,25 @@
                                     type: "image",
                                     src: "overlays/mdfc/front/top/artifact.png",
                                     conditions: {
-                                        color_count: 0,
-                                        types: {
-                                            artifact: true
-                                        }
+                                        colorless_artifact: true
                                     }
                                 },
                                 {
                                     type: "image",
                                     src: "overlays/mdfc/front/top/colorless.png",
                                     conditions: {
-                                        color_count: 0
+                                        proximity: {
+                                            color_count: 0
+                                        }
                                     }
                                 },
                                 {
                                     type: "image",
-                                    src: "overlays/mdfc/front/top/${card.color}.png",
+                                    src: "overlays/mdfc/front/top/${colors}.png",
                                     conditions: {
-                                        color_count: 1
+                                        proximity: {
+                                            color_count: 1
+                                        }
                                     }
                                 },
                                 {
@@ -1226,17 +1184,25 @@
                                     type: "image",
                                     src: "overlays/mdfc/front/bottom/colorless.png",
                                     conditions: {
-                                        flipped: {
-                                            color_count: 0
+                                        proximity: {
+                                            flipped: {
+                                                proximity: {
+                                                    color_count: 0
+                                                }
+                                            }
                                         }
                                     }
                                 },
                                 {
                                     type: "image",
-                                    src: "overlays/mdfc/front/bottom/${other.card.color}.png",
+                                    src: "overlays/mdfc/front/bottom/${proximity.flipped.colors}.png",
                                     conditions: {
-                                        flipped: {
-                                            color_count: 1
+                                        proximity: {
+                                            flipped: {
+                                                proximity: {
+                                                    color_count: 1
+                                                }
+                                            }
                                         }
                                     }
                                 },
@@ -1248,7 +1214,9 @@
                         }
                     ],
                     conditions: {
-                        front: true
+                        proximity: {
+                            front_face: true
+                        }
                     }
                 },
                 {
@@ -1261,24 +1229,25 @@
                                     type: "image",
                                     src: "overlays/mdfc/back/top/artifact.png",
                                     conditions: {
-                                        color_count: 0,
-                                        types: {
-                                            artifact: true
-                                        }
+                                        colorless_artifact: true
                                     }
                                 },
                                 {
                                     type: "image",
                                     src: "overlays/mdfc/back/top/colorless.png",
                                     conditions: {
-                                        color_count: 0
+                                        proximity: {
+                                            color_count: 0
+                                        }
                                     }
                                 },
                                 {
                                     type: "image",
-                                    src: "overlays/mdfc/back/top/${card.color}.png",
+                                    src: "overlays/mdfc/back/top/${colors}.png",
                                     conditions: {
-                                        color_count: 1
+                                        proximity: {
+                                            color_count: 1
+                                        }
                                     }
                                 },
                                 {
@@ -1294,17 +1263,25 @@
                                     type: "image",
                                     src: "overlays/mdfc/back/bottom/colorless.png",
                                     conditions: {
-                                        flipped: {
-                                            color_count: 0
+                                        proximity: {
+                                            flipped: {
+                                                proximity: {
+                                                    color_count: 0
+                                                }
+                                            }
                                         }
                                     }
                                 },
                                 {
                                     type: "image",
-                                    src: "overlays/mdfc/back/bottom/${other.card.color}.png",
+                                    src: "overlays/mdfc/back/bottom/${proximity.flipped.colors}.png",
                                     conditions: {
-                                        flipped: {
-                                            color_count: 1
+                                        proximity: {
+                                            flipped: {
+                                                proximity: {
+                                                    color_count: 1
+                                                }
+                                            }
                                         }
                                     }
                                 },
@@ -1316,7 +1293,9 @@
                         }
                     ],
                     conditions: {
-                        front: false
+                        proximity: {
+                            front_face: false
+                        }
                     }
                 }
             ],
@@ -1331,7 +1310,9 @@
                 frame_effects: {
                     sunmoondfc: true
                 },
-                front: true
+                proximity: {
+                    front_face: true
+                }
             }
         },
         {
@@ -1341,7 +1322,9 @@
                 frame_effects: {
                     sunmoondfc: true
                 },
-                front: false
+                proximity: {
+                    front_face: false
+                }
             }
         },
         {
@@ -1351,7 +1334,9 @@
                 frame_effects: {
                     compasslanddfc: true
                 },
-                front: true
+                proximity: {
+                    front_face: true
+                }
             }
         },
         {
@@ -1361,7 +1346,9 @@
                 frame_effects: {
                     compasslanddfc: true
                 },
-                front: false
+                proximity: {
+                    front_face: false
+                }
             }
         },
         {
@@ -1371,7 +1358,9 @@
                 frame_effects: {
                     mooneldrazidfc: true
                 },
-                front: true
+                proximity: {
+                    front_face: true
+                }
             }
         },
         {
@@ -1381,7 +1370,9 @@
                 frame_effects: {
                     mooneldrazidfc: true
                 },
-                front: false
+                proximity: {
+                    front_face: false
+                }
             }
         },
         {
@@ -1391,7 +1382,7 @@
                     type: "squish",
                     main: {
                         type: "text",
-                        value: "${other.card.cost}",
+                        value: "$parse_cost{proximity.flipped.mana_cost}",
                         alignment: "right",
                         x: 2925,
                         y: 503
@@ -1401,7 +1392,7 @@
                         children: [
                             {
                                 type: "text",
-                                value: "${other.card.main_types}",
+                                value: "${proximity.flipped.proximity.main_types}",
                                 x: 345,
                                 y: 4000,
                                 style: {
@@ -1410,12 +1401,14 @@
                                     size: 100
                                 },
                                 conditions: {
-                                    front: true
+                                    proximity: {
+                                        front_face: true
+                                    }
                                 }
                             },
                             {
                                 type: "text",
-                                value: "${other.card.main_types}",
+                                value: "${proximity.flipped.proximity.main_types}",
                                 x: 345,
                                 y: 4000,
                                 style: {
@@ -1436,7 +1429,16 @@
             type: "squish",
             main: {
                 type: "text",
-                value: "${card.cost}",
+                value: "$parse_cost{mana_cost}",
+                style: {
+                    font: "NDPMTG",
+                    size: 175,
+                    shadow: {
+                        color: "#000000",
+                        dX: -4,
+                        dY: 11
+                    }
+                },
                 alignment: "right",
                 x: 2925,
                 y: 503
@@ -1449,7 +1451,7 @@
                         children: [
                             {
                                 type: "text",
-                                value: "${card.name}",
+                                value: "${name}",
                                 x: 665,
                                 y: 515,
                                 style: {
@@ -1458,12 +1460,12 @@
                                     size: 160
                                 },
                                 conditions: {
-                                    front: true
+                                    front_face: true
                                 }
                             },
                             {
                                 type: "text",
-                                value: "${card.name}",
+                                value: "${name}",
                                 x: 665,
                                 y: 515,
                                 style: {
@@ -1486,7 +1488,7 @@
                     },
                     {
                         type: "text",
-                        value: "${card.name}",
+                        value: "${name}",
                         style: {
                             font: "Beleren2016-Bold",
                             color: "#000000",
@@ -1500,7 +1502,7 @@
         },
         {
             type: "text",
-            value: "${other.card.pt}",
+            value: "${proximity.flipped.power}/${proximity.flipped.toughness}",
             alignment: "right",
             x: 2925,
             y: 3790,
@@ -1511,10 +1513,14 @@
             },
             conditions: {
                 layout: "transform",
-                front: true,
-                flipped: {
-                    types: {
-                        creature: true
+                proximity: {
+                    front_face: true,
+                    flipped: {
+                        proximity: {
+                            types: {
+                                creature: true
+                            }
+                        }
                     }
                 }
             }
@@ -1533,7 +1539,7 @@
                 children: [
                     {
                         type: "text",
-                        value: "${card.type}",
+                        value: "${type_line}",
                         style: {
                             font: "Beleren2016-Bold",
                             color: "#FFFFFF",
@@ -1542,20 +1548,22 @@
                         x: 375,
                         y: 2675,
                         conditions: {
-                            front: false,
-                            or: [
-                                {
-                                    layout: "modal_dfc"
-                                },
-                                {
-                                    layout: "transform"
-                                }
-                            ]
+                            proximity: {
+                                front_face: false,
+                                or: [
+                                    {
+                                        layout: "modal_dfc"
+                                    },
+                                    {
+                                        layout: "transform"
+                                    }
+                                ]
+                            }
                         }
                     },
                     {
                         type: "text",
-                        value: "${card.type}",
+                        value: "${type_line}",
                         style: {
                             font: "Beleren2016-Bold",
                             color: "#000000",
@@ -1569,7 +1577,7 @@
         },
         {
             type: "text",
-            value: "${card.pt}",
+            value: "${power}/${toughness}",
             style:  {
                 font: "Beleren2016-Bold",
                 color: "#000000",
@@ -1579,14 +1587,16 @@
             x: 2740,
             y: 4062,
             conditions: {
-                types: {
-                    creature: true
+                proximity: {
+                    types: {
+                        creature: true
+                    }
                 }
             }
         },
         {
             type: "text",
-            value: "${card.pt}",
+            value: "${power}/${toughness}",
             style:  {
                 font: "Beleren2016-Bold",
                 color: "#FFFFFF",
@@ -1596,8 +1606,10 @@
             x: 2740,
             y: 4062,
             conditions: {
-                types: {
-                    vehicle: true
+                proximity: {
+                    types: {
+                        vehicle: true
+                    }
                 }
             }
         },
@@ -1612,22 +1624,24 @@
                             children: [
                                 {
                                     type: "text",
-                                    value: "${card.mutate}",
+                                    value: "$oracle_text{proximity.util.mutate_text}",
                                     x: 400,
                                     y: 2795,
                                     width: 2488,
-                                    height: 515
+                                    height: 515,
+                                    style: "oracle"
                                 },
                                 {
                                     type: "compound",
                                     children: [
                                         {
                                             type: "text",
-                                            value: "${card.oracle_and_flavor}",
+                                            value: "$oracle_and_flavor_text{}",
                                             x: 400,
                                             y: 3345,
                                             width: 2488,
                                             height: 520,
+                                            style: "oracle",
                                             wrap: {
                                                 x: 2472,
                                                 y: 3869,
@@ -1640,11 +1654,39 @@
                                         },
                                         {
                                             type: "text",
-                                            value: "${card.oracle_and_flavor}",
+                                            value: "$oracle_and_flavor_text{}",
+                                            x: 400,
+                                            y: 3345,
+                                            width: 2338,
+                                            height: 655,
+                                            style: "oracle",
+                                            wrap: {
+                                                x: 2472,
+                                                y: 3869,
+                                                width: 535,
+                                                height: 315
+                                            },
+                                            conditions: {
+                                                layout: "transform",
+                                                proximity: {
+                                                    flipped: {
+                                                        proximity: {
+                                                            types: {
+                                                                creature: true
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        {
+                                            type: "text",
+                                            value: "$oracle_and_flavor_text{}",
                                             x: 400,
                                             y: 3345,
                                             width: 2488,
                                             height: 655,
+                                            style: "oracle",
                                             wrap: {
                                                 x: 2472,
                                                 y: 3869,
@@ -1663,11 +1705,12 @@
                         },
                         {
                             type: "text",
-                            value: "${card.oracle_and_flavor}",
+                            value: "$oracle_and_flavor_text{}",
                             x: 400,
                             y: 2795,
                             width: 2488,
                             height: 1070,
+                            style: "oracle",
                             wrap: {
                                 x: 2472,
                                 y: 3869,
@@ -1680,11 +1723,39 @@
                         },
                         {
                             type: "text",
-                            value: "${card.oracle_and_flavor}",
+                            value: "$oracle_and_flavor_text{}",
                             x: 400,
                             y: 2795,
                             width: 2488,
                             height: 1200,
+                            style: "oracle",
+                            wrap: {
+                                x: 2472,
+                                y: 3669,
+                                width: 535,
+                                height: 515
+                            },
+                            conditions: {
+                                layout: "transform",
+                                proximity: {
+                                    flipped: {
+                                        proximity: {
+                                            types: {
+                                                creature: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            type: "text",
+                            value: "$oracle_and_flavor_text{}",
+                            x: 400,
+                            y: 2795,
+                            width: 2488,
+                            height: 1200,
+                            style: "oracle",
                             wrap: {
                                 x: 2472,
                                 y: 3869,
@@ -1694,38 +1765,69 @@
                         }
                     ],
                     conditions: {
-                        or: [
-                            {
-                                types: {
-                                    creature: true
+                        proximity: {
+                            or: [
+                                {
+                                    types: {
+                                        creature: true
+                                    }
+                                },
+                                {
+                                    types: {
+                                        vehicle: true
+                                    }
                                 }
-                            },
-                            {
-                                types: {
-                                    vehicle: true
-                                }
-                            }
-                        ]
+                            ]
+                        }
                     }
                 },
                 {
                     type: "text",
-                    value: "${card.oracle_and_flavor}",
+                    value: "$oracle_and_flavor_text{}",
                     x: 400,
                     y: 2795,
                     width: 2488,
                     height: 1070,
+                    style: "oracle",
                     conditions: {
                         layout: "modal_dfc"
                     }
                 },
                 {
                     type: "text",
-                    value: "${card.oracle_and_flavor}",
+                    value: "$oracle_and_flavor_text{}",
                     x: 400,
                     y: 2795,
                     width: 2488,
-                    height: 1200
+                    height: 1200,
+                    style: "oracle",
+                    wrap: {
+                        x: 2472,
+                        y: 3669,
+                        width: 535,
+                        height: 515
+                    },
+                    conditions: {
+                        layout: "transform",
+                        proximity: {
+                            flipped: {
+                                proximity: {
+                                    types: {
+                                        creature: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    type: "text",
+                    value: "$oracle_and_flavor_text{}",
+                    x: 400,
+                    y: 2795,
+                    width: 2488,
+                    height: 1200,
+                    style: "oracle"
                 }
             ]
         },
@@ -1735,7 +1837,7 @@
             children: [
                 {
                     type: "text",
-                    value: "${card.artist}",
+                    value: "${artist}",
                     style: {
                         font: "MatrixBold",
                         color: "#FFFFFF",
@@ -1758,8 +1860,10 @@
                 }
             ],
             conditions: {
-                options: {
-                    artist_outline: false
+                proximity: {
+                    options: {
+                        artist_outline: false
+                    }
                 }
             }
         },
@@ -1768,7 +1872,7 @@
             children: [
                 {
                     type: "text",
-                    value: "${card.artist}",
+                    value: "${artist}",
                     style: {
                         font: "MatrixBold",
                         color: "#FFFFFF",
@@ -1799,8 +1903,10 @@
                 }
             ],
             conditions: {
-                options: {
-                    artist_outline: true
+                proximity: {
+                    options: {
+                        artist_outline: true
+                    }
                 }
             }
         }

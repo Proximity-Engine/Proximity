@@ -9,10 +9,11 @@ import dev.hephaestus.proximity.text.Symbol;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public final class TextParser {
     private final String oracle;
-    private final Template template;
+    private final Map<String, Style> styles;
     private final Style style;
     private final String newLine;
 
@@ -22,9 +23,9 @@ public final class TextParser {
     private boolean italic;
     private boolean allWordsItalic;
 
-    public TextParser(String oracle, Template template, Style style, String newLine) {
+    public TextParser(String oracle, Map<String, Style> styles, Style style, String newLine) {
         this.oracle = oracle;
-        this.template = template;
+        this.styles = styles;
         this.style = style;
         this.newLine = newLine;
     }
@@ -59,6 +60,10 @@ public final class TextParser {
 
                     this.italic = allWordsItalic;
                 }
+                case '*' -> {
+                    completeWord();
+                    this.italic = !italic;
+                }
                 case '\n' -> {
                     completeWord();
 
@@ -79,7 +84,7 @@ public final class TextParser {
                     }
                     String symbol = symbolBuilder.toString();
 
-                    List<TextComponent> group = Symbol.symbol(symbol, this.template, this.style.color(null).font("NDPMTG", null), new Symbol.Factory.Context("oracle"));
+                    List<TextComponent> group = Symbol.symbol(symbol, this.styles, this.style.color(null).font("NDPMTG", null), new Symbol.Factory.Context("oracle"));
 
                     this.currentGroup.addAll(group);
                 }

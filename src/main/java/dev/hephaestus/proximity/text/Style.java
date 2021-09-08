@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.text;
 
-import com.google.gson.JsonObject;
+
+import dev.hephaestus.proximity.json.JsonObject;
 
 public record Style(String fontName, String italicFontName, Float size, Integer color,
                     Shadow shadow,

@@ -8,13 +8,17 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+    maven {
+        name = 'Quilt'
+        url = 'https://maven.quiltmc.org/repository/release'
+    }
 }
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    implementation "com.google.code.gson:gson:2.8.6"
-    shadow("com.google.code.gson:gson:2.8.6")
+    implementation "org.quiltmc:quilt-json5:1.0.0"
+    shadow "org.quiltmc:quilt-json5:1.0.0"
 }
 
 test {

@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.templates;
 
-import dev.hephaestus.proximity.cards.Card;
+import dev.hephaestus.proximity.json.JsonObject;
 
 public interface LayerFactory {
-    Layer create(Card card, int x, int y);
+    Layer create(JsonObject card, int x, int y);
 }

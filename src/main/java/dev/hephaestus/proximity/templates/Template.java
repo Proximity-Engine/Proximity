@@ -1,18 +1,16 @@
 package dev.hephaestus.proximity.templates;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+
 import dev.hephaestus.proximity.TemplateFiles;
 import dev.hephaestus.proximity.TextComponent;
-import dev.hephaestus.proximity.cards.*;
+import dev.hephaestus.proximity.json.JsonArray;
+import dev.hephaestus.proximity.json.JsonElement;
+import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.json.JsonPrimitive;
 import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
-import dev.hephaestus.proximity.text.Symbol;
 import dev.hephaestus.proximity.util.DrawingUtil;
-import dev.hephaestus.proximity.util.Option;
-import dev.hephaestus.proximity.util.OptionContainer;
+import dev.hephaestus.proximity.util.Keys;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import javax.imageio.ImageIO;
@@ -20,25 +18,32 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.net.URL;
 import java.util.List;
-import java.util.function.Function;
+import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public final class Template implements OptionContainer, TemplateFiles  {
+public final class Template implements TemplateFiles  {
+    private static final Pattern SUBSTITUTE = Pattern.compile("\\$(\\w*)\\{(\\w+(?:\\.\\w+)*)}");
+
     private final Map<String, Style> styles;
     private final List<LayerFactory> layers = new ArrayList<>();
-    private final OptionContainer wrappedOptions;
+    private final Map<String, List<Predicate<JsonElement>>> conditions;
+    private final JsonObject options;
     private final TemplateFiles files;
 
-    private Template(TemplateFiles files, List<LayerFactoryFactory> factories, OptionContainer options, Map<String, Style> styles) {
+    private Template(TemplateFiles files, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles, Map<String, List<Predicate<JsonElement>>> conditions) {
         this.files = files;
         this.styles = Map.copyOf(styles);
-        this.wrappedOptions = options;
+        this.options = options;
 
         for (LayerFactoryFactory factory : factories) {
             this.layers.add(factory.create(this));
         }
+
+        this.conditions = new HashMap<>(conditions);
     }
 
     public Style getStyle(String name) {
@@ -47,7 +52,7 @@ public final class Template implements OptionContainer, TemplateFiles  {
         return this.styles.getOrDefault(name, Style.EMPTY);
     }
 
-    public void draw(Card card, BufferedImage out) {
+    public void draw(JsonObject card, BufferedImage out) {
         StatefulGraphics graphics = new StatefulGraphics(out);
 
         for (LayerFactory factory : this.layers) {
@@ -60,16 +65,6 @@ public final class Template implements OptionContainer, TemplateFiles  {
     }
 
     @Override
-    public <T> T getOption(String name) {
-        return this.wrappedOptions.getOption(name);
-    }
-
-    @Override
-    public Map<String, Object> getMap() {
-        return this.wrappedOptions.getMap();
-    }
-
-    @Override
     public BufferedImage getImage(String... images) {
         return this.files.getImage(images);
     }
@@ -79,11 +74,20 @@ public final class Template implements OptionContainer, TemplateFiles  {
         return this.files.getInputStream(first, more);
     }
 
+    public JsonObject getOptions() {
+        return this.options;
+    }
+
+    public Map<String, Style> getStyles() {
+        return this.styles;
+    }
+
     public static final class Builder {
         private final TemplateFiles files;
         private final Map<String, Style> styles = new HashMap<>();
         private final List<LayerFactoryFactory> factories = new ArrayList<>();
-        private final Map<String, Object> options = new HashMap<>();
+        private final Map<String, List<Predicate<JsonElement>>> conditions = new HashMap<>();
+        private final JsonObject options = new JsonObject();
 
         public Builder(TemplateFiles files) {
             this.files = files;
@@ -95,40 +99,49 @@ public final class Template implements OptionContainer, TemplateFiles  {
             return this;
         }
 
+        public Builder condition(String name, Predicate<JsonElement> predicate) {
+            this.conditions.computeIfAbsent(name, k -> new ArrayList<>()).add(predicate);
+
+            return this;
+        }
+
         public Builder style(String name, Style style) {
             this.styles.put(name, style);
 
             return this;
         }
 
-        public <T> Builder option(String name, T value) {
-            this.options.put(name, value);
+        public <T> Builder option(String name, JsonElement value) {
+            this.options.add(name, value);
 
             return this;
         }
 
         public Template build() {
-            return new Template(this.files, this.factories, new OptionContainer.Implementation(this.options), this.styles);
+            return new Template(this.files, this.factories, this.options.deepCopy(), this.styles, this.conditions);
         }
     }
 
     public static class Parser {
-        private final Map<String, Predicate<Card>> predicates = new HashMap<>();
+        private final JsonObject object;
+        private final TemplateFiles files;
+        private final Template.Builder builder;
 
-        public Parser(Map<String, String> args) {
+        public Parser(JsonObject object, TemplateFiles files, Map<String, String> args) {
+            this.object = object;
+            this.files = files;
+            this.builder = new Template.Builder(files);
+
             for (var entry : args.entrySet()) {
                 if (entry.getValue().equalsIgnoreCase("true") || entry.getValue().equalsIgnoreCase("false")) {
                     boolean bl = Boolean.parseBoolean(entry.getValue());
-                    this.predicates.put(entry.getKey().replace("-", "_"), card -> bl);
+                    this.builder.options.add(new String[] { entry.getKey().replace("-", "_") }, bl);
                 }
             }
         }
 
-        public Template parse(JsonObject object, TemplateFiles files) {
-            Template.Builder builder = new Template.Builder(files);
-
-            builder.option(Option.USE_OFFICIAL_ART, true);
-            this.predicates.put("use_official_art", card -> card.getOption(Option.USE_OFFICIAL_ART));
+        public Template parse() {
+            builder.options.add(Keys.USE_OFFICIAL_ART, true);
 
             if (object.has("options")) {
                 for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("options").entrySet()) {
@@ -138,11 +151,9 @@ public final class Template implements OptionContainer, TemplateFiles  {
 
                         if (value.isString()) {
                             String stringValue = value.getAsString();
-                            builder.option(key, stringValue);
-                            this.predicates.put(key, card -> card.getOption(key).equals(stringValue));
+                            builder.options.add(new String[] {entry.getKey()}, stringValue);
                         } else if (value.isBoolean()) {
-                            builder.option(entry.getKey(), value.getAsBoolean());
-                            this.predicates.put(entry.getKey(), card -> card.getOption(entry.getKey()));
+                            builder.options.add(new String[] {entry.getKey()}, value.getAsBoolean());
                         }
                     }
                 }
@@ -152,6 +163,14 @@ public final class Template implements OptionContainer, TemplateFiles  {
                 for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("styles").entrySet()) {
                     if (entry.getValue().isJsonObject()) {
                         builder.style(entry.getKey(), parseStyle(entry.getValue().getAsJsonObject()));
+                    }
+                }
+            }
+
+            if (object.has("conditions")) {
+                for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("conditions").entrySet()) {
+                    if (entry.getValue().isJsonObject()) {
+                        builder.condition(entry.getKey(), (e -> parseConditions(entry.getValue().getAsJsonObject()).stream().allMatch(p -> p.test(e))));
                     }
                 }
             }
@@ -221,7 +240,9 @@ public final class Template implements OptionContainer, TemplateFiles  {
         }
 
         private LayerFactoryFactory parseLayerFromObject(JsonObject object, TemplateFiles cache) {
-            List<Predicate<Card>> predicates = parseConditions(object.getAsJsonObject("conditions"), card -> card);
+            List<Predicate<JsonElement>> predicates = object.has("conditions")
+                    ? parseConditions(object.getAsJsonObject("conditions"))
+                    : Collections.emptyList();
 
             int dX = object.has("x") ? object.get("x").getAsInt() : 0;
             int dY = object.has("y") ? object.get("y").getAsInt() : 0;
@@ -241,7 +262,7 @@ public final class Template implements OptionContainer, TemplateFiles  {
                 LayerFactory function = factory.create(template);
 
                 return (card, x, y) -> {
-                    for (Predicate<Card> predicate : predicates) {
+                    for (Predicate<JsonElement> predicate : predicates) {
                         if (!predicate.test(card)) return Layer.EMPTY;
                     }
 
@@ -351,45 +372,30 @@ public final class Template implements OptionContainer, TemplateFiles  {
                 return (card, x, y) -> {
                     List<List<TextComponent>> text;
 
-                    Alignment al = alignment;
-
-                    if (string.equals("${card.cost}") && card instanceof Spell spell) {
-                        text = Collections.singletonList(spell.manaCost());
-                    } else if (string.equals("${card.oracle}")) {
-                        TextBody oracle = card.getOracle();
-                        al = oracle.alignment();
-                        text = oracle.text();
-
-                        if (al == Alignment.CENTER && width != null) {
-                            x += width / 2;
-                        }
-                    } else if (string.equals("${card.oracle_and_flavor}")) {
-                        TextBody oracle = card.getOracle();
-                        TextBody flavor = card.getFlavor();
-                        al = oracle.alignment();
-                        text = oracle.text();
-
-                        if (flavor != null && !flavor.text().isEmpty() && !flavor.text().get(0).isEmpty()) {
-                            text.add(Collections.singletonList(new TextComponent(flavor.text().get(0).get(0).style(), "\n\n\n")));
-                            text.addAll(card.getFlavor().text());
-                        } else if (al == Alignment.CENTER && width != null) {
-                            x += width / 2;
-                        }
-                    } else if (string.equals("${card.flavor}")) {
-                        text = card.getFlavor().text();
-                    } else if (string.equals("${card.mutate}") && card instanceof Mutate mutate) {
-                        text = mutate.getMutateText().text();
-                    } else if (string.equals("${card.artist}")) {
-                        text = Collections.singletonList(Collections.singletonList(new TextComponent(card.getOption(Option.ARTIST))));
-                    } else {
-                        text = Collections.singletonList(Collections.singletonList(new TextComponent(substitute(string, card))));
-                    }
+                    text = string.equals("$oracle_and_flavor_text{}")
+                            ? parseOracleAndFlavorText(style, card)
+                            : parseText(style, string, card);
 
                     text = applyCapitalization(text, style.capitalization(), style.size());
 
-                    return new TextLayer(template, style, text, x, y, al, width != null && height != null ? new Rectangle(x, y, width, height) : null, wrap);
+                    return new TextLayer(template, style, text, x, y, alignment, width != null && height != null ? new Rectangle(x, y, width, height) : null, wrap);
                 };
             };
+        }
+
+        private List<List<TextComponent>> parseOracleAndFlavorText(Style base, JsonObject card) {
+            List<List<TextComponent>> text = TextFunction.oracleText(this.builder.styles, this.builder.styles.getOrDefault("oracle", base), card.getAsString("oracle_text"));
+
+            if (card.has("flavor_text")) {
+                List<List<TextComponent>> flavor = TextFunction.flavorText(this.builder.styles, this.builder.styles.getOrDefault("flavor", base), card.getAsString("flavor_text"));
+
+                if (!flavor.isEmpty()) {
+                    text.add(Collections.singletonList(new TextComponent(base, "\n\n")));
+                    text.addAll(flavor);
+                }
+            }
+
+            return text;
         }
 
         private static Rectangle parseRectangle(JsonObject object) {
@@ -443,18 +449,20 @@ public final class Template implements OptionContainer, TemplateFiles  {
 
             if (width != null || height != null) {
                 return template -> (card, x, y) -> {
-                    if (card.image() == null || !(boolean) card.getOption(Option.USE_OFFICIAL_ART)) return Layer.EMPTY;
-
-                    try {
-                        return new ImageLayer(card.image().toString(), ImageIO.read(card.image().openStream()), width, height, x, y);
-                    } catch (IOException exception) {
-                        exception.printStackTrace();
+                    if (card.getAsBoolean(Keys.USE_OFFICIAL_ART)) {
+                        try {
+                            return new ImageLayer(
+                                    card.getAsString("image_uris", "art_crop"),
+                                    ImageIO.read(new URL(card.getAsString("image_uris", "art_crop")).openStream()), width, height, x, y);
+                        } catch (IOException exception) {
+                            exception.printStackTrace();
+                        }
                     }
 
                     return Layer.EMPTY;
                 };
             } else {
-                throw new RuntimeException("Art layer requires at least one color 'width' and/or 'height'");
+                throw new RuntimeException("Art layer requires at least one field 'width' and/or 'height'");
             }
         }
 
@@ -466,51 +474,31 @@ public final class Template implements OptionContainer, TemplateFiles  {
             };
         }
 
-        private List<Predicate<Card>> parseConditions(JsonObject conditions, Function<Card, Card> modifier) {
+        private List<Predicate<JsonElement>> parseConditions(JsonObject conditions) {
             if (conditions == null) return Collections.emptyList();
 
-            List<Predicate<Card>> predicates = new ArrayList<>();
+            List<Predicate<JsonElement>> predicates = new ArrayList<>();
 
             for (Map.Entry<String, JsonElement> entry : conditions.entrySet()) {
                 String key = entry.getKey().toLowerCase(Locale.ROOT);
 
+                //noinspection SwitchStatementWithTooFewBranches
                 switch (key) {
-                    case "color_count" -> predicates.add(card -> modifier.apply(card).colors().size() == entry.getValue().getAsInt());
-                    case "hybrid" -> predicates.add(card -> {
-                        if (modifier.apply(card) instanceof Spell spell && spell.colors().size() == 2) {
-                            for (TextComponent component : spell.manaCost()) {
-                                switch (component.string()) {
-                                    case "w":
-                                    case "u":
-                                    case "b":
-                                    case "r":
-                                    case "g":
-                                        return !entry.getValue().getAsBoolean();
-                                }
-                            }
-
-                            return entry.getValue().getAsBoolean();
-                        }
-
-                        return !entry.getValue().getAsBoolean();
-                    });
-                    case "front" -> predicates.add(card -> modifier.apply(card).isFrontFace() == entry.getValue().getAsBoolean());
-                    case "layout" -> predicates.add(card -> modifier.apply(card).getLayout().equalsIgnoreCase(entry.getValue().getAsString()));
                     case "or" -> {
-                        List<List<Predicate<Card>>> orPredicates = new ArrayList<>();
+                        List<List<Predicate<JsonElement>>> orPredicates = new ArrayList<>();
 
                         for (JsonElement element : entry.getValue().getAsJsonArray()) {
-                            orPredicates.add(parseConditions(element.getAsJsonObject(), card -> card));
+                            orPredicates.add(parseConditions(element.getAsJsonObject()));
                         }
 
                         predicates.add(card -> {
                             boolean result = false;
 
-                            for (List<Predicate<Card>> list : orPredicates) {
+                            for (List<Predicate<JsonElement>> list : orPredicates) {
                                 boolean bl = true;
 
-                                for (Predicate<Card> predicate : list) {
-                                    bl &= predicate.test(modifier.apply(card));
+                                for (Predicate<JsonElement> predicate : list) {
+                                    bl &= predicate.test(card);
                                 }
 
                                 result |= bl;
@@ -519,72 +507,118 @@ public final class Template implements OptionContainer, TemplateFiles  {
                             return result;
                         });
                     }
-                    case "types" -> predicates.add(card -> {
-                        for (Map.Entry<String, JsonElement> type : entry.getValue().getAsJsonObject().entrySet()) {
-                            if (modifier.apply(card).getTypes().has(type.getKey()) != type.getValue().getAsBoolean()) return false;
+                    default -> {
+                        if (this.builder.conditions.containsKey(key)) {
+                            predicates.addAll(this.builder.conditions.get(key));
+                        } else if (entry.getValue() instanceof JsonPrimitive primitive) {
+                            if (primitive.isString()) {
+                                predicates.add(element -> element instanceof JsonObject object && object.has(key) && object.get(key).isJsonPrimitive() && object.get(key).getAsJsonPrimitive().isString() && object.getAsString(key).equalsIgnoreCase(primitive.getAsString()));
+                            } else if (primitive.isNumber()) {
+                                predicates.add(element -> element instanceof JsonObject object && object.has(key) && object.get(key).isJsonPrimitive() && object.get(key).getAsJsonPrimitive().isNumber() && object.getAsInt(key) == primitive.getAsInt());
+                            } else if (primitive.isBoolean()) {
+                                predicates.add(element -> {
+                                    if (element instanceof JsonObject object && object.has(key) && object.get(key).isJsonPrimitive() && object.get(key).getAsJsonPrimitive().isBoolean()) {
+                                        return object.getAsBoolean(key) == primitive.getAsBoolean();
+                                    } else if (element instanceof JsonArray array) {
+                                        return array.contains(key) == primitive.getAsBoolean();
+                                    }
+
+                                    return false;
+                                });
+                            }
+                        } else if (entry.getValue() instanceof JsonObject object) {
+                            List<Predicate<JsonElement>> p = parseConditions(object);
+                            predicates.add(o -> p.stream().allMatch(predicate -> predicate.test(o.getAsJsonObject().get(key))));
                         }
-
-                        return true;
-                    });
-                    case "frame_effects" -> predicates.add(card -> {
-                        for (Map.Entry<String, JsonElement> effect : entry.getValue().getAsJsonObject().entrySet()) {
-                            if (modifier.apply(card).hasFrameEffect(effect.getKey().toLowerCase(Locale.ROOT)) != effect.getValue().getAsBoolean()) return false;
-                        }
-
-                        return true;
-                    });
-                    case "keywords" -> predicates.add(card -> {
-                        for (Map.Entry<String, JsonElement> effect : entry.getValue().getAsJsonObject().entrySet()) {
-                            if (modifier.apply(card).hasKeyword(effect.getKey().toLowerCase(Locale.ROOT)) != effect.getValue().getAsBoolean()) return false;
-                        }
-
-                        return true;
-                    });
-                    case "flipped" -> predicates.addAll(this.parseConditions(entry.getValue().getAsJsonObject(), Card::getOtherSide));
-                    case "options" -> predicates.add(card -> {
-                        card = modifier.apply(card);
-
-                        for (Map.Entry<String, JsonElement> option : entry.getValue().getAsJsonObject().entrySet()) {
-                            if (option.getValue().getAsJsonPrimitive().isString() && !this.predicates.get(option.getKey()).test(card)) return false;
-                            if (this.predicates.get(option.getKey()).test(card) != option.getValue().getAsBoolean()) return false;
-                        }
-
-                        return true;
-                    });
-                    default -> throw new RuntimeException("Unexpected condition: " + entry.getKey());
+                    }
                 }
             }
 
             return predicates;
         }
 
-        private String substitute(String src, Card card) {
-            if (card instanceof Creature creature) {
-                src = src.replace("${card.pt}", creature.power() + "/" + creature.toughness());
-            }
+        private String substitute(String string, JsonObject card) {
+            Matcher matcher = SUBSTITUTE.matcher(string);
 
-            if (!card.isSingleSided()) {
-                if (card.getOtherSide() instanceof Creature creature) {
-                    src = src.replace("${other.card.pt}", creature.power() + "/" + creature.toughness());
+            String s = string;
+
+            while (matcher.find()) {
+                String[] key = matcher.group(2).split("\\.");
+
+                JsonElement element = card.get(key);
+
+                String replacement;
+
+                if (element == null) {
+                    replacement = "null";
+                } else if (element.isJsonArray()) {
+                    StringBuilder builder = new StringBuilder();
+
+                    for (JsonElement e : element.getAsJsonArray()) {
+                        builder.append(e.getAsString());
+                    }
+
+                    replacement = builder.toString();
+                } else if (element.isJsonPrimitive()) {
+                    replacement = element.getAsString();
+                } else {
+                    throw new UnsupportedOperationException();
                 }
 
-                src = src.replace("${other.card.color}", join(card.getOtherSide().colors()))
-                        .replace("${other.card.main_types}", card.getOtherSide().getMainTypes());
+                s = s.replace("${" + matcher.group(2) + "}", replacement);
             }
 
-            return src.replace("${card.color}", join(card.colors()))
-                    .replace("${card.name}", card.name())
-                    .replace("${card.type}", card.type());
+            return s;
         }
 
-        private String join(Iterable<Symbol> symbols) {
-            StringBuilder builder = new StringBuilder();
+        private List<List<TextComponent>> parseText(Style baseStyle, String string, JsonObject card) {
+            Matcher matcher = SUBSTITUTE.matcher(string);
 
-            for (Symbol symbol : symbols) {
-                builder.append(symbol.glyphs());
+            List<List<TextComponent>> result = new ArrayList<>();
+
+            int previousEnd = 0;
+
+            while (matcher.find()) {
+                String priors = string.substring(previousEnd, matcher.start());
+
+                if (!priors.isEmpty()) {
+                    result.add(Collections.singletonList(new TextComponent(baseStyle, priors)));
+                }
+
+                String function = matcher.group(1);
+                String[] key = matcher.group(2).split("\\.");
+
+                JsonElement element = card.get(key);
+
+                String replacement;
+
+                if (element == null) {
+                    replacement = "null";
+                } else if (element.isJsonArray()) {
+                    StringBuilder builder = new StringBuilder();
+
+                    for (JsonElement e : element.getAsJsonArray()) {
+                        builder.append(e.getAsString());
+                    }
+
+                    replacement = builder.toString();
+                } else if (element.isJsonPrimitive()) {
+                    replacement = element.getAsString();
+                } else {
+                    throw new UnsupportedOperationException();
+                }
+
+                previousEnd = matcher.end();
+
+                result.addAll(TextFunction.apply(this.builder.styles, baseStyle, function, replacement));
             }
 
-            return builder.toString();
+            if (previousEnd != string.length()) {
+                String priors = string.substring(previousEnd);
+                result.add(Collections.singletonList(new TextComponent(baseStyle, priors)));
+            }
+
+            return result;
         }
     }
 }
