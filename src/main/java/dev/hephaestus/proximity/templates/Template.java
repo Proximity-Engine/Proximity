@@ -1,7 +1,6 @@
 package dev.hephaestus.proximity.templates;
 
 
-import dev.hephaestus.proximity.Pair;
 import dev.hephaestus.proximity.TemplateFiles;
 import dev.hephaestus.proximity.TextComponent;
 import dev.hephaestus.proximity.cards.ElementPredicate;
@@ -263,8 +262,12 @@ public final class Template implements TemplateFiles  {
                     Layer layer = Layer.EMPTY;
 
                     if (builder.options.getAsBoolean("debug")) {
-                        layer = function.create(card, dX, dY);
-                        log.debug("\n\nLAYER: {}", layer);
+                        try {
+                            layer = function.create(card, dX, dY);
+                            log.debug("\n\nLAYER: {}", layer);
+                        } catch (Throwable throwable) {
+                            log.debug("\n\nLAYER: ???");
+                        }
                     }
 
                     for (Predicate predicate : predicates) {
