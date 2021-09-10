@@ -1,8 +1,11 @@
 package dev.hephaestus.proximity.templates;
 
 
+import dev.hephaestus.proximity.Pair;
 import dev.hephaestus.proximity.TemplateFiles;
 import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.cards.ElementPredicate;
+import dev.hephaestus.proximity.cards.Predicate;
 import dev.hephaestus.proximity.json.JsonArray;
 import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
@@ -11,7 +14,10 @@ import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.DrawingUtil;
 import dev.hephaestus.proximity.util.Keys;
+import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.StatefulGraphics;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -21,20 +27,19 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO: The main class has been broken up, but this one still needs some work.
 public final class Template implements TemplateFiles  {
     private static final Pattern SUBSTITUTE = Pattern.compile("\\$(\\w*)\\{(\\w+(?:\\.\\w+)*)}");
 
     private final Map<String, Style> styles;
     private final List<LayerFactory> layers = new ArrayList<>();
-    private final Map<String, List<Predicate<JsonElement>>> conditions;
     private final JsonObject options;
     private final TemplateFiles files;
 
-    private Template(TemplateFiles files, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles, Map<String, List<Predicate<JsonElement>>> conditions) {
+    private Template(TemplateFiles files, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles) {
         this.files = files;
         this.styles = Map.copyOf(styles);
         this.options = options;
@@ -43,7 +48,6 @@ public final class Template implements TemplateFiles  {
             this.layers.add(factory.create(this));
         }
 
-        this.conditions = new HashMap<>(conditions);
     }
 
     public Style getStyle(String name) {
@@ -78,19 +82,19 @@ public final class Template implements TemplateFiles  {
         return this.options;
     }
 
-    public Map<String, Style> getStyles() {
-        return this.styles;
-    }
-
     public static final class Builder {
         private final TemplateFiles files;
         private final Map<String, Style> styles = new HashMap<>();
         private final List<LayerFactoryFactory> factories = new ArrayList<>();
-        private final Map<String, List<Predicate<JsonElement>>> conditions = new HashMap<>();
+        private final Map<String, JsonObject> conditions = new HashMap<>();
         private final JsonObject options = new JsonObject();
 
         public Builder(TemplateFiles files) {
             this.files = files;
+        }
+
+        public Builder log() {
+            return this;
         }
 
         public Builder layer(LayerFactoryFactory factory) {
@@ -99,8 +103,8 @@ public final class Template implements TemplateFiles  {
             return this;
         }
 
-        public Builder condition(String name, Predicate<JsonElement> predicate) {
-            this.conditions.computeIfAbsent(name, k -> new ArrayList<>()).add(predicate);
+        public Builder condition(String name, JsonObject condition) {
+            this.conditions.put(name, condition);
 
             return this;
         }
@@ -111,42 +115,36 @@ public final class Template implements TemplateFiles  {
             return this;
         }
 
-        public <T> Builder option(String name, JsonElement value) {
-            this.options.add(name, value);
-
-            return this;
-        }
-
         public Template build() {
-            return new Template(this.files, this.factories, this.options.deepCopy(), this.styles, this.conditions);
+            return new Template(this.files, this.factories, this.options.deepCopy(), this.styles);
         }
     }
 
     public static class Parser {
+        private final Logger log;
         private final JsonObject object;
         private final TemplateFiles files;
         private final Template.Builder builder;
 
-        public Parser(JsonObject object, TemplateFiles files, Map<String, String> args) {
+        public Parser(String name, JsonObject object, TemplateFiles files, JsonObject options) {
+            this.log = LogManager.getLogger("Proximity/" + name);
             this.object = object;
             this.files = files;
             this.builder = new Template.Builder(files);
 
-            for (var entry : args.entrySet()) {
-                if (entry.getValue().equalsIgnoreCase("true") || entry.getValue().equalsIgnoreCase("false")) {
-                    boolean bl = Boolean.parseBoolean(entry.getValue());
-                    this.builder.options.add(new String[] { entry.getKey().replace("-", "_") }, bl);
-                }
+            for (var entry : options.entrySet()) {
+                this.builder.options.add(entry.getKey(), entry.getValue().deepCopy());
             }
         }
 
         public Template parse() {
             builder.options.add(Keys.USE_OFFICIAL_ART, true);
 
+            builder.log();
+
             if (object.has("options")) {
                 for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("options").entrySet()) {
                     if (entry.getValue().isJsonPrimitive()) {
-                        String key = entry.getKey();
                         JsonPrimitive value = entry.getValue().getAsJsonPrimitive();
 
                         if (value.isString()) {
@@ -170,7 +168,7 @@ public final class Template implements TemplateFiles  {
             if (object.has("conditions")) {
                 for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("conditions").entrySet()) {
                     if (entry.getValue().isJsonObject()) {
-                        builder.condition(entry.getKey(), (e -> parseConditions(entry.getValue().getAsJsonObject()).stream().allMatch(p -> p.test(e))));
+                        builder.condition(entry.getKey(), entry.getValue().getAsJsonObject());
                     }
                 }
             }
@@ -240,7 +238,7 @@ public final class Template implements TemplateFiles  {
         }
 
         private LayerFactoryFactory parseLayerFromObject(JsonObject object, TemplateFiles cache) {
-            List<Predicate<JsonElement>> predicates = object.has("conditions")
+            List<Predicate> predicates = object.has("conditions")
                     ? parseConditions(object.getAsJsonObject("conditions"))
                     : Collections.emptyList();
 
@@ -262,11 +260,26 @@ public final class Template implements TemplateFiles  {
                 LayerFactory function = factory.create(template);
 
                 return (card, x, y) -> {
-                    for (Predicate<JsonElement> predicate : predicates) {
-                        if (!predicate.test(card)) return Layer.EMPTY;
+                    Layer layer = Layer.EMPTY;
+
+                    if (builder.options.getAsBoolean("debug")) {
+                        layer = function.create(card, dX, dY);
+                        log.debug("\n\nLAYER: {}", layer);
                     }
 
-                    return function.create(card, dX, dY);
+                    for (Predicate predicate : predicates) {
+                        Result<Boolean> result = predicate.test(card);
+
+                        if (result.isError() || !result.get()) {
+                            return Layer.EMPTY;
+                        }
+                    }
+
+                    if (!builder.options.getAsBoolean("debug")) {
+                        layer = function.create(card, dX, dY);
+                    }
+
+                    return layer;
                 };
             };
         }
@@ -474,67 +487,62 @@ public final class Template implements TemplateFiles  {
             };
         }
 
-        private List<Predicate<JsonElement>> parseConditions(JsonObject conditions) {
+        private List<Predicate> flb(JsonObject conditions, String... path) {
             if (conditions == null) return Collections.emptyList();
 
-            List<Predicate<JsonElement>> predicates = new ArrayList<>();
+            List<Predicate> result = new ArrayList<>();
 
-            for (Map.Entry<String, JsonElement> entry : conditions.entrySet()) {
-                String key = entry.getKey().toLowerCase(Locale.ROOT);
+            for (var entry : conditions.entrySet()) {
+                String key = entry.getKey();
+                JsonElement value = entry.getValue();
 
-                //noinspection SwitchStatementWithTooFewBranches
-                switch (key) {
-                    case "or" -> {
-                        List<List<Predicate<JsonElement>>> orPredicates = new ArrayList<>();
+                if (key.equals("or")) {
+                    List<Predicate> ps = new ArrayList<>();
 
-                        for (JsonElement element : entry.getValue().getAsJsonArray()) {
-                            orPredicates.add(parseConditions(element.getAsJsonObject()));
-                        }
-
-                        predicates.add(card -> {
-                            boolean result = false;
-
-                            for (List<Predicate<JsonElement>> list : orPredicates) {
-                                boolean bl = true;
-
-                                for (Predicate<JsonElement> predicate : list) {
-                                    bl &= predicate.test(card);
-                                }
-
-                                result |= bl;
-                            }
-
-                            return result;
-                        });
+                    for (JsonElement element : value.getAsJsonArray()) {
+                        ps.addAll(flb(element.getAsJsonObject(), path));
                     }
-                    default -> {
-                        if (this.builder.conditions.containsKey(key)) {
-                            predicates.addAll(this.builder.conditions.get(key));
-                        } else if (entry.getValue() instanceof JsonPrimitive primitive) {
-                            if (primitive.isString()) {
-                                predicates.add(element -> element instanceof JsonObject object && object.has(key) && object.get(key).isJsonPrimitive() && object.get(key).getAsJsonPrimitive().isString() && object.getAsString(key).equalsIgnoreCase(primitive.getAsString()));
-                            } else if (primitive.isNumber()) {
-                                predicates.add(element -> element instanceof JsonObject object && object.has(key) && object.get(key).isJsonPrimitive() && object.get(key).getAsJsonPrimitive().isNumber() && object.getAsInt(key) == primitive.getAsInt());
-                            } else if (primitive.isBoolean()) {
-                                predicates.add(element -> {
-                                    if (element instanceof JsonObject object && object.has(key) && object.get(key).isJsonPrimitive() && object.get(key).getAsJsonPrimitive().isBoolean()) {
-                                        return object.getAsBoolean(key) == primitive.getAsBoolean();
-                                    } else if (element instanceof JsonArray array) {
-                                        return array.contains(key) == primitive.getAsBoolean();
-                                    }
 
-                                    return false;
-                                });
-                            }
-                        } else if (entry.getValue() instanceof JsonObject object) {
-                            List<Predicate<JsonElement>> p = parseConditions(object);
-                            predicates.add(o -> p.stream().allMatch(predicate -> predicate.test(o.getAsJsonObject().get(key))));
-                        }
-                    }
+                    result.add(new Predicate.Or(ps));
+                } else if (this.builder.conditions.containsKey(key)) {
+                    String[] p = Arrays.copyOf(path, path.length + 1);
+                    p[path.length] = key;
+
+                    result.addAll(flb(builder.conditions.get(key), p));
+                } else if (value.isJsonObject()) {
+                    String[] p = Arrays.copyOf(path, path.length + 1);
+                    p[path.length] = key;
+
+                    result.addAll(flb(value.getAsJsonObject(), p));
+                } else if (value.isJsonPrimitive()) {
+                    String[] p = Arrays.copyOf(path, path.length + 1);
+                    p[path.length] = key;
+
+                    ElementPredicate.of(log, p, value)
+                            .ifPresent(result::add)
+                            .ifError(log::error);
                 }
             }
 
-            return predicates;
+            return result;
+        }
+
+        private List<Predicate> parseConditions(JsonObject conditions) {
+            if (conditions == null) return Collections.emptyList();
+
+            List<Predicate> result = flb(conditions);
+
+            if (conditions.has("or")) {
+                List<Predicate> or = new ArrayList<>();
+
+                for (var entry : conditions.getAsJsonArray("or")) {
+                    or.addAll(parseConditions(entry.getAsJsonObject()));
+                }
+
+                result.add(new Predicate.Or(or));
+            }
+
+            return result;
         }
 
         private String substitute(String string, JsonObject card) {

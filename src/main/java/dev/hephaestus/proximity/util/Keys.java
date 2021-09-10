@@ -13,7 +13,6 @@ public class Keys {
     public static final String[] TYPES = new String[] { PROXIMITY, "types" };
     public static final String[] COLOR_COUNT = new String[] { PROXIMITY, "color_count" };
     public static final String[] HYBRID = new String[] { PROXIMITY, "hybrid" };
-    public static final String[] SET_CODE = new String[] { PROXIMITY, "options", "set_code" };
     public static final String[] MAIN_TYPES = new String[] { PROXIMITY, "main_types" };
     public static final String[] MUTATE_TEXT = new String[] { PROXIMITY, "util", "mutate_text" };
 }

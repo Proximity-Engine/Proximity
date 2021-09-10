@@ -357,4 +357,17 @@ public class TextLayer extends Layer {
 
         return new Pair<>(bounds == null ? new Rectangle() : bounds, firstRowHeight);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        for (List<TextComponent> list: this.text) {
+            for (TextComponent component : list) {
+                builder.append(component.string());
+            }
+        }
+
+        return builder.toString();
+    }
 }

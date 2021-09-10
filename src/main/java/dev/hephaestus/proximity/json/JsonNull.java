@@ -7,10 +7,7 @@ import java.io.IOException;
 public final class JsonNull extends JsonElement {
     public static final JsonNull INSTANCE = new JsonNull();
 
-    @Deprecated
-    public JsonNull() {
-        // Do nothing
-    }
+    private JsonNull() {}
 
     @Override
     public JsonNull deepCopy() {
@@ -29,6 +26,6 @@ public final class JsonNull extends JsonElement {
 
     @Override
     public boolean equals(Object other) {
-        return this == other || other instanceof JsonNull;
+        return other == this;
     }
 }

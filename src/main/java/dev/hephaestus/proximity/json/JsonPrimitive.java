@@ -164,8 +164,7 @@ public final class JsonPrimitive extends JsonElement {
      * (Long, Integer, Short, Byte, BigInteger)
      */
     private static boolean isIntegral(JsonPrimitive primitive) {
-        if (primitive.value instanceof Number) {
-            Number number = (Number) primitive.value;
+        if (primitive.value instanceof Number number) {
             return number instanceof BigInteger || number instanceof Long || number instanceof Integer
                     || number instanceof Short || number instanceof Byte;
         }

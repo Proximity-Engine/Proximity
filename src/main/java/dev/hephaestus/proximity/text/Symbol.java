@@ -87,10 +87,6 @@ public record Symbol(String glyphs, int color) {
         });
     }
 
-    public static Symbol of(String symbol) {
-        return DEFAULT_SYMBOLS.get(symbol);
-    }
-
     private static void symbol(String symbol, int color) {
         DEFAULT_SYMBOLS.put(symbol, new Symbol(symbol, color));
     }

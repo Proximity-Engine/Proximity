@@ -1,15 +1,11 @@
 package dev.hephaestus.proximity.cards;
 
 import dev.hephaestus.proximity.TextComponent;
-import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class TextParser {
     private final String oracle;
@@ -103,6 +99,20 @@ public final class TextParser {
     }
 
     private void completeWord() {
+        String word = this.currentWord.toString();
+
+        if (word.startsWith("\u2014")) {
+            loop: for (int i = this.text.size() - 1; i > 0; --i) {
+                List<TextComponent> list = this.text.get(i);
+
+                for (ListIterator<TextComponent> iterator = list.listIterator(list.size()); iterator.hasPrevious(); ) {
+                    TextComponent text = iterator.previous();
+                    if (text.string().equals(this.newLine)) break loop;
+                    iterator.set(new TextComponent(text.style().italic(), text.string()));
+                }
+            }
+        }
+
         if (!this.currentWord.isEmpty() || !this.currentGroup.isEmpty()) {
             if (!this.currentWord.isEmpty()) {
                 if (!this.italic) {
@@ -111,7 +121,7 @@ public final class TextParser {
 
                 this.currentGroup.add(new TextComponent(
                                 this.italic ? this.style.italic() : this.style,
-                                this.currentWord.toString()
+                                word
                         )
                 );
             }

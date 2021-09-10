@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.json;
 
+import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
 import org.quiltmc.json5.JsonWriter;
@@ -61,14 +62,6 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
         return false;
     }
 
-    public void add(Boolean bool) {
-        elements.add(bool == null ? JsonNull.INSTANCE : new JsonPrimitive(bool));
-    }
-
-    public void add(Number number) {
-        elements.add(number == null ? JsonNull.INSTANCE : new JsonPrimitive(number));
-    }
-
     public void add(String string) {
         elements.add(string == null ? JsonNull.INSTANCE : new JsonPrimitive(string));
     }
@@ -79,10 +72,6 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
         }
 
         return elements.add(element);
-    }
-
-    public void addAll(JsonArray array) {
-        elements.addAll(array.elements);
     }
 
     public JsonElement set(int index, JsonElement element) {
@@ -98,23 +87,15 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
         elements.add(index, element);
     }
 
-    public boolean remove(JsonElement element) {
-        return elements.remove(element);
-    }
-
     public JsonElement remove(int index) {
         return elements.remove(index);
-    }
-
-    public boolean contains(JsonElement element) {
-        return elements.contains(element);
     }
 
     public int size() {
         return elements.size();
     }
 
-    public Iterator<JsonElement> iterator() {
+    public @NotNull Iterator<JsonElement> iterator() {
         return elements.iterator();
     }
 
@@ -242,12 +223,12 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
     }
 
     @Override
-    public Object[] toArray() {
+    public Object @NotNull [] toArray() {
         return elements.toArray();
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
+    public <T> T @NotNull [] toArray(T @NotNull [] a) {
         return elements.toArray(a);
     }
 
@@ -257,27 +238,27 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
+    public boolean containsAll(@NotNull Collection<?> c) {
         return elements.containsAll(c);
     }
 
     @Override
-    public boolean addAll(Collection<? extends JsonElement> c) {
+    public boolean addAll(@NotNull Collection<? extends JsonElement> c) {
         return elements.addAll(c);
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends JsonElement> c) {
+    public boolean addAll(int index, @NotNull Collection<? extends JsonElement> c) {
         return elements.addAll(index, c);
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@NotNull Collection<?> c) {
         return elements.removeAll(c);
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@NotNull Collection<?> c) {
         return elements.retainAll(c);
     }
 
@@ -307,17 +288,17 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
     }
 
     @Override
-    public ListIterator<JsonElement> listIterator() {
+    public @NotNull ListIterator<JsonElement> listIterator() {
         return elements.listIterator();
     }
 
     @Override
-    public ListIterator<JsonElement> listIterator(int index) {
+    public @NotNull ListIterator<JsonElement> listIterator(int index) {
         return elements.listIterator(index);
     }
 
     @Override
-    public List<JsonElement> subList(int fromIndex, int toIndex) {
+    public @NotNull List<JsonElement> subList(int fromIndex, int toIndex) {
         return elements.subList(fromIndex, toIndex);
     }
 

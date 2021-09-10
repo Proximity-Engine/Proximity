@@ -13,6 +13,14 @@ public final class JsonObject extends JsonElement {
     private final Map<String, JsonElement> members =
             new LinkedHashMap<>();
 
+    public JsonObject() {
+
+    }
+
+    public JsonObject(String key, JsonElement entry) {
+        this.members.put(key, entry);
+    }
+
     @Override
     public JsonObject deepCopy() {
         JsonObject result = new JsonObject();
@@ -38,10 +46,6 @@ public final class JsonObject extends JsonElement {
         members.put(property, value == null ? JsonNull.INSTANCE : value);
     }
 
-    public JsonElement remove(String property) {
-        return members.remove(property);
-    }
-
     public void addProperty(String property, String value) {
         add(property, value == null ? JsonNull.INSTANCE : new JsonPrimitive(value));
     }
@@ -58,24 +62,8 @@ public final class JsonObject extends JsonElement {
         return members.entrySet();
     }
 
-    public Set<String> keySet() {
-        return members.keySet();
-    }
-
     public int size() {
         return members.size();
-    }
-
-    public JsonObject with(String key, JsonElement value) {
-        this.add(key, value);
-
-        return this;
-    }
-
-    public JsonObject with(String key, boolean value) {
-        this.add(key, new JsonPrimitive(value));
-
-        return this;
     }
 
     public boolean has(String memberName) {
@@ -99,18 +87,8 @@ public final class JsonObject extends JsonElement {
         return (T) this.get(key);
     }
 
-    public JsonPrimitive getAsJsonPrimitive(String memberName) {
-        return (JsonPrimitive) members.get(memberName);
-    }
-
     public JsonArray getAsJsonArray(String... keys) {
         return this.get((o, k) -> o.get(k, JsonArray::new).getAsJsonArray(), keys);
-    }
-
-    public Iterable<JsonElement> iterate(String key) {
-        return this.has(key) && this.get(key).isJsonArray() ?
-                this.getAsJsonArray(key)
-                : Collections.emptyList();
     }
 
     @Override
@@ -125,7 +103,9 @@ public final class JsonObject extends JsonElement {
     }
 
     public boolean getAsBoolean(String... keys) {
-        return get((o, k) -> o.get(k).getAsBoolean(), keys);
+        JsonElement e = get(JsonObject::get, keys);
+
+        return e != null && e.isJsonPrimitive() && e.getAsJsonPrimitive().isBoolean() && e.getAsBoolean();
     }
 
     public String getAsString(String... keys) {
@@ -217,5 +197,13 @@ public final class JsonObject extends JsonElement {
         }
 
         return object.get(key[key.length - 1]);
+    }
+
+    public JsonObject copyAll(JsonObject object) {
+        for (var entry : object.entrySet()) {
+            this.add(entry.getKey(), entry.getValue().deepCopy());
+        }
+
+        return this;
     }
 }

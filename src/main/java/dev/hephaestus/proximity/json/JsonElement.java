@@ -68,13 +68,6 @@ public abstract class JsonElement {
         throw new IllegalStateException("Not a JSON Primitive: " + this);
     }
 
-    public JsonNull getAsJsonNull() {
-        if (isJsonNull()) {
-            return (JsonNull) this;
-        }
-        throw new IllegalStateException("Not a JSON Null: " + this);
-    }
-
     public boolean getAsBoolean() {
         throw new UnsupportedOperationException(getClass().getSimpleName());
     }

@@ -1,9 +1,11 @@
-1x Arcane Signet (afc)
-1x Arid Mesa (mh2)
-1x Austere Command (cmr)
-1x Avacyn, Angel of Hope (2xm)
+1x Arcane Signet (afc) --use_official_art=false
+1x Cosima, God of the Voyage // The Omenkeel
+1x Elbrus, the Binding Blade // Withengar Unbound
+1x Avacyn, Angel of Hope (2xm) --use_official_art=false --border=false --artist_outline=true --artist=SomeCustomArtist
 1x Avenger of Zendikar (cmr)
-1x Bayou (olgc)
+1x Douse in Gloom (MB1)
+1x Douse in Gloom (GPT)
+1x Takklemaggot
 1x Beetleback Chief (jmp)
 1x Burgeoning (c16)
 1x Changeling Berserker (lrw)
@@ -14,8 +16,6 @@
 1x Coiling Oracle (c21)
 1x Command Tower (cc2)
 1x Commander's Sphere (afc)
-1x Conjurer's Closet (2xm)
-1x Conspiracy (tsb)
 1x Counterspell (mh2)
 1x Cultivate (afc)
 1x Cyclonic Rift (2xm)

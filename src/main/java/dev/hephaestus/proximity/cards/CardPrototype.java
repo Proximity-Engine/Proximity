@@ -5,11 +5,12 @@ import dev.hephaestus.proximity.json.JsonArray;
 import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.json.JsonPrimitive;
+import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.util.Keys;
 
 import java.util.*;
 
-public record CardPrototype(String scryfallName, String cardName, int number, JsonObject options) {
+public record CardPrototype(String scryfallName, String cardName, int number, JsonObject options, Template template) {
     private static final Map<String, String> LAND_TYPES = new HashMap<>();
 
     static {
@@ -47,13 +48,12 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
         JsonObject front = this.process(parseFace(raw, faces.get(0).getAsJsonObject()));
         JsonObject back = this.process(parseFace(raw, faces.get(1).getAsJsonObject()));
 
-        JsonObject frontCopy = front.deepCopy();
+        back.add(Keys.FLIPPED, front.deepCopy());
+        back.add(Keys.FRONT_FACE, false);
 
-        front.add(Keys.FLIPPED, back.deepCopy());
+        front.add(Keys.FLIPPED, back);
         front.add(Keys.FRONT_FACE, true);
 
-        back.add(Keys.FLIPPED, frontCopy);
-        back.add(Keys.FRONT_FACE, false);
 
         return front;
     }
@@ -80,7 +80,6 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
             String[] split = card.getAsString("oracle_text").split("\n", 2);
             card.addProperty("oracle_text", split[1]);
             card.add(Keys.MUTATE_TEXT, split[0]);
-
         }
 
         return card;
@@ -89,12 +88,20 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
     private static void processTypes(JsonObject card) {
         JsonArray types = card.getAsJsonArray(Keys.TYPES);
         StringBuilder mainTypes = new StringBuilder();
+        String typeLine = card.getAsString("type_line");
 
-        for (String string : card.get("type_line").getAsString().split(" ")) {
+        if (typeLine.contains("\u2014")) {
+            mainTypes.append(typeLine.split("\u2014")[1]);
+        }
+
+        for (String string : typeLine.split(" ")) {
             String type = string.toLowerCase(Locale.ROOT);
-            types.add(type);
 
-            if (MAIN_TYPES.contains(type)) {
+            if (!type.equals("\u2014")) {
+                types.add(type);
+            }
+
+            if (MAIN_TYPES.contains(type) && !typeLine.contains("\u2014")) {
                 mainTypes.append(string);
             }
         }

@@ -16,7 +16,7 @@
             font: "MPlantin",
             italic_font: "MPlantin-Italic",
             color: "#000000",
-            size: 125
+            size: 130
         }
     },
     conditions: {
@@ -375,7 +375,7 @@
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/land.png",
+                                        src: "pinlines/mdfc/back/land/colorless.png",
                                         conditions: {
                                             proximity: {
                                                 color_count: 0
@@ -403,13 +403,6 @@
                         ],
                         conditions: {
                             layout: "transform"
-                        }
-                    },
-                    {
-                        type: "image",
-                        src: "pinlines/land/artifact.png",
-                        conditions: {
-                            colorless_artifact: true
                         }
                     },
                     {
@@ -941,18 +934,6 @@
                             },
                             {
                                 type: "image",
-                                src: "plates/mdfc/front/miracle/${colors}.png",
-                                conditions: {
-                                    frame_effects: {
-                                        miracle: true
-                                    },
-                                    proximity: {
-                                        color_count: 1
-                                    }
-                                }
-                            },
-                            {
-                                type: "image",
                                 src: "plates/mdfc/front/${colors}.png",
                                 conditions: {
                                     proximity: {
@@ -1007,18 +988,6 @@
                                 conditions: {
                                     proximity: {
                                         color_count: 0
-                                    }
-                                }
-                            },
-                            {
-                                type: "image",
-                                src: "plates/mdfc/back/miracle/${colors}.png",
-                                conditions: {
-                                    frame_effects: {
-                                        miracle: true
-                                    },
-                                    proximity: {
-                                        color_count: 1
                                     }
                                 }
                             },
@@ -1384,8 +1353,12 @@
                         type: "text",
                         value: "$parse_cost{proximity.flipped.mana_cost}",
                         alignment: "right",
-                        x: 2925,
-                        y: 503
+                        x: 1435,
+                        y: 4000,
+                        style: {
+                            font: "NDPMTG",
+                            size: 125
+                        }
                     },
                     flex: {
                         type: "compound",
@@ -1460,7 +1433,9 @@
                                     size: 160
                                 },
                                 conditions: {
-                                    front_face: true
+                                    proximity: {
+                                        front_face: true
+                                    }
                                 }
                             },
                             {
@@ -1550,15 +1525,15 @@
                         conditions: {
                             proximity: {
                                 front_face: false,
-                                or: [
-                                    {
-                                        layout: "modal_dfc"
-                                    },
-                                    {
-                                        layout: "transform"
-                                    }
-                                ]
-                            }
+                            },
+                            or: [
+                                {
+                                    layout: "modal_dfc"
+                                },
+                                {
+                                    layout: "transform"
+                                }
+                            ]
                         }
                     },
                     {
@@ -1836,16 +1811,40 @@
             type: "group",
             children: [
                 {
-                    type: "text",
-                    value: "${artist}",
-                    style: {
-                        font: "MatrixBold",
-                        color: "#FFFFFF",
-                        capitalization: "SMALL_CAPS",
-                        size: 103
-                    },
-                    x: 485,
-                    y: 4134
+                    type: "compound",
+                    children: [
+                        {
+                            type: "text",
+                            value: "${artist}",
+                            style: {
+                                font: "MatrixBold",
+                                color: "#FFFFFF",
+                                capitalization: "SMALL_CAPS",
+                                size: 103
+                            },
+                            x: 485,
+                            y: 4134,
+                            conditions: {
+                                proximity: {
+                                    options: {
+                                        use_official_art: true
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            type: "text",
+                            value: "${proximity.options.artist}",
+                            style: {
+                                font: "MatrixBold",
+                                color: "#FFFFFF",
+                                capitalization: "SMALL_CAPS",
+                                size: 103
+                            },
+                            x: 485,
+                            y: 4134
+                        }
+                    ]
                 },
                 {
                     type: "text",
@@ -1871,20 +1870,48 @@
             type: "group",
             children: [
                 {
-                    type: "text",
-                    value: "${artist}",
-                    style: {
-                        font: "MatrixBold",
-                        color: "#FFFFFF",
-                        capitalization: "SMALL_CAPS",
-                        size: 103,
-                        outline: {
-                            weight: 5,
-                            color: "0x000000"
+                    type: "compound",
+                    children: [
+                        {
+                            type: "text",
+                            value: "${artist}",
+                            style: {
+                                font: "MatrixBold",
+                                color: "#FFFFFF",
+                                capitalization: "SMALL_CAPS",
+                                size: 103,
+                                outline: {
+                                    weight: 5,
+                                    color: "0x000000"
+                                }
+                            },
+                            x: 485,
+                            y: 4134,
+                            conditions: {
+                                proximity: {
+                                    options: {
+                                        use_official_art: true
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            type: "text",
+                            value: "${proximity.options.artist}",
+                            style: {
+                                font: "MatrixBold",
+                                color: "#FFFFFF",
+                                capitalization: "SMALL_CAPS",
+                                size: 103,
+                                outline: {
+                                    weight: 5,
+                                    color: "0x000000"
+                                }
+                            },
+                            x: 485,
+                            y: 4134
                         }
-                    },
-                    x: 485,
-                    y: 4134
+                    ]
                 },
                 {
                     type: "text",
