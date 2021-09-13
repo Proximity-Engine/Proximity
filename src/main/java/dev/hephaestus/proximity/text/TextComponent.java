@@ -1,6 +1,4 @@
-package dev.hephaestus.proximity;
-
-import dev.hephaestus.proximity.text.Style;
+package dev.hephaestus.proximity.text;
 
 public record TextComponent(Style style, String string) {
     public TextComponent(String string) {

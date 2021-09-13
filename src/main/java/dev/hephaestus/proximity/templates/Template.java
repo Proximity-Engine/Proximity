@@ -1,8 +1,7 @@
 package dev.hephaestus.proximity.templates;
 
 
-import dev.hephaestus.proximity.TemplateFiles;
-import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.cards.ElementPredicate;
 import dev.hephaestus.proximity.cards.Predicate;
 import dev.hephaestus.proximity.json.JsonArray;
@@ -22,7 +21,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.*;
@@ -30,16 +28,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // TODO: The main class has been broken up, but this one still needs some work.
-public final class Template implements TemplateFiles  {
+public final class Template {
     private static final Pattern SUBSTITUTE = Pattern.compile("\\$(\\w*)\\{(\\w+(?:\\.\\w+)*)}");
 
     private final Map<String, Style> styles;
     private final List<LayerFactory> layers = new ArrayList<>();
     private final JsonObject options;
-    private final TemplateFiles files;
+    private final TemplateSource source;
 
-    private Template(TemplateFiles files, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles) {
-        this.files = files;
+    private Template(TemplateSource source, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles) {
+        this.source = source;
         this.styles = Map.copyOf(styles);
         this.options = options;
 
@@ -67,14 +65,8 @@ public final class Template implements TemplateFiles  {
         }
     }
 
-    @Override
-    public BufferedImage getImage(String... images) {
-        return this.files.getImage(images);
-    }
-
-    @Override
-    public InputStream getInputStream(String first, String... more) throws IOException {
-        return this.files.getInputStream(first, more);
+    public TemplateSource getSource() {
+        return this.source;
     }
 
     public JsonObject getOptions() {
@@ -82,13 +74,13 @@ public final class Template implements TemplateFiles  {
     }
 
     public static final class Builder {
-        private final TemplateFiles files;
+        private final TemplateSource files;
         private final Map<String, Style> styles = new HashMap<>();
         private final List<LayerFactoryFactory> factories = new ArrayList<>();
         private final Map<String, JsonObject> conditions = new HashMap<>();
         private final JsonObject options = new JsonObject();
 
-        public Builder(TemplateFiles files) {
+        public Builder(TemplateSource files) {
             this.files = files;
         }
 
@@ -122,10 +114,10 @@ public final class Template implements TemplateFiles  {
     public static class Parser {
         private final Logger log;
         private final JsonObject object;
-        private final TemplateFiles files;
+        private final TemplateSource files;
         private final Template.Builder builder;
 
-        public Parser(String name, JsonObject object, TemplateFiles files, JsonObject options) {
+        public Parser(String name, JsonObject object, TemplateSource files, JsonObject options) {
             this.log = LogManager.getLogger("Proximity/" + name);
             this.object = object;
             this.files = files;
@@ -200,7 +192,7 @@ public final class Template implements TemplateFiles  {
             return styleBuilder.build();
         }
 
-        private LayerFactoryFactory parseLayer(JsonElement element, TemplateFiles cache) {
+        private LayerFactoryFactory parseLayer(JsonElement element, TemplateSource cache) {
             if (element.isJsonArray()) {
                 return parseArray(element.getAsJsonArray(), cache);
             } else if (element.isJsonObject()) {
@@ -210,7 +202,7 @@ public final class Template implements TemplateFiles  {
             }
         }
 
-        private LayerFactoryFactory parseArray(JsonArray array, TemplateFiles cache) {
+        private LayerFactoryFactory parseArray(JsonArray array, TemplateSource cache) {
             List<LayerFactoryFactory> factories = new ArrayList<>();
 
             for (JsonElement element : array) {
@@ -236,7 +228,7 @@ public final class Template implements TemplateFiles  {
             };
         }
 
-        private LayerFactoryFactory parseLayerFromObject(JsonObject object, TemplateFiles cache) {
+        private LayerFactoryFactory parseLayerFromObject(JsonObject object, TemplateSource cache) {
             List<Predicate> predicates = object.has("conditions")
                     ? parseConditions(object.getAsJsonObject("conditions"))
                     : Collections.emptyList();
@@ -287,7 +279,7 @@ public final class Template implements TemplateFiles  {
             };
         }
 
-        private LayerFactoryFactory parseGroup(JsonObject object, TemplateFiles cache) {
+        private LayerFactoryFactory parseGroup(JsonObject object, TemplateSource cache) {
             List<LayerFactoryFactory> factories = new ArrayList<>();
 
             for (JsonElement element : object.getAsJsonArray("children")) {
@@ -341,7 +333,7 @@ public final class Template implements TemplateFiles  {
             };
         }
 
-        private LayerFactoryFactory parseSquish(JsonObject object, TemplateFiles cache) {
+        private LayerFactoryFactory parseSquish(JsonObject object, TemplateSource cache) {
             LayerFactoryFactory main = parseLayer(object.get("main").getAsJsonObject(), cache);
             LayerFactoryFactory flex = parseLayer(object.get("flex").getAsJsonObject(), cache);
 
@@ -482,7 +474,7 @@ public final class Template implements TemplateFiles  {
             }
         }
 
-        private LayerFactoryFactory parseImage(JsonObject object, TemplateFiles cache) {
+        private LayerFactoryFactory parseImage(JsonObject object, TemplateSource cache) {
             return template -> (card, x, y) -> {
                 String sub = substitute(object.get("src").getAsString(), card);
                 BufferedImage image = cache.getImage(sub);

@@ -1,6 +1,6 @@
 package dev.hephaestus.proximity.cards;
 
-import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;

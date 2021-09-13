@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.templates;
 
-import dev.hephaestus.proximity.Pair;
-import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.util.Pair;
+import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.DrawingUtil;
@@ -56,7 +56,7 @@ public class TextLayer extends Layer {
 
                     Font font = style.fontName() == null && this.style.fontName() == null
                             ? graphics.getFont().deriveFont(size)
-                            : DrawingUtil.getFont(this.template, style.fontName() == null
+                            : DrawingUtil.getFont(this.template.getSource(), style.fontName() == null
                             ? this.style.fontName()
                             : style.fontName(), size
                     );
@@ -80,7 +80,7 @@ public class TextLayer extends Layer {
 
                     Font font = style.fontName() == null && this.style.fontName() == null
                             ? graphics.getFont().deriveFont(size)
-                            : DrawingUtil.getFont(this.template, style.fontName() == null
+                            : DrawingUtil.getFont(this.template.getSource(), style.fontName() == null
                             ? this.style.fontName()
                             : style.fontName(), size
                     );
@@ -109,7 +109,7 @@ public class TextLayer extends Layer {
 
         Font font = style.fontName() == null && this.style.fontName() == null
                 ? graphics.getFont().deriveFont(size)
-                : DrawingUtil.getFont(this.template, style.fontName() == null
+                : DrawingUtil.getFont(this.template.getSource(), style.fontName() == null
                 ? this.style.fontName()
                 : style.fontName(), size
         );

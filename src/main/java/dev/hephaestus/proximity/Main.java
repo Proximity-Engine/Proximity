@@ -2,8 +2,11 @@ package dev.hephaestus.proximity;
 
 
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.templates.FileSystemTemplateLoader;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+
+import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] argArray) {
@@ -13,7 +16,7 @@ public class Main {
             Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
         }
 
-        Proximity proximity = new Proximity(args);
+        Proximity proximity = new Proximity(args, new FileSystemTemplateLoader(Path.of("templates")));
 
         proximity.run();
     }

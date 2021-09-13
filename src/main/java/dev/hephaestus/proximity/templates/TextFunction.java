@@ -1,6 +1,6 @@
 package dev.hephaestus.proximity.templates;
 
-import dev.hephaestus.proximity.TextComponent;
+import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.cards.TextParser;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;

@@ -1,7 +1,5 @@
 package dev.hephaestus.proximity.text;
 
-import dev.hephaestus.proximity.TextComponent;
-
 import java.util.*;
 
 public record Symbol(String glyphs, int color) {

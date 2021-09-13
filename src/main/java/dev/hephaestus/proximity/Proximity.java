@@ -7,6 +7,7 @@ import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.json.JsonPrimitive;
 import dev.hephaestus.proximity.templates.Template;
+import dev.hephaestus.proximity.templates.TemplateLoader;
 import dev.hephaestus.proximity.util.Keys;
 import dev.hephaestus.proximity.util.Logging;
 import dev.hephaestus.proximity.util.Result;
@@ -34,9 +35,11 @@ import java.util.regex.Pattern;
 public final class Proximity {
     private final Logger log = LogManager.getLogger("Proximity");
     private final JsonObject options;
+    private final List<TemplateLoader> loaders;
 
-    public Proximity(JsonObject options) {
+    public Proximity(JsonObject options, TemplateLoader... loaders) {
         this.options = options;
+        this.loaders = new ArrayList<>(Arrays.asList(loaders));
     }
 
     public void run() {
@@ -67,32 +70,15 @@ public final class Proximity {
     }
 
     private Result<Template> parseTemplate(String name) {
-        try {
-            TemplateFiles cache = new TemplateFiles.Implementation(Path.of("templates", name));
-            Path path = Path.of("templates", name);
+        for (TemplateLoader loader : this.loaders) {
+            Result<Template> files = loader.getTemplateFiles(name)
+                    .then(fs -> loader.load(fs, this.options))
+                    .ifError(this.log::warn);
 
-            InputStream stream;
-
-            if (name.endsWith(".zip")) {
-                FileSystem fileSystem = FileSystems.newFileSystem(path);
-                stream = Files.newInputStream(fileSystem.getPath("template.json5"));
-                name = name.substring(0, name.indexOf(".zip"));
-            } else if (Files.isDirectory(path)) {
-                stream = Files.newInputStream(path.resolve("template.json5"));
-            } else {
-                log.error("Template {} must be either a zip file or a directory", path);
-                return Result.error(String.format("Template %s must be either a zip file or a directory", path));
-            }
-
-            InputStreamReader streamReader = new InputStreamReader(stream);
-            JsonReader jsonReader = JsonReader.json5(streamReader);
-            JsonObject object = JsonObject.parseObject(jsonReader);
-            Template.Parser parser = new Template.Parser(name, object, cache, this.options);
-
-            return Result.of(parser.parse());
-        } catch (IOException e) {
-            return Result.error(e.getMessage());
+            if (!files.isError()) return files;
         }
+
+        return Result.error("Template '%s' not found.", name);
     }
 
     private Result<Deque<CardPrototype>> loadCardsFromFile(Template defaultTemplate) {
@@ -369,7 +355,7 @@ public final class Proximity {
                             if (!card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
                                 Files.copy(card.representation().has("proximity", "options", "cardback")
                                         ? Files.newInputStream(Path.of(card.representation().getAsString("proximity", "options", "cardback")))
-                                        : card.template().getInputStream("back.png"), back, StandardCopyOption.REPLACE_EXISTING);
+                                        : card.template().getSource().getInputStream("back.png"), back, StandardCopyOption.REPLACE_EXISTING);
                             } else {
                                 stream = Files.newOutputStream(back);
 
@@ -398,6 +384,7 @@ public final class Proximity {
         try {
             executor.shutdown();
 
+            //noinspection StatementWithEmptyBody
             while (!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.NANOSECONDS)) {
 
             }
