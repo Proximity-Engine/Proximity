@@ -23,7 +23,7 @@ public class FileSystemTemplateSource implements TemplateSource {
                 ? templateName.substring(0, templateName.lastIndexOf("."))
                 : templateName;
 
-        if (path.endsWith(".zip")) {
+        if (path.toString().endsWith(".zip")) {
             FileSystem fileSystem = FileSystems.newFileSystem(path);
             this.pathGetter = fileSystem::getPath;
         } else if (Files.isDirectory(path)) {
