@@ -11,9 +11,12 @@ import dev.hephaestus.proximity.util.Keys;
 import java.util.*;
 
 public record CardPrototype(String scryfallName, String cardName, int number, JsonObject options, Template template) {
+    private static final Set<String> MANA_COLORS = new HashSet<>();
     private static final Map<String, String> LAND_TYPES = new HashMap<>();
 
     static {
+        MANA_COLORS.addAll(Arrays.asList("W", "U", "B", "R", "G"));
+
         LAND_TYPES.put("Plains", "W");
         LAND_TYPES.put("Island", "U");
         LAND_TYPES.put("Swamp", "B");
@@ -90,6 +93,8 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
         StringBuilder mainTypes = new StringBuilder();
         String typeLine = card.getAsString("type_line");
 
+        Set<String> cardTypes = new HashSet<>();
+
         if (typeLine.contains("\u2014")) {
             mainTypes.append(typeLine.split("\u2014")[1]);
         }
@@ -104,22 +109,45 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
             if (MAIN_TYPES.contains(type) && !typeLine.contains("\u2014")) {
                 mainTypes.append(string);
             }
+
+            if (MAIN_TYPES.contains(type)) {
+                cardTypes.add(type);
+            }
         }
 
         card.add(Keys.MAIN_TYPES, mainTypes.toString());
+        card.add(Keys.TYPE_COUNT, cardTypes.size());
     }
 
     private static void processColors(JsonObject card) {
         Set<JsonElement> colors = new HashSet<>(card.get("colors", JsonArray::new));
 
         if (card.getAsJsonArray(Keys.TYPES).contains("land")) {
-            colors.addAll(card.get("produced_mana", JsonArray::new));
+            if (!card.get("layout").getAsString().equals("transform") && !card.get("layout").getAsString().equals("modal_dfc")) {
+                for (JsonElement element : card.getAsJsonArray("produced_mana")) {
+                    if (MANA_COLORS.contains(element.getAsString())) {
+                        colors.add(element);
+                    }
+                }
+            }
 
             card.getIfPresent("oracle_text")
                     .map(JsonElement::getAsString)
                     .ifPresent(oracle -> {
                         for (var entry : LAND_TYPES.entrySet()) {
                             if (oracle.contains(entry.getKey())) colors.add(new JsonPrimitive(entry.getValue()));
+                        }
+
+                        if (oracle.contains("of any color")) {
+                            for (var color : MANA_COLORS) {
+                                colors.add(new JsonPrimitive(color));
+                            }
+                        }
+
+                        for (var color : MANA_COLORS) {
+                            if (oracle.contains("Add ") && oracle.substring(oracle.indexOf("Add ")).contains(color)) {
+                                colors.add(new JsonPrimitive(color));
+                            }
                         }
                     });
         }

@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates;
 
+import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.cards.TextParser;
 import dev.hephaestus.proximity.text.Style;
@@ -18,15 +19,15 @@ public interface TextFunction {
         put("flavor_text", TextFunction::flavorText);
     }};
 
-    List<List<TextComponent>> apply(Map<String, Style> styles, Style base, String target);
+    List<List<TextComponent>> apply(Map<String, Style> styles, Style base, String target, JsonObject options);
 
-    static List<List<TextComponent>> apply(Map<String, Style> styles, Style base, String function, String target) {
+    static List<List<TextComponent>> apply(Map<String, Style> styles, Style base, String function, String target, JsonObject options) {
         if (function.isEmpty() || !FUNCTIONS.containsKey(function)) return Collections.singletonList(Collections.singletonList(new TextComponent(base, target)));
 
-        return FUNCTIONS.get(function).apply(styles, base, target);
+        return FUNCTIONS.get(function).apply(styles, base, target, options);
     }
 
-    private static List<List<TextComponent>> parse_cost(Map<String, Style> styles, Style base, String target) {
+    private static List<List<TextComponent>> parse_cost(Map<String, Style> styles, Style base, String target, JsonObject options) {
         Matcher matcher = COST_SYMBOLS.matcher(target);
 
         List<TextComponent> result = new ArrayList<>();
@@ -39,10 +40,12 @@ public interface TextFunction {
         return Collections.singletonList(result);
     }
 
-    static List<List<TextComponent>> oracleText(Map<String, Style> styles, Style base, String target) {
-        return new TextParser(target, styles, base, "\n\n").parseOracle().text();
+    static List<List<TextComponent>> oracleText(Map<String, Style> styles, Style base, String target, JsonObject options) {
+        return new TextParser(target, styles, base, "\n\n", options).parseOracle().text();
     }
-    static List<List<TextComponent>> flavorText(Map<String, Style> styles, Style base, String target) {
-        return new TextParser(target, styles, base, "\n").parseFlavor().text();
+
+
+    static List<List<TextComponent>> flavorText(Map<String, Style> styles, Style base, String target, JsonObject options) {
+        return new TextParser(target, styles, base, "\n", options).parseFlavor().text();
     }
 }

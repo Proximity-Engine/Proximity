@@ -1,9 +1,10 @@
 package dev.hephaestus.proximity.cards;
 
-import dev.hephaestus.proximity.text.TextComponent;
+import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.text.Alignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
+import dev.hephaestus.proximity.text.TextComponent;
 
 import java.util.*;
 
@@ -12,6 +13,7 @@ public final class TextParser {
     private final Map<String, Style> styles;
     private final Style style;
     private final String newLine;
+    private final JsonObject options;
 
     private List<List<TextComponent>> text;
     private StringBuilder currentWord;
@@ -19,11 +21,12 @@ public final class TextParser {
     private boolean italic;
     private boolean allWordsItalic;
 
-    public TextParser(String oracle, Map<String, Style> styles, Style style, String newLine) {
+    public TextParser(String oracle, Map<String, Style> styles, Style style, String newLine, JsonObject options) {
         this.oracle = oracle;
         this.styles = styles;
         this.style = style;
         this.newLine = newLine;
+        this.options = options;
     }
 
     public TextBody parseOracle() {
@@ -46,8 +49,14 @@ public final class TextParser {
 
             switch (c) {
                 case '(' -> {
-                    this.italic = true;
-                    this.currentWord.append(c);
+                    if (this.options.getAsBoolean("reminder_text")) {
+                        this.italic = true;
+                        this.currentWord.append(c);
+                    } else {
+                        while(c != ')') {
+                            c = oracle.charAt(++i);
+                        }
+                    }
                 }
                 case ')' -> {
                     this.currentWord.append(c);
@@ -61,14 +70,16 @@ public final class TextParser {
                     this.italic = !italic;
                 }
                 case '\n' -> {
-                    completeWord();
+                    String word = completeWord();
 
-                    this.text.add(Collections.singletonList(
-                            new TextComponent(
-                                    this.italic ? this.style.italic() : this.style,
-                                    this.newLine
-                            )
-                    ));
+                    if (!word.isEmpty()) {
+                        this.text.add(Collections.singletonList(
+                                new TextComponent(
+                                        this.italic ? this.style.italic() : this.style,
+                                        this.newLine
+                                )
+                        ));
+                    }
                 }
                 case '{' -> {
                     completeWord();
@@ -98,7 +109,7 @@ public final class TextParser {
         return new TextBody(this.allWordsItalic ? Alignment.CENTER : Alignment.LEFT, text);
     }
 
-    private void completeWord() {
+    private String completeWord() {
         String word = this.currentWord.toString();
 
         if (word.startsWith("\u2014")) {
@@ -130,5 +141,7 @@ public final class TextParser {
             this.currentWord = new StringBuilder();
             this.currentGroup = new ArrayList<>();
         }
+
+        return word;
     }
 }

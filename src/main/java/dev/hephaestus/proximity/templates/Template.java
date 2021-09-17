@@ -1,6 +1,8 @@
 package dev.hephaestus.proximity.templates;
 
 
+import dev.hephaestus.proximity.cards.TextBody;
+import dev.hephaestus.proximity.cards.TextParser;
 import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.cards.ElementPredicate;
 import dev.hephaestus.proximity.cards.Predicate;
@@ -379,31 +381,33 @@ public final class Template {
 
                 return (card, x, y) -> {
                     List<List<TextComponent>> text;
+                    Alignment al = alignment;
 
-                    text = string.equals("$oracle_and_flavor_text{}")
-                            ? parseOracleAndFlavorText(style, card)
-                            : parseText(style, string, card);
+                    if (string.equals("$oracle_and_flavor_text{}")) {
+                        TextBody oracle = new TextParser(card.getAsString("oracle_text"), this.builder.styles, builder.styles.getOrDefault("oracle", style), "\n\n", this.builder.options).parseOracle();
+
+                        if (card.has("flavor_text")) {
+                            text = oracle.text();
+
+                            text.add(Collections.singletonList(new TextComponent(style, "\n\n")));
+                            text.addAll(TextFunction.flavorText(this.builder.styles, this.builder.styles.getOrDefault("flavor", style), card.getAsString("flavor_text"), this.builder.options));
+                        } else {
+                            if (oracle.alignment() == Alignment.CENTER && width != null) {
+                                al = Alignment.CENTER;
+                                x += width / 2;
+                            }
+
+                            text = oracle.text();
+                        }
+                    } else {
+                        text = parseText(style, string, card);
+                    }
 
                     text = applyCapitalization(text, style.capitalization(), style.size());
 
-                    return new TextLayer(template, style, text, x, y, alignment, width != null && height != null ? new Rectangle(x, y, width, height) : null, wrap);
+                    return new TextLayer(template, style, text, x, y, al, width != null && height != null ? new Rectangle(x, y, width, height) : null, wrap);
                 };
             };
-        }
-
-        private List<List<TextComponent>> parseOracleAndFlavorText(Style base, JsonObject card) {
-            List<List<TextComponent>> text = TextFunction.oracleText(this.builder.styles, this.builder.styles.getOrDefault("oracle", base), card.getAsString("oracle_text"));
-
-            if (card.has("flavor_text")) {
-                List<List<TextComponent>> flavor = TextFunction.flavorText(this.builder.styles, this.builder.styles.getOrDefault("flavor", base), card.getAsString("flavor_text"));
-
-                if (!flavor.isEmpty()) {
-                    text.add(Collections.singletonList(new TextComponent(base, "\n\n")));
-                    text.addAll(flavor);
-                }
-            }
-
-            return text;
         }
 
         private static Rectangle parseRectangle(JsonObject object) {
@@ -613,7 +617,7 @@ public final class Template {
 
                 previousEnd = matcher.end();
 
-                result.addAll(TextFunction.apply(this.builder.styles, baseStyle, function, replacement));
+                result.addAll(TextFunction.apply(this.builder.styles, baseStyle, function, replacement, this.builder.options));
             }
 
             if (previousEnd != string.length()) {

@@ -322,14 +322,14 @@
                                 children: [
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/front/land/artifact.png",
+                                        src: "pinlines/transform/front/artifact.png",
                                         conditions: {
                                             colorless_artifact: true
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/front/land/colorless.png",
+                                        src: "pinlines/transform/front/colorless.png",
                                         conditions: {
                                             proximity: {
                                                 color_count: 0
@@ -338,14 +338,14 @@
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/front/${colors}.png",
+                                        src: "pinlines/transform/front/${colors}.png",
                                         conditions: {
                                             one_or_two_colors: true
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/front/gold.png"
+                                        src: "pinlines/transform/front/gold.png"
                                     }
                                 ],
                                 conditions: {
@@ -359,14 +359,14 @@
                                 children: [
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/land/artifact.png",
+                                        src: "pinlines/transform/back/artifact.png",
                                         conditions: {
                                             colorless_artifact: true
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/land/colorless.png",
+                                        src: "pinlines/transform/back/colorless.png",
                                         conditions: {
                                             proximity: {
                                                 color_count: 0
@@ -375,7 +375,7 @@
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/land/colorless.png",
+                                        src: "pinlines/transform/back/colorless.png",
                                         conditions: {
                                             proximity: {
                                                 color_count: 0
@@ -384,14 +384,14 @@
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/${colors}.png",
+                                        src: "pinlines/transform/back/${colors}.png",
                                         conditions: {
                                             one_or_two_colors: true
                                         }
                                     },
                                     {
                                         type: "image",
-                                        src: "pinlines/mdfc/back/gold.png"
+                                        src: "pinlines/transform/back/gold.png"
                                     }
                                 ],
                                 conditions: {
@@ -913,7 +913,19 @@
                                         types: {
                                             land: true
                                         }
-                                    }
+                                    },
+                                    or: [
+                                        {
+                                            proximity: {
+                                                color_count: 0
+                                            }
+                                        },
+                                        {
+                                            proximity: {
+                                                color_count: 2
+                                            }
+                                        }
+                                    ]
                                 }
                             },
                             {
@@ -972,7 +984,19 @@
                                         types: {
                                             land: true
                                         }
-                                    }
+                                    },
+                                    or: [
+                                        {
+                                            proximity: {
+                                                color_count: 0
+                                            }
+                                        },
+                                        {
+                                            proximity: {
+                                                color_count: 2
+                                            }
+                                        }
+                                    ]
                                 }
                             },
                             {

@@ -85,7 +85,7 @@ public final class Proximity {
         Deque<CardPrototype> result = new ArrayDeque<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(this.options.getAsString("cards")))) {
-            Pattern pattern = Pattern.compile("([0-9]+)x (.+)");
+            Pattern pattern = Pattern.compile("([0-9]+)x? (.+)");
 
             int cardNumber = 1;
 
@@ -235,17 +235,22 @@ public final class Proximity {
                 .build();
 
         try {
-            String responseBody = client.send(request, HttpResponse.BodyHandlers.ofString()).body();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            JsonObject response = JsonObject.parseObject(JsonReader.json5(responseBody));
+            if (response.statusCode() == 200) {
+                String responseBody = response.body();
+                JsonObject cardInfo = JsonObject.parseObject(JsonReader.json5(responseBody));
 
-            if (response.has("not_found")) {
-                for (JsonElement element : response.getAsJsonArray("not_found")) {
-                    log.warn("Could not find '{}'", element.getAsJsonObject().get("cardName"));
+                if (cardInfo.has("not_found")) {
+                    for (JsonElement element : cardInfo.getAsJsonArray("not_found")) {
+                        log.warn("Could not find '{}'", element.getAsJsonObject().get("cardName"));
+                    }
                 }
-            }
 
-            return Result.of(response.get("data", JsonArray::new));
+                return Result.of(cardInfo.get("data", JsonArray::new));
+            } else {
+                return Result.error("Response %s:", response.statusCode(), response.body());
+            }
         } catch (Exception e) {
             return Result.error(e.getMessage());
         }
@@ -276,7 +281,10 @@ public final class Proximity {
         Deque<Card> cards = new ArrayDeque<>();
 
         for (CardPrototype prototype : prototypes) {
-            if (!cardInfo.containsKey(prototype.cardName())) continue;
+            if (!cardInfo.containsKey(prototype.cardName())) {
+                log.error("Card '{}' not found.", prototype.cardName());
+                continue;
+            }
 
             String setCode = prototype.options().has("set_code") ?
                     prototype.options().getAsString("set_code")
@@ -311,87 +319,92 @@ public final class Proximity {
 
         int countStrLen = Integer.toString(cardCount).length();
         int threadCount = Integer.min(options.has("threads") ? Integer.parseInt(options.getAsString("threads")) : 10, cardCount);
-        Deque<String> finishedCards = new ConcurrentLinkedDeque<>();
-        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-        log.info("Rendering {} cards on {} threads", cardCount, threadCount);
+        if (threadCount > 0) {
+            Deque<String> finishedCards = new ConcurrentLinkedDeque<>();
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-        for (Card card : cards) {
-            executor.submit(() -> {
-                long cardTime = System.currentTimeMillis();
+            log.info("Rendering {} cards on {} threads", cardCount, threadCount);
 
-                try {
-                    BufferedImage frontImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
-                    BufferedImage backImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
+            for (Card card : cards) {
+                executor.submit(() -> {
+                    long cardTime = System.currentTimeMillis();
 
-                    card.template().draw(card.representation(), frontImage);
+                    try {
+                        BufferedImage frontImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
+                        BufferedImage backImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
 
-                    if (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
-                        card.template().draw(card.representation().getAsJsonObject(Keys.FLIPPED), backImage);
-                    }
+                        card.template().draw(card.representation(), frontImage);
 
-                    for (int i = 0; i < card.representation().getAsInt(Keys.COUNT); ++i) {
-                        Path front = Path.of("images", "fronts", card.representation().getAsInt(Keys.CARD_NUMBER) + i + " " + card.representation().getAsString("name").replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
-
-                        Path back = Path.of("images", "backs", card.representation().getAsInt(Keys.CARD_NUMBER) + i + " " + (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)
-                                ? card.representation().getAsJsonObject(Keys.FLIPPED).getAsString("name")
-                                : card.representation().getAsString("name")
-                        ).replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
-
-                        try {
-                            if (!Files.isDirectory(front.getParent())) {
-                                Files.createDirectories(front.getParent());
-                            }
-
-                            OutputStream stream = Files.newOutputStream(front);
-
-                            ImageIO.write(frontImage, "png", stream);
-                            stream.close();
-
-                            if (!Files.isDirectory(back.getParent())) {
-                                Files.createDirectories(back.getParent());
-                            }
-
-                            if (!card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
-                                Files.copy(card.representation().has("proximity", "options", "cardback")
-                                        ? Files.newInputStream(Path.of(card.representation().getAsString("proximity", "options", "cardback")))
-                                        : card.template().getSource().getInputStream("back.png"), back, StandardCopyOption.REPLACE_EXISTING);
-                            } else {
-                                stream = Files.newOutputStream(back);
-
-                                ImageIO.write(backImage, "png", stream);
-                                stream.close();
-                            }
-
-                            finishedCards.add(card.representation().getAsString("name"));
-                            log.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_GREEN, Logging.ANSI_RESET);
-                        } catch (Throwable throwable) {
-                            finishedCards.add(card.representation().getAsString("name"));
-                            log.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
-                            log.error(throwable.getMessage());
+                        if (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
+                            card.template().draw(card.representation().getAsJsonObject(Keys.FLIPPED), backImage);
                         }
 
-                        cardTime = System.currentTimeMillis();
+                        for (int i = 0; i < card.representation().getAsInt(Keys.COUNT); ++i) {
+                            Path front = Path.of("images", "fronts", card.representation().getAsInt(Keys.CARD_NUMBER) + i + " " + card.representation().getAsString("name").replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+
+                            Path back = Path.of("images", "backs", card.representation().getAsInt(Keys.CARD_NUMBER) + i + " " + (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)
+                                    ? card.representation().getAsJsonObject(Keys.FLIPPED).getAsString("name")
+                                    : card.representation().getAsString("name")
+                            ).replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+
+                            try {
+                                if (!Files.isDirectory(front.getParent())) {
+                                    Files.createDirectories(front.getParent());
+                                }
+
+                                OutputStream stream = Files.newOutputStream(front);
+
+                                ImageIO.write(frontImage, "png", stream);
+                                stream.close();
+
+                                if (!Files.isDirectory(back.getParent())) {
+                                    Files.createDirectories(back.getParent());
+                                }
+
+                                if (!card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
+                                    Files.copy(card.representation().has("proximity", "options", "cardback")
+                                            ? Files.newInputStream(Path.of(card.representation().getAsString("proximity", "options", "cardback")))
+                                            : card.template().getSource().getInputStream("back.png"), back, StandardCopyOption.REPLACE_EXISTING);
+                                } else {
+                                    stream = Files.newOutputStream(back);
+
+                                    ImageIO.write(backImage, "png", stream);
+                                    stream.close();
+                                }
+
+                                finishedCards.add(card.representation().getAsString("name"));
+                                log.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_GREEN, Logging.ANSI_RESET);
+                            } catch (Throwable throwable) {
+                                finishedCards.add(card.representation().getAsString("name"));
+                                log.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
+                                log.error(throwable.getMessage());
+                            }
+
+                            cardTime = System.currentTimeMillis();
+                        }
+                    } catch (Throwable throwable) {
+                        finishedCards.add(card.representation().getAsString("name"));
+                        log.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
+                        log.error(throwable.getMessage());
                     }
-                } catch (Throwable throwable) {
-                    finishedCards.add(card.representation().getAsString("name"));
-                    log.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
-                    log.error(throwable.getMessage());
-                }
-            });
-        }
-
-        try {
-            executor.shutdown();
-
-            //noinspection StatementWithEmptyBody
-            while (!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.NANOSECONDS)) {
-
+                });
             }
 
-            return Result.of(finishedCards);
-        } catch (InterruptedException e) {
-            return Result.error(e.getMessage());
+            try {
+                executor.shutdown();
+
+                //noinspection StatementWithEmptyBody
+                while (!executor.awaitTermination(Integer.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+
+                }
+
+                return Result.of(finishedCards);
+            } catch (InterruptedException e) {
+                return Result.error(e.getMessage());
+            }
         }
+
+        return Result.error("No cards to render");
     }
 }

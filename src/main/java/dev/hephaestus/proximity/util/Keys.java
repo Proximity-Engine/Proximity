@@ -15,4 +15,6 @@ public class Keys {
     public static final String[] HYBRID = new String[] { PROXIMITY, "hybrid" };
     public static final String[] MAIN_TYPES = new String[] { PROXIMITY, "main_types" };
     public static final String[] MUTATE_TEXT = new String[] { PROXIMITY, "util", "mutate_text" };
+    public static final String[] TYPE_COUNT = new String[] { PROXIMITY, "type_count" };
+    public static final String[] REMINDER_TEXT = new String[] { PROXIMITY, "reminder_text" };
 }

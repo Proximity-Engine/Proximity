@@ -1,7 +1,3 @@
-1x Tergrid, God of Fright // Tergrid's Lantern
-1x Civilized Scholar // Homicidal Brute
-1x Pious Evangel // Wayward Disciple
-1x Branchloft Pathway // Boulderloft Pathway
-1x Flamescroll Celebrant // Revel in Silence
-1x Cryptolith Fragment // Aurora of Emrakul
-1x Boneyard Lurker
+1x Badlands
+1x Llanowar Elves
+1x Tatyova, Benthic Druid
