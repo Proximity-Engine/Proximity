@@ -346,8 +346,8 @@ public final class Template {
         }
 
         private LayerFactoryFactory parseSquish(JsonObject object, TemplateSource cache) {
-            LayerFactoryFactory main = parseLayer(object.get("main").getAsJsonObject(), cache);
-            LayerFactoryFactory flex = parseLayer(object.get("flex").getAsJsonObject(), cache);
+            LayerFactoryFactory main = parseLayer(object.get("main"), cache);
+            LayerFactoryFactory flex = parseLayer(object.get("flex"), cache);
 
             return template -> {
                 LayerFactory mainFunction = main.create(template);

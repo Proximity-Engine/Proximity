@@ -5,10 +5,6 @@
     border: "black"
   },
   styles: {
-    mana_cost: {
-      font: "NDPMTG",
-      size: 175
-    },
     oracle: {
       font: "MPlantin",
       italic_font: "MPlantin-Italic",
@@ -20,6 +16,40 @@
       italic_font: "MPlantin-Italic",
       color: "#000000",
       size: 130
+    },
+    artist: {
+      font: "MPlantin",
+      color: "#FFFFFF",
+      size: 103,
+      shadow: {
+        color: 0x000000,
+        dX: 5,
+        dY: 5
+      }
+    }
+  },
+  conditions: {
+    colorless_artifact: {
+      proximity: {
+        types: {
+          artifact: true
+        },
+        color_count: 0
+      }
+    },
+    one_or_two_colors: {
+      or: [
+        {
+          proximity: {
+            color_count: 1
+          }
+        },
+        {
+          proximity: {
+            color_count: 2
+          }
+        }
+      ]
     }
   },
   layers: [
@@ -37,14 +67,30 @@
       }
     },
     {
+      type: "art",
+      x: 476,
+      y: 549,
+      width: 2337,
+      height: 1875,
+      conditions: {
+        proximity: {
+          options: {
+            use_official_art: true
+          }
+        }
+      }
+    },
+    {
       type: "compound",
       children: [
         {
           type: "image",
           src: "backgrounds/artifact.png",
           conditions: {
-            types: {
-              artifact: true
+            proximity: {
+              types: {
+                artifact: true
+              },
             }
           }
         },
@@ -52,42 +98,43 @@
           type: "image",
           src: "backgrounds/land/${card.color}.png",
           conditions: {
-            types: {
-              land: true
-            },
-            or: [
-              {
-                color_count: 1
+            proximity: {
+              types: {
+                land: true
               },
-              {
-                color_count: 2
-              }
-            ]
+            },
+            one_or_two_colors: true
           }
         },
         {
           type: "image",
-          src: "backgrounds/${card.color}.png",
+          src: "backgrounds/${colors}.png",
           conditions: {
-            color_count: 1
+            proximity: {
+              color_count: 1,
+            }
           }
         },
         {
           type: "image",
           src: "backgrounds/land/colorless.png",
           conditions: {
-            types: {
-              land: true
-            },
-            color_count: 0
+            proximity: {
+              types: {
+                land: true
+              },
+              color_count: 0,
+            }
           }
         },
         {
           type: "image",
           src: "backgrounds/land/gold.png",
           conditions: {
-            types: {
-              land: true
+            proximity: {
+              types: {
+                land: true
+              }
             }
           }
         },
@@ -101,27 +148,33 @@
       type: "squish",
       main: {
         type: "text",
-        value: "${card.cost}",
+        value: "$parse_cost{mana_cost}",
         alignment: "right",
         x: 2915,
-        y: 470
-      },
-      flex: {
-        type: "text",
-        value: "${card.name}",
+        y: 470,
         style: {
-          font: "Goudy Medieval Alternate",
-          color: "#FFFFFF",
-          size: 160,
-          shadow: {
-            color: 0x000000,
-            dX: 10,
-            dY: 10
-          }
-        },
-        x: 461,
-        y: 475
-      }
+          font: "NDPMTG",
+          size: 175
+        }
+      },
+      flex: [
+        {
+          type: "text",
+          value: "${name}",
+          style: {
+            font: "Goudy Medieval Alternate",
+            color: "#FFFFFF",
+            size: 160,
+            shadow: {
+              color: 0x000000,
+              dX: 10,
+              dY: 10
+            }
+          },
+          x: 440,
+          y: 475
+        }
+      ]
     },
     {
       type: "squish",
@@ -134,7 +187,7 @@
       },
       flex: {
         type: "text",
-        value: "${card.type}",
+        value: "${type_line}",
         style: {
           font: "MPlantin",
           color: "#FFFFFF",
@@ -151,15 +204,16 @@
     },
     {
       type: "text",
-      value: "${card.oracle_and_flavor}",
+      value: "$oracle_and_flavor_text{}",
       x: 495,
       y: 2666,
       width: 2298,
-      height: 1200
+      height: 1200,
+      style: "oracle"
     },
     {
       type: "text",
-      value: "${card.pt}",
+      value: "${power}/${toughness}",
       style:  {
         font: "MPlantin-Bold",
         color: "#FFFFFF",
@@ -192,24 +246,25 @@
                   type: "image",
                   src: "overlays/mdfc/front/top/artifact.png",
                   conditions: {
-                    color_count: 0,
-                    types: {
-                      artifact: true
-                    }
+                    colorless_artifact: true
                   }
                 },
                 {
                   type: "image",
                   src: "overlays/mdfc/front/top/colorless.png",
                   conditions: {
-                    color_count: 0
+                    proximity: {
+                      color_count: 0
+                    }
                   }
                 },
                 {
                   type: "image",
                   src: "overlays/mdfc/front/top/${card.color}.png",
                   conditions: {
-                    color_count: 1
+                    proximity: {
+                      color_count: 1,
+                    }
                   }
                 },
                 {
@@ -225,8 +280,12 @@
                   type: "image",
                   src: "overlays/mdfc/front/bottom/colorless.png",
                   conditions: {
-                    flipped: {
-                      color_count: 0
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 0
+                        }
+                      }
                     }
                   }
                 },
@@ -234,8 +293,12 @@
                   type: "image",
                   src: "overlays/mdfc/front/bottom/${other.card.color}.png",
                   conditions: {
-                    flipped: {
-                      color_count: 1
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 1
+                        }
+                      }
                     }
                   }
                 },
@@ -260,24 +323,25 @@
                   type: "image",
                   src: "overlays/mdfc/back/top/artifact.png",
                   conditions: {
-                    color_count: 0,
-                    types: {
-                      artifact: true
-                    }
+                    colorless_artifact: true
                   }
                 },
                 {
                   type: "image",
                   src: "overlays/mdfc/back/top/colorless.png",
                   conditions: {
-                    color_count: 0
+                    proximity: {
+                      color_count: 0
+                    }
                   }
                 },
                 {
                   type: "image",
                   src: "overlays/mdfc/back/top/${card.color}.png",
                   conditions: {
-                    color_count: 1
+                    proximity: {
+                      color_count: 0
+                    }
                   }
                 },
                 {
@@ -293,8 +357,12 @@
                   type: "image",
                   src: "overlays/mdfc/back/bottom/colorless.png",
                   conditions: {
-                    flipped: {
-                      color_count: 0
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 0
+                        }
+                      }
                     }
                   }
                 },
@@ -302,8 +370,12 @@
                   type: "image",
                   src: "overlays/mdfc/back/bottom/${other.card.color}.png",
                   conditions: {
-                    flipped: {
-                      color_count: 1
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 1
+                        }
+                      }
                     }
                   }
                 },
@@ -315,13 +387,336 @@
             }
           ],
           conditions: {
-            front: false
+            proximity: {
+              front: false
+            }
           }
         }
       ],
       conditions: {
         layout: "modal_dfc"
       }
-    }
+    },
+    {
+      type: "image",
+      src: "borders/${proximity.options.border}.png"
+    },
+    {
+      type: "compound",
+      children: [
+        {
+          type: "group",
+          children: [
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/artifact.png",
+                  conditions: {
+                    colorless_artifact: true
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/colorless.png",
+                  conditions: {
+                    proximity: {
+                      color_count: 0
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/${colors}.png",
+                  conditions: {
+                    proximity: {
+                      color_count: 1
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/top/gold.png"
+                }
+              ]
+            },
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/bottom/colorless.png",
+                  conditions: {
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 0
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/bottom/${proximity.flipped.colors}.png",
+                  conditions: {
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 1
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/front/bottom/gold.png"
+                }
+              ]
+            }
+          ],
+          conditions: {
+            proximity: {
+              front_face: true
+            }
+          }
+        },
+        {
+          type: "group",
+          children: [
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/artifact.png",
+                  conditions: {
+                    colorless_artifact: true
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/colorless.png",
+                  conditions: {
+                    proximity: {
+                      color_count: 0
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/${colors}.png",
+                  conditions: {
+                    proximity: {
+                      color_count: 1
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/top/gold.png"
+                }
+              ]
+            },
+            {
+              type: "compound",
+              children: [
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/bottom/colorless.png",
+                  conditions: {
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 0
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/bottom/${proximity.flipped.colors}.png",
+                  conditions: {
+                    proximity: {
+                      flipped: {
+                        proximity: {
+                          color_count: 1
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  type: "image",
+                  src: "overlays/mdfc/back/bottom/gold.png"
+                }
+              ]
+            }
+          ],
+          conditions: {
+            proximity: {
+              front_face: false
+            }
+          }
+        }
+      ],
+      conditions: {
+        layout: "modal_dfc"
+      }
+    },
+    {
+      type: "image",
+      src: "icons/sun.png",
+      conditions: {
+        frame_effects: {
+          sunmoondfc: true
+        },
+        proximity: {
+          front_face: true
+        }
+      }
+    },
+    {
+      type: "image",
+      src: "icons/moon.png",
+      conditions: {
+        frame_effects: {
+          sunmoondfc: true
+        },
+        proximity: {
+          front_face: false
+        }
+      }
+    },
+    {
+      type: "image",
+      src: "icons/compass.png",
+      conditions: {
+        frame_effects: {
+          compasslanddfc: true
+        },
+        proximity: {
+          front_face: true
+        }
+      }
+    },
+    {
+      type: "image",
+      src: "icons/land.png",
+      conditions: {
+        frame_effects: {
+          compasslanddfc: true
+        },
+        proximity: {
+          front_face: false
+        }
+      }
+    },
+    {
+      type: "image",
+      src: "icons/eldrazi moon.png",
+      conditions: {
+        frame_effects: {
+          mooneldrazidfc: true
+        },
+        proximity: {
+          front_face: true
+        }
+      }
+    },
+    {
+      type: "image",
+      src: "icons/eldrazi.png",
+      conditions: {
+        frame_effects: {
+          mooneldrazidfc: true
+        },
+        proximity: {
+          front_face: false
+        }
+      }
+    },
+    {
+      type: "compound",
+      children: [
+        {
+          type: "squish",
+          main: {
+            type: "text",
+            value: "$parse_cost{proximity.flipped.mana_cost}",
+            alignment: "right",
+            x: 1435,
+            y: 4000,
+            style: {
+              font: "NDPMTG",
+              size: 125
+            }
+          },
+          flex: {
+            type: "compound",
+            children: [
+              {
+                type: "text",
+                value: "${proximity.flipped.proximity.main_types}",
+                x: 345,
+                y: 4000,
+                style: {
+                  font: "Beleren2016-Bold",
+                  color: "#FFFFFF",
+                  size: 100
+                },
+                conditions: {
+                  proximity: {
+                    front_face: true
+                  }
+                }
+              },
+              {
+                type: "text",
+                value: "${proximity.flipped.proximity.main_types}",
+                x: 345,
+                y: 4000,
+                style: {
+                  font: "Beleren2016-Bold",
+                  color: "#000000",
+                  size: 100
+                }
+              }
+            ]
+          }
+        }
+      ],
+      conditions: {
+        layout: "modal_dfc"
+      }
+    },
+    [
+      {
+        type: "text",
+        value: "Illus. ${artist}",
+        alignment: "center",
+        style: "artist",
+        x: 1644,
+        y: 4030,
+        conditions: {
+          proximity: {
+            options: {
+              use_official_art: true
+            }
+          }
+        }
+      },
+      {
+        type: "text",
+        value: "Illus. ${proximity.options.artist}",
+        alignment: "center",
+        style: "artist",
+        x: 1644,
+        y: 4030
+      }
+    ]
   ]
 }

@@ -1,3 +1,4 @@
-1x Rhox War Monk --override=flavor_text:"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum odio justo, vel porta mi gravida id. Nam ex justo, mattis sed libero non, cursus fermentum ligula."
-1x Jace, the Mind Sculptor
-1x Grist, the Hunger Tide
+1x Ancestral Recall (LEA)
+1x Ancestral Recall (OVNT)
+1x Camouflage
+1x Esika, God of the Tree // The Prismatic Bridge
