@@ -148,6 +148,54 @@
                     }
                 },
                 {
+                    type: "compound",
+                    children: [
+                        {
+                            type: "image",
+                            src: "backgrounds/pw/${colors}.png",
+                            conditions: {
+                                proximity: {
+                                    color_count: 1
+                                }
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "backgrounds/pw/colorless.png",
+                            conditions: {
+                                proximity: {
+                                    color_count: 0
+                                }
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "backgrounds/pw/gold.png",
+                            conditions: {
+                                proximity: {
+                                    hybrid: false
+                                }
+                            }
+                        },
+                        {
+                            type: "image",
+                            src: "backgrounds/pw/${colors}.png",
+                            conditions: {
+                                proximity: {
+                                    hybrid: true
+                                }
+                            }
+                        }
+                    ],
+                    conditions: {
+                        proximity: {
+                            types: {
+                                planeswalker: true
+                            }
+                        }
+                    }
+                },
+                {
                     type: "image",
                     // There are certain placeholders defined for image paths
                     src: "backgrounds/${colors}.png",
@@ -705,6 +753,34 @@
                 proximity: {
                     options: {
                         border: true
+                    }
+                }
+            }
+        },
+        {
+            type: "group",
+            children: [
+                {
+                    type: "image",
+                    src: "overlays/starting_loyalty.png"
+                },
+                {
+                    type: "text",
+                    value: "${loyalty}",
+                    alignment: "center",
+                    x: 2782,
+                    y: 4073,
+                    style: {
+                        font: "Beleren2016-Bold",
+                        size: 170,
+                        color: "#FFFFFF",
+                    }
+                }
+            ],
+            conditions: {
+                proximity: {
+                    types: {
+                        planeswalker: true
                     }
                 }
             }
