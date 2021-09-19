@@ -1,1 +1,1 @@
-1x Rhox War Monk
+1x Rhox War Monk --override=flavor_text:"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum odio justo, vel porta mi gravida id. Nam ex justo, mattis sed libero non, cursus fermentum ligula."

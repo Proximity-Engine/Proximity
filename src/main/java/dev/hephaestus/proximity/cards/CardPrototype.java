@@ -10,7 +10,7 @@ import dev.hephaestus.proximity.util.Keys;
 
 import java.util.*;
 
-public record CardPrototype(String scryfallName, String cardName, int number, JsonObject options, Template template) {
+public record CardPrototype(String scryfallName, String cardName, int number, JsonObject options, Template template, JsonObject overrides) {
     private static final Set<String> MANA_COLORS = new HashSet<>();
     private static final Map<String, String> LAND_TYPES = new HashMap<>();
 
@@ -84,6 +84,8 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
             card.addProperty("oracle_text", split[1]);
             card.add(Keys.MUTATE_TEXT, split[0]);
         }
+
+        card.copyAll(this.overrides);
 
         return card;
     }

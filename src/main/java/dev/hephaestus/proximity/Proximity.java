@@ -2,10 +2,7 @@ package dev.hephaestus.proximity;
 
 import dev.hephaestus.proximity.cards.Card;
 import dev.hephaestus.proximity.cards.CardPrototype;
-import dev.hephaestus.proximity.json.JsonArray;
-import dev.hephaestus.proximity.json.JsonElement;
-import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.json.JsonPrimitive;
+import dev.hephaestus.proximity.json.*;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.TemplateLoader;
 import dev.hephaestus.proximity.util.Keys;
@@ -14,6 +11,7 @@ import dev.hephaestus.proximity.util.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.quiltmc.json5.JsonReader;
 
 import javax.imageio.ImageIO;
@@ -94,6 +92,7 @@ public final class Proximity {
 
                 if (matcher.matches()) {
                     JsonObject cardOptions = new JsonObject();
+                    JsonObject overrides = new JsonObject();
                     String cardName = parseCardName(matcher.group(2));
                     String scryfallName = getFirstCardName(cardName);
 
@@ -120,18 +119,19 @@ public final class Proximity {
                         }
 
                         String[] split = line.substring(i + 2, j).split("=", 2);
+                        String key = split[0];
                         String value = split.length == 2 ? split[1] : null;
 
-                        if (value != null) {
-                            if (value.startsWith("\"") && value.endsWith("\"")) {
-                                value = value.substring(1, value.length() - 1);
+                        if (key.equals("override")) {
+                            if (value != null) {
+                                split = value.split(":", 2);
+                                key = split[0];
+                                value = split.length == 2 ? split[1] : null;
                             }
 
-                            if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
-                                cardOptions.addProperty(split[0], Boolean.parseBoolean(value));
-                            } else {
-                                cardOptions.addProperty(split[0], value);
-                            }
+                            overrides.add(key, parseStringValue(value));
+                        } else {
+                            cardOptions.add(key, parseStringValue(value));
                         }
 
                         if (j < line.length()) {
@@ -157,7 +157,7 @@ public final class Proximity {
 
                     JsonObject options = template.getOptions().deepCopy().copyAll(cardOptions);
 
-                    result.add(new CardPrototype(scryfallName, cardName, cardNumber++, options, template));
+                    result.add(new CardPrototype(scryfallName, cardName, cardNumber++, options, template, overrides));
                 } else {
                     return Result.error("Could not parse line '%s'", line);
                 }
@@ -167,6 +167,22 @@ public final class Proximity {
         }
 
         return Result.of(result);
+    }
+
+    private JsonElement parseStringValue(@Nullable String value) {
+        if (value != null) {
+            if (value.startsWith("\"") && value.endsWith("\"")) {
+                value = value.substring(1, value.length() - 1);
+            }
+        }
+
+        if (value == null) {
+            return JsonNull.INSTANCE;
+        } else if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
+            return new JsonPrimitive(Boolean.parseBoolean(value));
+        } else {
+            return new JsonPrimitive(value);
+        }
     }
 
     // This is needed because Scryfall's search API only expects a single card name, so we just pass the first
