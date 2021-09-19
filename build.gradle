@@ -1,11 +1,12 @@
 plugins {
     id 'java'
+    id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
 group 'dev.hephaestus'
 version '0.1.0'
-archivesBaseName = 'proximity'
 
 repositories {
     mavenCentral()

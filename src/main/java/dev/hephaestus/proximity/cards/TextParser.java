@@ -72,7 +72,7 @@ public final class TextParser {
                 case '\n' -> {
                     String word = completeWord();
 
-                    if (!word.isEmpty()) {
+                    if (!word.isEmpty() || !this.text.isEmpty()) {
                         this.text.add(Collections.singletonList(
                                 new TextComponent(
                                         this.italic ? this.style.italic() : this.style,
@@ -99,6 +99,14 @@ public final class TextParser {
                     this.currentWord.append(c);
 
                     this.completeWord();
+                }
+                case '"' -> {
+                    if (this.currentWord.isEmpty() || this.currentWord.toString().endsWith("(")) {
+                        this.currentWord.append("\u201C");
+                    } else {
+                        this.currentWord.append("\u201D");
+
+                    }
                 }
                 default -> this.currentWord.append(c);
             }

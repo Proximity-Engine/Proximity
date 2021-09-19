@@ -16,7 +16,7 @@
             font: "MPlantin",
             italic_font: "MPlantin-Italic",
             color: "#000000",
-            size: 130
+            size: 135
         }
     },
     conditions: {

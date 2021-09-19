@@ -10,14 +10,10 @@ import dev.hephaestus.proximity.util.StatefulGraphics;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
+import java.util.*;
 import java.util.List;
 
 public class TextLayer extends Layer {
-    private static final boolean DEBUG = false;
-
     private final Template template;
     private final Alignment alignment;
     private final Style style;
@@ -190,6 +186,13 @@ public class TextLayer extends Layer {
             x += componentBounds.width;
         }
 
+        if (bounds != null && this.template.getOptions().getAsBoolean("debug")) {
+            this.template.log().info(text);
+            this.template.log().info(String.format(
+                    "%s  %10s  %5d %5d %5d %5d", draw ? "DRAW" : "NOPE", "", bounds.x, bounds.y, bounds.width, bounds.height
+            ));
+        }
+
         return new Pair<>(bounds, height);
     }
 
@@ -210,6 +213,19 @@ public class TextLayer extends Layer {
             Rectangle drawnBounds = pair.left();
             Integer drawnFirstRowHeight = pair.right();
 
+            graphics.push(0, drawnFirstRowHeight + (this.textBox.height - drawnBounds.height) / 2);
+            pair = this.draw(graphics, wrap, fontSizeChange, false);
+            drawnBounds = pair.left();
+            drawnFirstRowHeight = pair.right();
+            graphics.pop();
+
+            if (this.template.getOptions().getAsBoolean("debug")) {
+                graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
+                graphics.drawRect(drawnBounds.x, drawnBounds.y, drawnBounds.width, drawnBounds.height);
+                graphics.pop(2);
+            }
+
             while(this.textBox.height < drawnBounds.height) {
                 fontSizeChange -= 5;
                 graphics.push(0, drawnFirstRowHeight + (drawnBounds.height - this.textBox.height) / 2);
@@ -217,9 +233,16 @@ public class TextLayer extends Layer {
                 drawnBounds = pair.left();
                 drawnFirstRowHeight = pair.right();
                 graphics.pop();
+
+                if (this.template.getOptions().getAsBoolean("debug")) {
+                    graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                    graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
+                    graphics.drawRect(drawnBounds.x, drawnBounds.y, drawnBounds.width, drawnBounds.height);
+                    graphics.pop(2);
+                }
             }
 
-            if (DEBUG /* DEBUG */) {
+            if (this.template.getOptions().getAsBoolean("debug")) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
                 graphics.drawRect(this.x, this.y, this.textBox.width, this.textBox.height);
@@ -341,7 +364,7 @@ public class TextLayer extends Layer {
 
         graphics.pop("Text");
 
-        if (draw && bounds != null && DEBUG /* DEBUG */) {
+        if (draw && bounds != null && this.template.getOptions().getAsBoolean("debug")) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
             graphics.drawRect(bounds.x, bounds.y, bounds.width, bounds.height);

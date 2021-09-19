@@ -37,11 +37,13 @@ public final class Template {
     private final List<LayerFactory> layers = new ArrayList<>();
     private final JsonObject options;
     private final TemplateSource source;
+    private final Logger log;
 
-    private Template(TemplateSource source, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles) {
+    private Template(TemplateSource source, List<LayerFactoryFactory> factories, JsonObject options, Map<String, Style> styles, Logger log) {
         this.source = source;
         this.styles = Map.copyOf(styles);
         this.options = options;
+        this.log = log;
 
         for (LayerFactoryFactory factory : factories) {
             this.layers.add(factory.create(this));
@@ -75,6 +77,10 @@ public final class Template {
         return this.options;
     }
 
+    public Logger log() {
+        return this.log;
+    }
+
     public static final class Builder {
         private final TemplateSource files;
         private final Map<String, Style> styles = new HashMap<>();
@@ -82,11 +88,15 @@ public final class Template {
         private final Map<String, JsonObject> conditions = new HashMap<>();
         private final JsonObject options = new JsonObject();
 
+        private Logger log;
+
         public Builder(TemplateSource files) {
             this.files = files;
         }
 
-        public Builder log() {
+        public Builder log(Logger log) {
+            this.log = log;
+
             return this;
         }
 
@@ -109,7 +119,7 @@ public final class Template {
         }
 
         public Template build() {
-            return new Template(this.files, this.factories, this.options.deepCopy(), this.styles);
+            return new Template(this.files, this.factories, this.options.deepCopy(), this.styles, this.log);
         }
     }
 
@@ -133,7 +143,7 @@ public final class Template {
         public Template parse() {
             builder.options.add(Keys.USE_OFFICIAL_ART, true);
 
-            builder.log();
+            builder.log(this.log);
 
             if (object.has("options")) {
                 for (Map.Entry<String, JsonElement> entry : object.getAsJsonObject("options").entrySet()) {

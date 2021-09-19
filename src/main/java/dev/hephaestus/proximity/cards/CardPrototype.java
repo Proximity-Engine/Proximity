@@ -145,16 +145,23 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
                         }
 
                         for (var color : MANA_COLORS) {
-                            if (oracle.contains("Add ") && oracle.substring(oracle.indexOf("Add ")).contains(color)) {
-                                colors.add(new JsonPrimitive(color));
+                            if (oracle.contains("Add ")) {
+                                String string = oracle.substring(oracle.indexOf("Add "));
+                                string = string.contains("\n") ? string.substring(0, string.indexOf("\n")) : string;
+
+                                if (string.contains("{" + color + "}")) {
+                                    colors.add(new JsonPrimitive(color));
+                                }
                             }
                         }
                     });
         }
 
+        boolean hybrid = false;
+
         if (colors.size() == 2 && card.has("mana_cost") && !card.getAsString("mana_cost").isEmpty()) {
             String manaCost = card.getAsString("mana_cost");
-            boolean hybrid = true;
+            hybrid = true;
 
             for (String string : manaCost.substring(1, manaCost.length() - 1).split("}\\{")) {
                 switch (string.toLowerCase(Locale.ROOT)) {
@@ -163,9 +170,9 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
 
                 if (!hybrid) break;
             }
-
-            card.add(Keys.HYBRID, hybrid);
         }
+
+        card.add(Keys.HYBRID, hybrid);
 
         List<JsonElement> colorList = new ArrayList<>(colors);
 
