@@ -22,4 +22,9 @@ then choose
 
 
 
+## Build 
+
+to build the `jar` run 
+
+    ./gradlew shadowJar 
 
