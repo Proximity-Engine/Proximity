@@ -1,0 +1,745 @@
+<?xml version="1.0"?>
+
+<Template name="Chilli's" author="ChilliAxe and Haven King" width="3288"
+          height="4488"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="template.xsd">
+    <options>
+        <Enumeration id="border" default="black">
+            <EnumerationValue value="black"/>
+            <EnumerationValue value="gold" id="gold"/>
+            <EnumerationValue value="silver"/>
+        </Enumeration>
+        <ToggleOption id="artist_outline" default="false"/>
+        <ToggleOption id="copyright" default="true"/>
+    </options>
+    <styles>
+        <style name="oracle" font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="150"/>
+        <style name="flavor" font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="150"/>
+    </styles>
+    <condition_definitions>
+        <ConditionDefinition name="colorless_artifact">
+            <IsPresent key="proximity.types.artifact"/>
+            <IsEquals key="proximity.color_count" value="0"/>
+        </ConditionDefinition>
+        <ConditionDefinition name="one_or_two_colors">
+            <Range key="proximity.color_count" min="1" max="2"/>
+        </ConditionDefinition>
+    </condition_definitions>
+    <layers>
+        <!-- The art layer is special in that it can also contain a width and/or height
+        If both are provided, the layer will be stretched or shrunk to cover that area
+        If only one is provided, the layer will be stretched or shrunk to fit that dimension
+        while keeping the image proportional with its original dimensions -->
+        <ArtLayer x="352" y="605" width="2584" height="1882">
+            <conditions>
+                <IsEquals key="proximity.options.use_official_art"/>
+            </conditions>
+        </ArtLayer>
+        <Selector id="backgrounds">
+            <Selector id="nyx">
+                <ImageLayer id="artifact">
+                    <conditions>
+                        <IsPresent key="proximity.types.artifact"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colorless">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="0"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colored" src="${colors}">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="1"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="gold"/>
+                <conditions>
+                    <IsEquals key="frame_effects" value="nyxtouched"/>
+                </conditions>
+            </Selector>
+            <Selector id="standard">
+                <ImageLayer id="vehicle">
+                    <conditions>
+                        <IsPresent key="proximity.types.vehicle"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="artifact">
+                    <conditions>
+                        <IsPresent key="proximity.types.artifact"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="land">
+                    <conditions>
+                        <IsPresent key="proximity.types.land"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colored" src="${colors}">
+                    <conditions>
+                        <Or>
+                            <IsEquals key="proximity.color_count" value="1"/>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="2"/>
+                                <IsEquals key="proximity.hybrid"/>
+                            </And>
+                        </Or>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="gold">
+                    <conditions>
+                        <Range key="proximity.color_count" min="2"/>
+                    </conditions>
+                </ImageLayer>
+            </Selector>
+            <conditions>
+                <Not>
+                    <IsEquals key="proximity.options.border" value="none"/>
+                </Not>
+            </conditions>
+        </Selector>
+        <Selector id="shadows">
+            <ImageLayer id="legendary">
+                <conditions>
+                    <IsPresent key="proximity.types.legendary"/>
+                </conditions>
+            </ImageLayer>
+            <ImageLayer id="mdfc">
+                <conditions>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                </conditions>
+            </ImageLayer>
+            <ImageLayer id="transform">
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                </conditions>
+            </ImageLayer>
+            <ImageLayer id="normal"/>
+        </Selector>
+        <Selector id="pinlines">
+            <Fork id="modal">
+                <Fork>
+                    <Selector>
+                        <ImageLayer id="artifact">
+                            <conditions>
+                                <IsEquals key="colorless_artifact"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="colorless">
+                            <conditions>
+                                <IsEquals key="proximity.color_count" value="0"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="colored" src="${colors}">
+                            <conditions>
+                                <IsEquals key="one_or_two_colors"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="gold"/>
+                    </Selector>
+                    <branches>
+                        <Branch id="land">
+                            <IsPresent key="proximity.types.land"/>
+                        </Branch>
+                        <Branch id="standard"/>
+                    </branches>
+                </Fork>
+                <branches>
+                    <Branch id="front">
+                        <IsEquals key="proximity.front_face"/>
+                    </Branch>
+                    <Branch id="back">
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </Branch>
+                </branches>
+                <conditions>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                </conditions>
+            </Fork>
+            <Fork id="transform">
+                <Selector>
+                    <ImageLayer id="artifact">
+                        <conditions>
+                            <IsEquals key="colorless_artifact"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colorless">
+                        <conditions>
+                            <IsEquals key="proximity.color_count" value="0"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colored" src="${colors}">
+                        <conditions>
+                            <IsEquals key="one_or_two_colors"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="gold"/>
+                </Selector>
+                <branches>
+                    <Branch id="front">
+                        <IsEquals key="proximity.front_face"/>
+                    </Branch>
+                    <Branch id="back">
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </Branch>
+                </branches>
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                </conditions>
+            </Fork>
+            <ImageLayer id="miracle" src="miracle/${colors}">
+                <conditions>
+                    <IsPresent key="frame_effects.miracle"/>
+                    <IsEquals key="proximity.color_count" value="0"/>
+                </conditions>
+            </ImageLayer>
+            <Selector id="mutate">
+                <ImageLayer id="colorless">
+                    <conditions>
+                        <IsEquals key="colorless_artifact"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colored">
+                    <conditions>
+                        <IsEquals key="one_or_two_colors"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="gold"/>
+                <conditions>
+                    <IsPresent key="keywords.mutate"/>
+                </conditions>
+            </Selector>
+            <Fork id="standard">
+                <Selector>
+                    <ImageLayer id="artifact">
+                        <conditions>
+                            <IsEquals key="colorless_artifact"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colorless">
+                        <conditions>
+                            <IsEquals key="proximity.color_count" value="0"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colored" src="${colors}">
+                        <conditions>
+                            <IsEquals key="one_or_two_colors"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="gold"/>
+                </Selector>
+                <branches>
+                    <Branch id="land">
+                        <IsPresent key="proximity.types.land"/>
+                    </Branch>
+                    <Branch id="standard"/>
+                </branches>
+            </Fork>
+        </Selector>
+        <Fork id="border">
+            <Fork>
+                <ImageLayer src="${proximity.options.border}"/>
+                <branches>
+                    <Branch id="legendary">
+                        <IsPresent key="proximity.types.legendary"/>
+                    </Branch>
+                    <Branch id="standard"/>
+                </branches>
+            </Fork>
+            <branches>
+                <Branch id="mdfc">
+                    <IsEquals key="layout" value="modal_dfc"/>
+                </Branch>
+                <Branch id="transform">
+                    <IsEquals key="layout" value="transform"/>
+                    <IsEquals key="proximity.front_face"/>
+                </Branch>
+                <Branch id="standard"/>
+            </branches>
+            <conditions>
+                <Not>
+                    <IsEquals key="proximity.options.border" value="none"/>
+                </Not>
+            </conditions>
+        </Fork>
+        <Fork id="crowns">
+            <Selector>
+                <ImageLayer id="monocolored" src="${colors}">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="1"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="artifact">
+                    <conditions>
+                        <IsEquals key="colorless_artifact"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colorless">
+                    <conditions>
+                        <Or>
+                            <IsEquals key="proximity.color_count" value="0"/>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="2"/>
+                                <IsEquals key="proximity.hybrid"/>
+                            </And>
+                        </Or>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="gold"/>
+            </Selector>
+            <branches>
+                <Branch id="companion">
+                    <IsPresent key="frame_effects.companion"/>
+                </Branch>
+                <Branch id="legendary">
+                    <IsPresent key="proximity.types.legendary"/>
+                </Branch>
+            </branches>
+        </Fork>
+        <Selector id="crowns.companion.gems">
+            <ImageLayer id="monocolored" src="${colors}">
+                <conditions>
+                    <IsEquals key="proximity.color_count" value="1"/>
+                </conditions>
+            </ImageLayer>
+            <ImageLayer id="artifact">
+                <conditions>
+                    <IsEquals key="colorless_artifact"/>
+                </conditions>
+            </ImageLayer>
+            <ImageLayer id="colorless">
+                <conditions>
+                    <Or>
+                        <IsEquals key="proximity.color_count" value="0"/>
+                        <And>
+                            <IsEquals key="proximity.color_count" value="2"/>
+                            <IsEquals key="proximity.hybrid"/>
+                        </And>
+                    </Or>
+                </conditions>
+            </ImageLayer>
+            <ImageLayer id="gold"/>
+            <conditions>
+                <IsPresent key="frame_effects.companion"/>
+            </conditions>
+        </Selector>
+        <Selector id="plates">
+            <Fork id="mdfc">
+                <Selector>
+                    <ImageLayer id="monocolored" src="${colors}">
+                        <conditions>
+                            <IsEquals key="proximity.color_count" value="1"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="artifact">
+                        <conditions>
+                            <IsEquals key="colorless_artifact"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colorless">
+                        <conditions>
+                            <IsEquals key="proximity.color_count" value="0"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="hybrid">
+                        <conditions>
+                            <IsEquals key="proximity.color_count" value="2"/>
+                            <IsEquals key="proximity.hybrid"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="gold"/>
+                </Selector>
+                <branches>
+                    <Branch id="front">
+                        <IsEquals key="proximity.front_face"/>
+                    </Branch>
+                    <Branch id="back">
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </Branch>
+                </branches>
+                <conditions>
+                    <Or>
+                        <IsEquals key="layout" value="modal_dfc"/>
+                        <IsEquals key="layout" value="transform"/>
+                    </Or>
+                </conditions>
+            </Fork>
+            <ImageLayer id="miracle" src="miracle/${colors}">
+                <conditions>
+                    <IsEquals key="proximity.color_count" value="1"/>
+                    <IsPresent key="frame_effects"/>
+                    <IsPresent key="frame_effects.miracle"/>
+                </conditions>
+            </ImageLayer>
+            <Selector id="standard">
+                <ImageLayer id="monocolored" src="${colors}">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="1"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="artifact">
+                    <conditions>
+                        <IsEquals key="colorless_artifact"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colorless">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="0"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="hybrid">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="2"/>
+                        <IsEquals key="proximity.hybrid"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="gold"/>
+            </Selector>
+        </Selector>
+        <SquishBox id="title_bar">
+            <main id="cost">
+                <TextLayer x="2925" y="503" alignment="right" value="$parse_cost{mana_cost}">
+                    <style font="NDPMTG" size="175">
+                        <shadow color="#000000" dX="-4" dY="11"/>
+                    </style>
+                </TextLayer>
+            </main>
+            <flex>
+                <Selector id="name">
+                    <Selector id="dfc">
+                        <TextLayer x="665" y="515" value="${name}">
+                            <style font="Beleren2016-Bold" color="#000000" size="160"/>
+                            <conditions>
+                                <IsEquals key="proximity.front_face"/>
+                            </conditions>
+                        </TextLayer>
+                        <TextLayer x="665" y="515" value="${name}">
+                            <style font="Beleren2016-Bold" color="#FFFFFF" size="160"/>
+                            <conditions>
+                                <IsEquals key="proximity.front_face" value="false"/>
+                            </conditions>
+                        </TextLayer>
+                        <conditions>
+                            <IsPresent key="layout"/>
+                            <Or>
+                                <IsEquals key="layout" value="modal_dfc"/>
+                                <IsEquals key="layout" value="transform"/>
+                            </Or>
+                        </conditions>
+                    </Selector>
+                    <TextLayer x="395" y="515" value="${name}">
+                        <style font="Beleren2016-Bold" color="#000000" size="160"/>
+                    </TextLayer>
+                </Selector>
+            </flex>
+        </SquishBox>
+        <TextLayer id="flipped.power_and_toughness" x="2925" y="3790" alignment="right" value="${proximity.flipped.power}/${proximity.flipped.toughness}">
+            <style font="Beleren2016-Bold" color="#494949" size="100"/>
+            <conditions>
+                <IsPresent key="layout"/>
+                <IsEquals key="layout" value="transform"/>
+                <IsPresent key="proximity.flipped.proximity.types.creature"/>
+            </conditions>
+        </TextLayer>
+        <SquishBox id="type_line">
+            <main>
+                <SpacingLayer x="2678" y="2553" width="212" height="156"/>
+            </main>
+            <flex>
+                <Selector id="types">
+                    <TextLayer id="back" x="375" y="2675" value="${type_line}">
+                        <style font="Beleren2016-Bold" color="#FFFFFF" size="150"/>
+                        <conditions>
+                            <IsPresent key="layout"/>
+                            <Or>
+                                <IsEquals key="layout" value="modal_dfc"/>
+                                <IsEquals key="layout" value="transform"/>
+                            </Or>
+                            <IsEquals key="proximity.front_face" value="false"/>
+                        </conditions>
+                    </TextLayer>
+                    <TextLayer id="front" x="375" y="2675" value="${type_line}">
+                        <style font="Beleren2016-Bold" color="#000000" size="150"/>
+                    </TextLayer>
+                </Selector>
+            </flex>
+        </SquishBox>
+        <Group id="pt">
+            <Selector>
+                <ImageLayer id="vehicle">
+                    <conditions>
+                        <IsPresent key="proximity.types.vehicle"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="monocolored" src="${colors}">
+                    <conditions>
+                        <IsEquals key="proximity.color_count" value="1"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="artifact">
+                    <conditions>
+                        <IsEquals key="colorless_artifact"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="colorless">
+                    <conditions>
+                        <Or>
+                            <IsEquals key="proximity.color_count" value="0"/>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="2"/>
+                                <IsEquals key="proximity.hybrid"/>
+                            </And>
+                        </Or>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="gold"/>
+            </Selector>
+            <Selector>
+                <TextLayer id="vehicle" x="2740" y="4062" alignment="center" value="${power}/${toughness}">
+                    <style font="Beleren2016-Bold" color="#FFFFFF" size="160"/>
+                    <conditions>
+                        <IsPresent key="proximity.types.vehicle"/>
+                    </conditions>
+                </TextLayer>
+                <TextLayer id="creature" x="2740" y="4062" alignment="center" value="${power}/${toughness}">
+                    <style font="Beleren2016-Bold" color="#000000" size="160"/>
+                    <conditions>
+                        <IsPresent key="proximity.types.creature"/>
+                    </conditions>
+                </TextLayer>
+            </Selector>
+            <conditions>
+                <Or>
+                    <IsPresent key="proximity.types.creature"/>
+                    <IsPresent key="proximity.types.vehicle"/>
+                </Or>
+            </conditions>
+        </Group>
+        <Selector id="oracle_text">
+            <Selector id="mutate">
+                <Group>
+                    <Group id="mutate">
+                        <TextLayer x="400" y="2795" width="2488" height="515" value="$oracle_text{proximity.util.mutate_text}" style="oracle"/>
+                    </Group>
+                    <Selector id="oracle">
+                        <Group>
+                            <TextLayer id="mdfc" x="400" y="3345" width="2488" height="520"  value="$oracle_and_flavor_text{}" style="oracle">
+                                <wrap x="2472" y="3869" width="535" height="315"/>
+                                <conditions>
+                                    <IsEquals key="layout" value="modal_dfc"/>
+                                </conditions>
+                            </TextLayer>
+                            <TextLayer id="transform" x="400" y="3345" width="2488" height="655"  value="$oracle_and_flavor_text{}" style="oracle">
+                                <wrap x="2472" y="3615" width="535" height="515"/>
+                                <conditions>
+                                    <IsEquals key="layout" value="transform"/>
+                                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                                </conditions>
+                            </TextLayer>
+                            <TextLayer id="standard" x="400" y="3345" width="2488" height="655" value="$oracle_and_flavor_text{}" style="oracle">
+                                <wrap x="2472" y="3869" width="535" height="315"/>
+                            </TextLayer>
+                        </Group>
+                    </Selector>
+                </Group>
+                <conditions>
+                    <IsPresent key="keywords.mutate"/>
+                </conditions>
+            </Selector>
+            <Selector id="creature">
+                <TextLayer x="400" y="2795" width="2488" height="1070" value="$oracle_and_flavor_text{}" style="oracle">
+                    <wrap x="2472" y="3869" width="535" height="315"/>
+                    <conditions>
+                        <IsPresent key="layout"/>
+                        <IsEquals key="layout" value="modal_dfc"/>
+                    </conditions>
+                </TextLayer>
+                <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}" style="oracle">
+                    <wrap x="2472" y="3869" width="535" height="315"/>
+                </TextLayer>
+                <conditions>
+                    <Or>
+                        <IsPresent key="proximity.types.creature"/>
+                        <IsPresent key="proximity.types.vehicle"/>
+                    </Or>
+                </conditions>
+            </Selector>
+            <TextLayer x="400" y="2795" width="2488" height="1070" value="$oracle_and_flavor_text{}" style="oracle">
+                <conditions>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                </conditions>
+            </TextLayer>
+            <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}" style="oracle">
+                <wrap x="2472" y="3669" width="535" height="515"/>
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                </conditions>
+            </TextLayer>
+            <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}" style="oracle"/>
+        </Selector>
+        <Selector id="artist">
+            <Group>
+                <Group>
+                    <TextLayer x="485" y="4134" value="${artist}">
+                        <style font="MatrixBold" color="#FFFFFF" capitalization="small_caps" size="103"/>
+                    </TextLayer>
+                    <TextLayer x="340" y="4145" value="a"> <!-- This is the little brush symbol -->
+                        <style font="NDPMTG" color="#FFFFFF" size="100"/>
+                    </TextLayer>
+                </Group>
+                <conditions>
+                    <IsEquals key="proximity.options.artist_outline" value="false"/>
+                </conditions>
+            </Group>
+            <Group>
+                <Group>
+                    <TextLayer x="485" y="4134" value="${artist}">
+                        <style font="MatrixBold" color="#FFFFFF" capitalization="small_caps" size="103">
+                            <outline weight="5" color="#000000"/>
+                        </style>
+                    </TextLayer>
+                    <TextLayer x="340" y="4145" value="a"> <!-- This is the little brush symbol -->
+                        <style font="NDPMTG" color="#FFFFFF" size="100">
+                            <outline weight="5" color="#000000"/>
+                        </style>
+                    </TextLayer>
+                </Group>
+                <conditions>
+                    <IsEquals key="proximity.options.artist_outline"/>
+                </conditions>
+            </Group>
+        </Selector>
+        <Group id="overlays">
+            <Group id="loyalty">
+                <ImageLayer src="../loyalty"/>
+                <TextLayer x="2782" y="4073" alignment="center" value="${loyalty}">
+                    <style font="Beleren2016-Bold" size="170" color="#FFFFFF"/>
+                </TextLayer>
+                <conditions>
+                    <IsPresent key="proximity.types.planeswalker"/>
+                </conditions>
+            </Group>
+            <Group id="mdfc">
+                <Fork>
+                    <Selector id="top">
+                        <ImageLayer id="artifact">
+                            <conditions>
+                                <IsEquals key="colorless_artifact"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="colorless">
+                            <conditions>
+                                <IsEquals key="proximity.color_count" value="0"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="colored" src="${colors}">
+                            <conditions>
+                                <IsEquals key="proximity.color_count" value="1"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="gold"/>
+                    </Selector>
+                    <Selector id="bottom">
+                        <ImageLayer id="colorless">
+                            <conditions>
+                                <IsEquals key="proximity.flipped.proximity.color_count" value="0"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="colored" src="${proximity.flipped.colors}">
+                            <conditions>
+                                <IsEquals key="proximity.flipped.proximity.color_count" value="1"/>
+                            </conditions>
+                        </ImageLayer>
+                        <ImageLayer id="gold"/>
+                    </Selector>
+                    <branches>
+                        <Branch id="front">
+                            <IsEquals key="proximity.front_face"/>
+                        </Branch>
+                        <Branch id="back"/>
+                    </branches>
+                </Fork>
+                <conditions>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                </conditions>
+            </Group>
+            <Group id="transform">
+                <ImageLayer id="sun">
+                    <conditions>
+                        <IsPresent key="frame_effects.sunmoondfc"/>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="moon">
+                    <conditions>
+                        <IsPresent key="frame_effects.sunmoondfc"/>
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="pwo">
+                    <conditions>
+                        <IsPresent key="frame_effects.originpwdfc"/>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="pw">
+                    <conditions>
+                        <IsPresent key="frame_effects.originpwdfc"/>
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="compass">
+                    <conditions>
+                        <IsPresent key="frame_effects.compasslanddfc"/>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="land">
+                    <conditions>
+                        <IsPresent key="frame_effects.compasslanddfc"/>
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="eldrazi moon">
+                    <conditions>
+                        <IsPresent key="frame_effects.mooneldrazidfc"/>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="eldrazi">
+                    <conditions>
+                        <IsPresent key="frame_effects.mooneldrazidfc"/>
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </conditions>
+                </ImageLayer>
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                </conditions>
+            </Group>
+        </Group>
+        <SquishBox id="flipped">
+            <main id="cost">
+                <TextLayer x="1435" y="4000" alignment="right" value="$parse_cost{proximity.flipped.mana_cost}">
+                    <style font="NDPMTG" size="125"/>
+                </TextLayer>
+            </main>
+            <flex id="types">
+                <TextLayer x="345" y="4000" value="${proximity.flipped.proximity.main_types}">
+                    <style font="Beleren2016-Bold" color="#FFFFFF" size="100"/>
+                    <conditions>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </TextLayer>
+                <TextLayer x="345" y="4000" value="${proximity.flipped.proximity.main_types}">
+                    <style font="Beleren2016-Bold" color="#000000" size="100"/>
+                    <conditions>
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </conditions>
+                </TextLayer>
+            </flex>
+            <conditions>
+                <IsEquals key="layout" value="modal_dfc"/>
+            </conditions>
+        </SquishBox>
+    </layers>
+</Template>

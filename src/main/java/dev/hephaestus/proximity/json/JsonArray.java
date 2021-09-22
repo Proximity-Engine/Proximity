@@ -229,6 +229,7 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
 
     @Override
     public <T> T @NotNull [] toArray(T @NotNull [] a) {
+        //noinspection SuspiciousToArrayCall
         return elements.toArray(a);
     }
 

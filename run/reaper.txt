@@ -1,7 +1,8 @@
 1x Arcane Signet (afc) --use_official_art=false
+1x Barkchannel Pathway // Tidechannel Pathway
 1x Cosima, God of the Voyage // The Omenkeel
 1x Elbrus, the Binding Blade // Withengar Unbound
-1x Avacyn, Angel of Hope (2xm) --use_official_art=false --border=false --artist_outline=true --artist=SomeCustomArtist
+1x Avacyn, Angel of Hope (2xm) --use_official_art=false --border=none --artist_outline=true --artist=SomeCustomArtist
 1x Avenger of Zendikar (cmr)
 1x Douse in Gloom (MB1)
 1x Douse in Gloom (GPT)

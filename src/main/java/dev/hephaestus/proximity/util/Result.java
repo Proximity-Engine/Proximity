@@ -1,7 +1,5 @@
 package dev.hephaestus.proximity.util;
 
-import dev.hephaestus.proximity.cards.Predicate;
-
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -66,6 +64,16 @@ public class Result<T> {
         }
 
         return this;
+    }
+
+    public <V> Result<V> unwrap() {
+        if (this.isError()) {
+            return Result.error(this.error);
+        } else if (this.value instanceof Result<?> result) {
+            return result.unwrap();
+        } else {
+            return (Result<V>) this;
+        }
     }
 
     public static <T> Result<T> error(String message, Object... args) {

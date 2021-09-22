@@ -2,6 +2,13 @@ package dev.hephaestus.proximity.text;
 
 
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.util.XMLUtil;
+import org.w3c.dom.Element;
+
+import java.util.Locale;
+
+import static dev.hephaestus.proximity.util.XMLUtil.apply;
 
 public record Style(String fontName, String italicFontName, Float size, Integer color,
                     Shadow shadow,
@@ -58,6 +65,33 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
 
     public Style size(float fontSize) {
         return new Style(this.fontName, this.italicFontName, fontSize, this.color, this.shadow, this.outline, this.capitalization);
+    }
+
+    public static Result<Style> parse(Element style) {
+        Style.Builder builder = new Style.Builder();
+
+        builder.font(style.getAttribute("font"));
+
+        apply(style, "italicFont", builder::italics);
+        apply(style, "capitalization", Style.Capitalization::parse, builder::capitalization);
+        apply(style, "color", Integer::decode, builder::color);
+        apply(style, "size", Float::parseFloat, builder::size);
+
+        XMLUtil.iterate(style, (child, i) -> {
+            switch (child.getTagName()) {
+                case "shadow" -> builder.shadow(new Style.Shadow(
+                        Integer.decode(child.getAttribute("color")),
+                        Integer.decode(child.getAttribute("dX")),
+                        Integer.decode(child.getAttribute("dY"))
+                ));
+                case "outline" -> builder.outline(new Style.Outline(
+                        Integer.decode(child.getAttribute("color")),
+                        Integer.decode(child.getAttribute("weight"))
+                ));
+            }
+        });
+
+        return Result.of(builder.build());
     }
 
     public static final class Builder {
@@ -122,6 +156,10 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
     }
 
     public enum Capitalization {
-        ALL_CAPS, NO_CAPS, SMALL_CAPS
+        ALL_CAPS, NO_CAPS, SMALL_CAPS;
+
+        public static Capitalization parse(String string) {
+            return Capitalization.valueOf(string.toUpperCase(Locale.ROOT));
+        }
     }
 }
