@@ -4,7 +4,7 @@ A tool to assemble Magic: The Gathering proxies from a set of template images
 
 ## Dependencies 
 
-When building the project make sure you are have `Java 16` installed.    
+When building the project make sure you have `Java 16` installed.    
 
 ### Arch 
 

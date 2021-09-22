@@ -606,7 +606,7 @@
                     <TextLayer x="335" y="4134" value="2021 Custom Proxy">
                         <Style font="Calibri" color="#FFFFFF" size="78"/>
                     </TextLayer>
-                    <TextLayer value="NOT FOR SALE" x="1010" y="4136">
+                    <TextLayer value="NOT FOR SALE" x="1120" y="4136">
                         <Style font="Beleren2016-Bold" color="#FFFFFF" size="71" kerning="1"/>
                     </TextLayer>
                 </Group>
