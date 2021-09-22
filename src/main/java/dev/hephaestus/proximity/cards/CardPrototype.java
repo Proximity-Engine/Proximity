@@ -161,16 +161,19 @@ public record CardPrototype(String scryfallName, String cardName, int number, Js
 
         boolean hybrid = false;
 
-        if (colors.size() == 2 && card.has("mana_cost") && !card.getAsString("mana_cost").isEmpty()) {
-            String manaCost = card.getAsString("mana_cost");
+        if (colors.size() == 2) {
             hybrid = true;
 
-            for (String string : manaCost.substring(1, manaCost.length() - 1).split("}\\{")) {
-                switch (string.toLowerCase(Locale.ROOT)) {
-                    case "w", "u", "b", "r", "g" -> hybrid = false;
-                }
+            if (card.has("mana_cost") && !card.getAsString("mana_cost").isEmpty()) {
+                String manaCost = card.getAsString("mana_cost");
 
-                if (!hybrid) break;
+                for (String string : manaCost.substring(1, manaCost.length() - 1).split("}\\{")) {
+                    switch (string.toLowerCase(Locale.ROOT)) {
+                        case "w", "u", "b", "r", "g" -> hybrid = false;
+                    }
+
+                    if (!hybrid) break;
+                }
             }
         }
 
