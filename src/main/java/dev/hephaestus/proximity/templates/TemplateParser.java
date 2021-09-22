@@ -61,7 +61,11 @@ public record TemplateParser(Logger log) {
                                     errors.add(String.format("Default value '%s' not present in Enumeration '%s'", defaultValue, id));
                                 }
                             }
-                            case "ToggleOption" -> info.options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
+                            case "ToggleOption" -> {
+                                if (!info.options.has(id)) {
+                                    info.options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
+                                }
+                            }
                         }
                 })
         );
@@ -78,7 +82,7 @@ public record TemplateParser(Logger log) {
         List<String> errors = new ArrayList<>();
 
         XMLUtil.iterate(info.root, "styles", (styles, i) ->
-                XMLUtil.iterate(styles, "style", (style, j) -> {
+                XMLUtil.iterate(styles, "Style", (style, j) -> {
                         if (!style.hasAttribute("name")) {
                             errors.add(String.format("Style #%d missing name attribute", j));
                         }

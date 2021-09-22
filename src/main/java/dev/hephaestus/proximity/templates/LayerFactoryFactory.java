@@ -52,6 +52,8 @@ public abstract class LayerFactoryFactory<Factory extends LayerFactory<?>> {
             case "Selector" -> SelectorFactoryFactory.parse(element, id, x, y, predicates, log, definedPredicateGetter);
             case "SpacingLayer" -> SpacerFactoryFactory.parse(element, id, x, y, predicates);
             case "Fork" -> ForkFactoryFactory.parse(element, id, x, y, predicates, log, definedPredicateGetter);
+            case "HorizontalLayout" -> HorizontalLayoutFactoryFactory.parse(element, id, x, y, predicates, log, definedPredicateGetter);
+            case "VerticalLayout" -> VerticalLayoutFactoryFactory.parse(element, id, x, y, predicates, log, definedPredicateGetter);
             default -> Result.error("Unexpected layer type: %s", element.getTagName());
         };
     }

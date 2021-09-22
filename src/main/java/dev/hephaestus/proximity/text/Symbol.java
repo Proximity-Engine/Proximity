@@ -238,10 +238,7 @@ public record Symbol(String glyphs, int color) {
                 base.fontName(),
                 base.italicFontName(),
                 base.size(),
-                base.color() == null ? color : base.color(),
-                base.shadow(),
-                base.outline(),
-                base.capitalization()
+                base.kerning(), base.shadow(), base.outline(), base.capitalization(), base.color() == null ? color : base.color()
         );
     }
 

@@ -7,11 +7,11 @@ import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.TemplateLoader;
 import dev.hephaestus.proximity.util.Keys;
 import dev.hephaestus.proximity.util.Logging;
+import dev.hephaestus.proximity.util.ParsingUtil;
 import dev.hephaestus.proximity.util.Result;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.quiltmc.json5.JsonReader;
 
 import javax.imageio.ImageIO;
@@ -33,10 +33,12 @@ import java.util.regex.Pattern;
 public final class Proximity {
     private final Logger log = LogManager.getLogger("Proximity");
     private final JsonObject options;
+    private final JsonObject overrides;
     private final List<TemplateLoader> loaders;
 
-    public Proximity(JsonObject options, TemplateLoader... loaders) {
+    public Proximity(JsonObject options, JsonObject overrides, TemplateLoader... loaders) {
         this.options = options;
+        this.overrides = overrides;
         this.loaders = new ArrayList<>(Arrays.asList(loaders));
     }
 
@@ -129,9 +131,9 @@ public final class Proximity {
                                 value = split.length == 2 ? split[1] : null;
                             }
 
-                            overrides.add(key, parseStringValue(value));
+                            overrides.add(key, ParsingUtil.parseStringValue(value));
                         } else {
-                            cardOptions.add(key, parseStringValue(value));
+                            cardOptions.add(key, ParsingUtil.parseStringValue(value));
                         }
 
                         if (j < line.length()) {
@@ -167,22 +169,6 @@ public final class Proximity {
         }
 
         return Result.of(result);
-    }
-
-    private JsonElement parseStringValue(@Nullable String value) {
-        if (value != null) {
-            if (value.startsWith("\"") && value.endsWith("\"")) {
-                value = value.substring(1, value.length() - 1);
-            }
-        }
-
-        if (value == null) {
-            return JsonNull.INSTANCE;
-        } else if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
-            return new JsonPrimitive(Boolean.parseBoolean(value));
-        } else {
-            return new JsonPrimitive(value);
-        }
     }
 
     // This is needed because Scryfall's search API only expects a single card name, so we just pass the first
@@ -320,10 +306,11 @@ public final class Proximity {
                 continue;
             }
 
-            cards.add(new Card(
-                    prototype.parse(cardInfo.get(prototype.cardName()).get(setCode)),
-                    prototype.template())
-            );
+            JsonObject representation = prototype.parse(cardInfo.get(prototype.cardName()).get(setCode));
+
+            representation.copyAll(this.overrides);
+
+            cards.add(new Card(representation, prototype.template()));
         }
 
         return Result.of(cards);

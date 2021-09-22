@@ -10,6 +10,7 @@ import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
+import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
 import java.util.*;
 import java.util.List;
@@ -58,6 +59,17 @@ public class TextLayer extends Layer {
                             : style.fontName(), size
                     );
 
+                    if (font != null) {
+                        Map<TextAttribute, Object> attributes = new HashMap<>();
+
+                        float kerning = style.kerning() == null && this.style.kerning() == null ? 0
+                                : style.kerning() == null ? this.style.kerning() : style.kerning();
+
+                        attributes.put(TextAttribute.TRACKING, kerning);
+
+                        font = font.deriveFont(attributes);
+                    }
+
                     graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
                     TextLayout textLayout = new TextLayout(c.string(), graphics.getFont(), graphics.getFontRenderContext());
                     x -= textLayout.getAdvance();
@@ -81,6 +93,14 @@ public class TextLayer extends Layer {
                             ? this.style.fontName()
                             : style.fontName(), size
                     );
+
+                    if (font != null) {
+                        Map<TextAttribute, Object> attributes = new HashMap<>();
+
+                        attributes.put(TextAttribute.KERNING, this.style.kerning());
+
+                        font = font.deriveFont(attributes);
+                    }
 
                     graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
                     TextLayout textLayout = new TextLayout(c.string(), graphics.getFont(), graphics.getFontRenderContext());
@@ -110,6 +130,17 @@ public class TextLayer extends Layer {
                 ? this.style.fontName()
                 : style.fontName(), size
         );
+
+        float kerning = style.kerning() == null && this.style.kerning() == null ? 0
+                : style.kerning() == null ? this.style.kerning() : style.kerning();
+
+        if (font != null) {
+            Map<TextAttribute, Object> attributes = new HashMap<>();
+
+            attributes.put(TextAttribute.TRACKING, kerning / font.getSize());
+
+            font = font.deriveFont(attributes);
+        }
 
         Color textColor = style.color() == null && this.style.color() == null
                 ? graphics.getColor()

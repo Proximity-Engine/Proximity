@@ -72,7 +72,7 @@ public class TextFactoryFactory extends LayerFactoryFactory<TextFactory> {
 
         XMLUtil.iterate(element, (child, i) -> {
             switch (child.getTagName()) {
-                case "style" -> Style.parse(child).ifError(errors::add).ifPresent(style::set);
+                case "Style" -> Style.parse(child).ifError(errors::add).ifPresent(style::set);
                 case "wrap" -> {
                     if (!(child.hasAttribute("x") && child.hasAttribute("y") && child.hasAttribute("width") && child.hasAttribute("height"))) {
                         errors.add("Wrap must have x, y, width, and height attributes");

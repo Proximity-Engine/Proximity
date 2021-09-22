@@ -10,10 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 public class FileSystemTemplateSource implements TemplateSource {
     private final String templateName;
-    private final PathGetter pathGetter;
+    private final Function<String, Path> pathGetter;
     private final Map<String, BufferedImage> imageCache = new HashMap<>();
 
     public FileSystemTemplateSource(Path path) throws IOException {
@@ -27,52 +28,42 @@ public class FileSystemTemplateSource implements TemplateSource {
             FileSystem fileSystem = FileSystems.newFileSystem(path);
             this.pathGetter = fileSystem::getPath;
         } else if (Files.isDirectory(path)) {
-            this.pathGetter = (first, more) -> {
-                Path p = path.resolve(first);
-
-                for (String s : more) {
-                    p = p.resolve(s);
-                }
-
-                return p;
-            };
+            this.pathGetter = path::resolve;
         } else {
             throw new RuntimeException("Template must be either a zip file or a directory!");
         }
     }
 
-    public BufferedImage getImage(String... images) {
+    public BufferedImage getImage(String image) {
         try {
-            for (String image : images) {
-                if (image.startsWith("/")) {
-                    image = image.substring(1);
-                }
-
-                if (!this.imageCache.containsKey(image)) {
-                    Path path = this.pathGetter.apply(image);
-
-                    this.imageCache.put(image, ImageIO.read(Files.newInputStream(path)));
-                }
-
-                return this.imageCache.get(image);
+            if (image.startsWith("/")) {
+                image = image.substring(1);
             }
+
+            if (!this.imageCache.containsKey(image)) {
+                Path path = this.pathGetter.apply(image);
+
+                this.imageCache.put(image, ImageIO.read(Files.newInputStream(path)));
+            }
+
+            return this.imageCache.get(image);
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }
-
-        throw new RuntimeException("Invalid resources: [" + String.join(", ", images) + "]");
     }
 
-    public InputStream getInputStream(String first, String... more) throws IOException {
-        return Files.newInputStream(this.pathGetter.apply(first, more));
+    @Override
+    public InputStream getInputStream(String first) throws IOException {
+        return Files.newInputStream(this.pathGetter.apply(first));
+    }
+
+    @Override
+    public boolean exists(String file) {
+        return Files.exists(this.pathGetter.apply(file));
     }
 
     @Override
     public String getTemplateName() {
         return this.templateName;
-    }
-
-    private interface PathGetter {
-        Path apply(String first, String... more);
     }
 }
