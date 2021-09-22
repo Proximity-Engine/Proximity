@@ -7,10 +7,11 @@ import dev.hephaestus.proximity.text.Symbol;
 import dev.hephaestus.proximity.text.TextComponent;
 
 import java.util.*;
+import java.util.function.Function;
 
 public final class TextParser {
     private final String oracle;
-    private final Map<String, Style> styles;
+    private final Function<String, Style> styleGetter;
     private final Style style;
     private final String newLine;
     private final JsonObject options;
@@ -21,9 +22,9 @@ public final class TextParser {
     private boolean italic;
     private boolean allWordsItalic;
 
-    public TextParser(String oracle, Map<String, Style> styles, Style style, String newLine, JsonObject options) {
+    public TextParser(String oracle, Function<String, Style> styleGetter, Style style, String newLine, JsonObject options) {
         this.oracle = oracle;
-        this.styles = styles;
+        this.styleGetter = styleGetter;
         this.style = style;
         this.newLine = newLine;
         this.options = options;
@@ -91,7 +92,7 @@ public final class TextParser {
                     }
                     String symbol = symbolBuilder.toString();
 
-                    List<TextComponent> group = Symbol.symbol(symbol, this.styles, this.style.color(null).font("NDPMTG", null), new Symbol.Factory.Context("oracle"));
+                    List<TextComponent> group = Symbol.symbol(symbol, this.styleGetter, this.style.color(null).font("NDPMTG", null), new Symbol.Factory.Context("oracle"));
 
                     this.currentGroup.addAll(group);
                 }

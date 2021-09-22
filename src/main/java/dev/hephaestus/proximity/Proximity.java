@@ -70,7 +70,7 @@ public final class Proximity {
     private Result<Template> parseTemplate(String name) {
         for (TemplateLoader loader : this.loaders) {
             Result<Template> files = loader.getTemplateFiles(name)
-                    .then(fs -> loader.load(fs, this.options))
+                    .then(fs -> loader.load(this.log, fs, this.options))
                     .ifError(this.log::warn);
 
             if (!files.isError()) return files;
@@ -347,8 +347,8 @@ public final class Proximity {
                     long cardTime = System.currentTimeMillis();
 
                     try {
-                        BufferedImage frontImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
-                        BufferedImage backImage = new BufferedImage(3288, 4488, BufferedImage.TYPE_INT_ARGB);
+                        BufferedImage frontImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
+                        BufferedImage backImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
 
                         card.template().draw(card.representation(), frontImage);
 

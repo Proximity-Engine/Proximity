@@ -7,6 +7,7 @@ import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,33 +20,33 @@ public interface TextFunction {
         put("flavor_text", TextFunction::flavorText);
     }};
 
-    List<List<TextComponent>> apply(Map<String, Style> styles, Style base, String target, JsonObject options);
+    List<List<TextComponent>> apply(Function<String, Style> styleGetter, Style base, String target, JsonObject options);
 
-    static List<List<TextComponent>> apply(Map<String, Style> styles, Style base, String function, String target, JsonObject options) {
+    static List<List<TextComponent>> apply(Function<String, Style> styleGetter, Style base, String function, String target, JsonObject options) {
         if (function.isEmpty() || !FUNCTIONS.containsKey(function)) return Collections.singletonList(Collections.singletonList(new TextComponent(base, target)));
 
-        return FUNCTIONS.get(function).apply(styles, base, target, options);
+        return FUNCTIONS.get(function).apply(styleGetter, base, target, options);
     }
 
-    private static List<List<TextComponent>> parse_cost(Map<String, Style> styles, Style base, String target, JsonObject options) {
+    private static List<List<TextComponent>> parse_cost(Function<String, Style> styleGetter, Style base, String target, JsonObject options) {
         Matcher matcher = COST_SYMBOLS.matcher(target);
 
         List<TextComponent> result = new ArrayList<>();
 
         while (matcher.find()) {
             String symbol = matcher.group(1);
-            result.addAll(Symbol.symbol(symbol, styles, base, new Symbol.Factory.Context("cost")));
+            result.addAll(Symbol.symbol(symbol, styleGetter, base, new Symbol.Factory.Context("cost")));
         }
 
         return Collections.singletonList(result);
     }
 
-    static List<List<TextComponent>> oracleText(Map<String, Style> styles, Style base, String target, JsonObject options) {
-        return new TextParser(target, styles, base, "\n\n", options).parseOracle().text();
+    static List<List<TextComponent>> oracleText(Function<String, Style> styleGetter, Style base, String target, JsonObject options) {
+        return new TextParser(target, styleGetter, base, "\n\n", options).parseOracle().text();
     }
 
 
-    static List<List<TextComponent>> flavorText(Map<String, Style> styles, Style base, String target, JsonObject options) {
-        return new TextParser(target, styles, base, "\n", options).parseFlavor().text();
+    static List<List<TextComponent>> flavorText(Function<String, Style> styleGetter, Style base, String target, JsonObject options) {
+        return new TextParser(target, styleGetter, base, "\n", options).parseFlavor().text();
     }
 }

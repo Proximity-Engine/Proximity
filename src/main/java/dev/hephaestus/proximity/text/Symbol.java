@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.text;
 
 import java.util.*;
+import java.util.function.Function;
 
 public record Symbol(String glyphs, int color) {
     public static final String[] COLORS = new String[] {"W", "U", "B", "R", "G"};
@@ -78,8 +79,8 @@ public record Symbol(String glyphs, int color) {
         // Miscellaneous
         register("CHAOS", BLACK1, 0, false, "?");
         register("E", (template, base, context) -> {
-            Style mods = template.getOrDefault(context.name + ".E", Style.EMPTY);
-            base = base.merge(mods == null ? template.getOrDefault("E", Style.EMPTY) : mods);
+            Style mods = template.apply(context.name + ".E");
+            base = base.merge(mods == null ? template.apply("E") : mods);
 
             return Collections.singletonList(new TextComponent(copyWithDefaultColor(base, BLACK1), "e"));
         });
@@ -89,13 +90,13 @@ public record Symbol(String glyphs, int color) {
         DEFAULT_SYMBOLS.put(symbol, new Symbol(symbol, color));
     }
 
-    public static List<TextComponent> symbol(String symbol, Map<String, Style> template, Style base, Factory.Context context) {
+    public static List<TextComponent> symbol(String symbol, Function<String, Style> styleGetter, Style base, Factory.Context context) {
         if (!SYMBOLS.containsKey(symbol)) {
             System.out.printf("Unrecognized glyphs '%s'%n", symbol);
             return Collections.emptyList();
         }
 
-        return SYMBOLS.get(symbol).apply(template, base, context);
+        return SYMBOLS.get(symbol).apply(styleGetter, base, context);
     }
 
     private static void register(String symbol, Factory function) {
@@ -144,13 +145,13 @@ public record Symbol(String glyphs, int color) {
 
     private record Single(String symbol, int symbolColor, int backgroundColor, boolean bigCircle, String glyphs) implements Factory {
         @Override
-        public List<TextComponent> apply(Map<String, Style> template, Style base, Context context) {
+        public List<TextComponent> apply(Function<String, Style> template, Style base, Context context) {
             ArrayList<TextComponent> text = new ArrayList<>(2);
 
-            Style mods = template.getOrDefault(context.name + "." + this.symbol, Style.EMPTY);
+            Style mods = template.apply(context.name + "." + this.symbol);
             base = base.merge(mods == null ?
-                    template.getOrDefault(this.symbol, Style.EMPTY)
-                    : template.getOrDefault(this.symbol, Style.EMPTY));
+                    template.apply(this.symbol)
+                    : template.apply(this.symbol));
 
             text.add(
                     new TextComponent(
@@ -197,14 +198,14 @@ public record Symbol(String glyphs, int color) {
         }
 
         @Override
-        public List<TextComponent> apply(Map<String, Style> template, Style base, Context context) {
+        public List<TextComponent> apply(Function<String, Style> styleGetter, Style base, Context context) {
             ArrayList<TextComponent> text = new ArrayList<>(4);
 
-            Style mods1 = template.getOrDefault(context.name + "." + this.symbol1, Style.EMPTY);
-            Style mods2 = template.getOrDefault(context.name + "." + this.symbol2, Style.EMPTY);
+            Style mods1 = styleGetter.apply(context.name + "." + this.symbol1);
+            Style mods2 = styleGetter.apply(context.name + "." + this.symbol2);
 
-            Style style1 = base.merge(mods1 == null ? template.getOrDefault(this.symbol1, Style.EMPTY) : mods1);
-            Style style2 = base.merge(mods2 == null ? template.getOrDefault(this.symbol2, Style.EMPTY) : mods2);
+            Style style1 = base.merge(mods1 == null ? styleGetter.apply(this.symbol1) : mods1);
+            Style style2 = base.merge(mods2 == null ? styleGetter.apply(this.symbol2) : mods2);
 
             // Big circle
             text.add(new TextComponent(
@@ -245,7 +246,7 @@ public record Symbol(String glyphs, int color) {
     }
 
     public interface Factory {
-        List<TextComponent> apply(Map<String, Style> template, Style base, Context context);
+        List<TextComponent> apply(Function<String, Style> styleGetter, Style base, Context context);
 
         record Context(String name) {
         }

@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Template" type="TemplateType"/>
+  <xs:simpleType name="color">
+    <xs:annotation>
+      <xs:documentation>The color entity indicates the color of an element. Color may be represented as hexadecimal RGB triples, as in HTML, or as hexadecimal ARGB tuples, with the A indicating alpha of transparency. An alpha value of 00 is totally transparent; FF is totally opaque. If RGB is used, the A value is assumed to be FF. For instance, the RGB value "#800080" represents purple. An ARGB value of "#40800080" would be a transparent purple. As in SVG 1.1, colors are defined in terms of the sRGB color space (IEC 61966).</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:token">
+      <xs:pattern value="#[\dA-F]{6}([\dA-F][\dA-F])?"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="capitalization">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="default"/>
+      <xs:enumeration value="all_caps"/>
+      <xs:enumeration value="no_caps"/>
+      <xs:enumeration value="small_caps"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="alignment">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="left"/>
+      <xs:enumeration value="center"/>
+      <xs:enumeration value="right"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="EnumerationValueType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="value" use="optional"/>
+        <xs:attribute type="xs:string" name="id" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="EnumerationType">
+    <xs:sequence>
+      <xs:element type="EnumerationValueType" name="EnumerationValue" maxOccurs="unbounded" minOccurs="2"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="required"/>
+    <xs:attribute type="xs:string" name="default" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="ToggleOptionType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="id" use="required"/>
+        <xs:attribute type="xs:boolean" name="default" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="StringOptionType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="value"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="optionsType">
+    <xs:sequence>
+      <xs:element type="EnumerationType" name="Enumeration" minOccurs="0"  maxOccurs="unbounded"/>
+      <xs:element type="ToggleOptionType" name="ToggleOption" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="StringOptionType" name="StringOption" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="styleType" mixed="true">
+    <xs:sequence>
+      <xs:element type="TextShadowType" name="shadow" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="TextOutlineType" name="outline" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="optional"/>
+    <xs:attribute type="xs:string" name="font" use="required"/>
+    <xs:attribute type="xs:string" name="italicFont" use="optional"/>
+    <xs:attribute type="capitalization" name="capitalization" use="optional"/>
+    <xs:attribute type="color" name="color" use="optional"/>
+    <xs:attribute type="xs:float" name="size" use="optional"/>
+  </xs:complexType>
+  <xs:complexType name="stylesType">
+    <xs:sequence>
+      <xs:element type="styleType" name="style" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="RangeType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="key" use="required"/>
+        <xs:attribute type="xs:int" name="min" use="optional"/>
+        <xs:attribute type="xs:int" name="max" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ConditionDefinitionType">
+    <xs:simpleContent>
+      <xs:extension base="conditionsType">
+        <xs:attribute type="xs:string" name="name" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="condition_definitionsType">
+    <xs:sequence>
+      <xs:element type="ConditionDefinitionType" name="ConditionDefinition" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="IsEqualsType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="key" use="required"/>
+        <xs:attribute type="xs:string" name="value" use="optional" default="true"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="IsPresentType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:string" name="key" use="required"/>
+        <xs:attribute type="xs:boolean" name="value" use="optional" default="true"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="conditionsType">
+    <xs:choice maxOccurs="unbounded" minOccurs="0">
+      <xs:element type="IsEqualsType" name="IsEquals"/>
+      <xs:element type="IsPresentType" name="IsPresent"/>
+      <xs:element type="RangeType" name="Range"/>
+      <xs:element type="OrType" name="Or"/>
+      <xs:element type="AllType" name="And"/>
+      <xs:element type="NotType" name="Not" minOccurs="0"/>
+    </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="LayerType">
+    <xs:sequence>
+      <xs:element type="conditionsType" name="conditions"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="optional"/>
+    <xs:attribute type="xs:int" name="x"/>
+    <xs:attribute type="xs:int" name="y"/>
+  </xs:complexType>
+  <xs:complexType name="ArtLayerType">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:attribute type="xs:string" name="width"/>
+        <xs:attribute type="xs:string" name="height"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ImageLayerType" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:sequence>
+          <xs:element type="conditionsType" name="conditions" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="src" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="GroupType">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:sequence>
+          <xs:element type="ImageLayerType" name="ImageLayer"/>
+          <xs:element type="SelectorType" name="Selector"/>
+          <xs:element type="ForkType" name="Fork"/>
+          <xs:element type="TextLayerType" name="TextLayer"/>
+          <xs:element type="GroupType" name="Group"/>
+          <xs:element type="SpacingLayerType" name="SpacingLayer" minOccurs="0"/>
+          <xs:element type="ArtLayerType" name="ArtLayer">
+            <xs:annotation>
+              <xs:documentation>The art layer is special in that it can also contain a width and/or height
+                If both are provided, the layer will be stretched or shrunk to cover that area
+                If only one is provided, the layer will be stretched or shrunk to fit that dimension
+                while keeping the image proportional with its original dimensions</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element type="SquishBoxType" name="SquishBox"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="SelectorType">
+    <xs:simpleContent>
+      <xs:extension base="GroupType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="AllType">
+    <xs:simpleContent>
+      <xs:extension base="conditionsType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="OrType">
+    <xs:simpleContent>
+      <xs:extension base="conditionsType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="NotType">
+    <xs:complexContent>
+      <xs:extension base="conditionsType"/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="BranchType" mixed="true">
+    <xs:simpleContent>
+      <xs:extension base="conditionsType">
+        <xs:attribute type="xs:string" name="id" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="branchesType">
+    <xs:sequence>
+      <xs:element type="BranchType" name="Branch" maxOccurs="unbounded" minOccurs="2"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ForkType">
+    <xs:complexContent>
+      <xs:extension base="GroupType">
+        <xs:sequence>
+          <xs:element type="branchesType" name="branches" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="TextLayerType" mixed="true">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:sequence>
+          <xs:element type="styleType" name="style" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="wrapType" name="wrap" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute type="alignment" name="alignment" use="optional" default="left"/>
+        <xs:attribute type="xs:string" name="value" use="required"/>
+        <xs:attribute type="xs:int" name="width" use="optional"/>
+        <xs:attribute type="xs:int" name="height" use="optional"/>
+        <xs:attribute type="xs:string" name="style" use="optional"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="layersType">
+    <xs:simpleContent>
+      <xs:extension base="GroupType"/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SquishBoxType">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:sequence>
+          <xs:element type="GroupType" name="main"/>
+          <xs:element type="GroupType" name="flex"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="TextShadowType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="color" name="color" use="required"/>
+        <xs:attribute type="xs:int" name="dX" use="required"/>
+        <xs:attribute type="xs:int" name="dY" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TextOutlineType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="color" name="color" use="required"/>
+        <xs:attribute type="xs:int" name="weight" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="SpacingLayerType">
+    <xs:simpleContent>
+      <xs:extension base="LayerType">
+        <xs:attribute type="xs:int" name="x"/>
+        <xs:attribute type="xs:int" name="y"/>
+        <xs:attribute type="xs:int" name="width"/>
+        <xs:attribute type="xs:int" name="height"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="wrapType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute type="xs:int" name="x" use="optional"/>
+        <xs:attribute type="xs:int" name="y" use="optional"/>
+        <xs:attribute type="xs:int" name="width" use="optional"/>
+        <xs:attribute type="xs:int" name="height" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="TemplateType">
+    <xs:sequence>
+      <xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="stylesType" name="styles" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="layersType" name="layers"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name"/>
+    <xs:attribute type="xs:string" name="author"/>
+    <xs:attribute type="xs:string" name="width" use="required"/>
+    <xs:attribute type="xs:string" name="height" use="required"/>
+  </xs:complexType>
+</xs:schema>

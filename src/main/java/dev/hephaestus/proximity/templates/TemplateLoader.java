@@ -2,27 +2,28 @@ package dev.hephaestus.proximity.templates;
 
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.util.Result;
-import org.quiltmc.json5.JsonReader;
+import org.apache.logging.log4j.Logger;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 public interface TemplateLoader {
     Result<TemplateSource> getTemplateFiles(String name);
 
-    default Result<Template> load(TemplateSource files, JsonObject options) {
-        String name = files.getTemplateName();
+    default Result<Template> load(Logger log, TemplateSource source, JsonObject options) {
+        String name = source.getTemplateName();
 
         try {
-            InputStream inputStream = files.getInputStream("template.json5");
-            InputStreamReader streamReader = new InputStreamReader(inputStream);
-            JsonReader jsonReader = JsonReader.json5(streamReader);
-            JsonObject object = JsonObject.parseObject(jsonReader);
-            Template.Parser parser = new Template.Parser(name, object, files, options);
+            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = documentBuilder.parse(source.getInputStream("template.xml"));
+            TemplateParser parser = new TemplateParser(log);
 
-            return Result.of(parser.parse());
-        } catch (IOException e) {
+            return parser.parse(document, source, options);
+        } catch (IOException | ParserConfigurationException | SAXException e) {
             return Result.error("Exception loading template '%s': %s", name, e.getMessage());
         }
     }
