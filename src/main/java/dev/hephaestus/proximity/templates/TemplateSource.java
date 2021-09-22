@@ -6,10 +6,11 @@ import java.io.InputStream;
 
 public interface TemplateSource {
     /**
-     * @param images A list of images to try to get
+     * @param file A list of images to try to get
      * @return the first image found
      */
-    BufferedImage getImage(String... images);
-    InputStream getInputStream(String first, String... more) throws IOException;
+    BufferedImage getImage(String file);
+    InputStream getInputStream(String file) throws IOException;
+    boolean exists(String file);
     String getTemplateName();
 }

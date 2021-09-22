@@ -14,7 +14,7 @@ public abstract class Layer {
 
     private final String parentId;
     private final String id;
-    protected final int x, y;
+    protected int x, y;
 
     public Layer(String parentId, String id, int x, int y) {
         this.parentId = parentId;

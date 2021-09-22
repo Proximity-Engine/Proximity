@@ -139,7 +139,7 @@ public class TextFactory extends LayerFactory<TextLayer> {
         ));
     }
 
-    private static List<List<TextComponent>> applyCapitalization(List<List<TextComponent>> text, Style.Capitalization caps, Float fontSize) {
+    private static List<List<TextComponent>> applyCapitalization(List<List<TextComponent>> text, Style.Capitalization caps, Integer fontSize) {
         if (caps == null || fontSize == null) return text;
 
         List<List<TextComponent>> result = new ArrayList<>();
@@ -157,8 +157,8 @@ public class TextFactory extends LayerFactory<TextLayer> {
                                 : component.style().size(fontSize);
 
                         Style lowercase = component.style() == null
-                                ? new Style.Builder().size(fontSize * 0.75F).build()
-                                : component.style().size(fontSize * 0.75F);
+                                ? new Style.Builder().size((int) (fontSize * 0.75F)).build()
+                                : component.style().size((int) (fontSize * 0.75F));
 
                         for (char c : component.string().toCharArray()) {
                             boolean bl = Character.isUpperCase(c);

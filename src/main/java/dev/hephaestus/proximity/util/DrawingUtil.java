@@ -14,17 +14,18 @@ public final class DrawingUtil {
 
     private DrawingUtil() {}
 
-    // TODO: Allow loading fonts from template zip files
     public static Font getFont(TemplateSource files, String fontName, float size) {
         Font font = FONTS.computeIfAbsent(fontName, name -> {
-            try {
-                InputStream stream = files.getInputStream("fonts/" + fontName + ".ttf");
+            if (files.exists("fonts/" + fontName + ".ttf")) {
+                try {
+                    InputStream stream = files.getInputStream("fonts/" + fontName + ".ttf");
 
-                return stream != null ? Font.createFont(Font.TRUETYPE_FONT, stream) : null;
-            } catch (FontFormatException | IOException e) {
-                e.printStackTrace();
-                return null;
+                    return stream != null ? Font.createFont(Font.TRUETYPE_FONT, stream) : null;
+                } catch (FontFormatException | IOException ignored) {
+                }
             }
+
+            return new Font(fontName, Font.PLAIN, (int) size);
         });
 
         return font == null ? null : font.deriveFont(size);

@@ -10,9 +10,9 @@ import java.util.Locale;
 
 import static dev.hephaestus.proximity.util.XMLUtil.apply;
 
-public record Style(String fontName, String italicFontName, Float size, Integer color,
-                    Shadow shadow,
-                    Outline outline, Capitalization capitalization) {
+public record Style(String fontName, String italicFontName, Integer size, Float kerning, Shadow shadow,
+                    Outline outline, Capitalization capitalization, Integer color
+) {
     public static final Style EMPTY = new Style.Builder().build();
 
     public Style font(String fontName, String italicFontName) {
@@ -20,10 +20,7 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
                 fontName,
                 italicFontName,
                 this.size,
-                this.color,
-                this.shadow,
-                this.outline,
-                null
+                this.kerning, this.shadow, this.outline, null, this.color
         );
     }
 
@@ -32,21 +29,18 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
                 this.fontName,
                 this.italicFontName,
                 this.size,
-                this.color,
-                shadow,
-                this.outline,
-                this.capitalization
+                this.kerning, shadow, this.outline, this.capitalization, this.color
         );
     }
 
     public Style italic() {
         if (this.italicFontName == null) return this;
 
-        return new Style(this.italicFontName, this.italicFontName, this.size, this.color, this.shadow, this.outline, this.capitalization);
+        return new Style(this.italicFontName, this.italicFontName, this.size, this.kerning, this.shadow, this.outline, this.capitalization, this.color);
     }
 
     public Style color(Integer color) {
-        return new Style(this.fontName, this.italicFontName, this.size, color, this.shadow, this.outline, this.capitalization);
+        return new Style(this.fontName, this.italicFontName, this.size, this.kerning, this.shadow, this.outline, this.capitalization, color);
     }
 
     public Style merge(Style modifications) {
@@ -56,15 +50,12 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
                 modifications.fontName == null ? this.fontName : modifications.fontName,
                 modifications.italicFontName == null ? this.italicFontName : modifications.italicFontName,
                 modifications.size == null ? this.size : modifications.size,
-                modifications.color == null ? this.color : modifications.color,
-                modifications.shadow == null ? this.shadow : modifications.shadow,
-                modifications.outline == null ? this.outline : modifications.outline,
-                modifications.capitalization == null ? this.capitalization : modifications.capitalization
+                this.kerning, modifications.shadow == null ? this.shadow : modifications.shadow, modifications.outline == null ? this.outline : modifications.outline, modifications.capitalization == null ? this.capitalization : modifications.capitalization, modifications.color == null ? this.color : modifications.color
         );
     }
 
-    public Style size(float fontSize) {
-        return new Style(this.fontName, this.italicFontName, fontSize, this.color, this.shadow, this.outline, this.capitalization);
+    public Style size(int fontSize) {
+        return new Style(this.fontName, this.italicFontName, fontSize, this.kerning, this.shadow, this.outline, this.capitalization, this.color);
     }
 
     public static Result<Style> parse(Element style) {
@@ -75,7 +66,8 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
         apply(style, "italicFont", builder::italics);
         apply(style, "capitalization", Style.Capitalization::parse, builder::capitalization);
         apply(style, "color", Integer::decode, builder::color);
-        apply(style, "size", Float::parseFloat, builder::size);
+        apply(style, "size", Integer::parseInt, builder::size);
+        apply(style, "kerning", Float::parseFloat, builder::kerning);
 
         XMLUtil.iterate(style, (child, i) -> {
             switch (child.getTagName()) {
@@ -97,7 +89,8 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
     public static final class Builder {
         private String fontName;
         private String italicFontName;
-        private Float size;
+        private Integer size;
+        private Float kerning;
         private Integer color;
         private Shadow shadow;
         private Outline outline;
@@ -113,8 +106,13 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
             return this;
         }
 
-        public Builder size(Float size) {
+        public Builder size(Integer size) {
             this.size = size;
+            return this;
+        }
+
+        public Builder kerning(float kerning) {
+            this.kerning = kerning;
             return this;
         }
 
@@ -139,7 +137,7 @@ public record Style(String fontName, String italicFontName, Float size, Integer 
         }
 
         public Style build() {
-            return new Style(this.fontName, this.italicFontName, this.size, this.color, this.shadow, this.outline, this.capitalization);
+            return new Style(this.fontName, this.italicFontName, this.size, this.kerning, this.shadow, this.outline, this.capitalization, this.color);
         }
     }
 
