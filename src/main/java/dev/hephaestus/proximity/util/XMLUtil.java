@@ -122,7 +122,7 @@ public final class XMLUtil {
                     return Result.error("Error(s) parsing style:\n\t%s", String.join("\n\t%s", errors));
                 }
 
-                return Result.of(element.getTagName().equals("AllCondition")
+                return Result.of(element.getTagName().equals("And")
                         ? new CardPredicate.And(predicates)
                         : new CardPredicate.Or(predicates));
             }
