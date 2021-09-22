@@ -335,11 +335,12 @@ public final class Proximity {
 
                     try {
                         BufferedImage frontImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
-                        BufferedImage backImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
+                        BufferedImage backImage = null;
 
                         card.template().draw(card.representation(), frontImage);
 
                         if (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
+                            backImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
                             card.template().draw(card.representation().getAsJsonObject(Keys.FLIPPED), backImage);
                         }
 
@@ -365,11 +366,7 @@ public final class Proximity {
                                     Files.createDirectories(back.getParent());
                                 }
 
-                                if (!card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
-                                    Files.copy(card.representation().has("proximity", "options", "cardback")
-                                            ? Files.newInputStream(Path.of(card.representation().getAsString("proximity", "options", "cardback")))
-                                            : card.template().getSource().getInputStream("back.png"), back, StandardCopyOption.REPLACE_EXISTING);
-                                } else {
+                                if (card.representation().getAsBoolean(Keys.DOUBLE_SIDED) && backImage != null) {
                                     stream = Files.newOutputStream(back);
 
                                     ImageIO.write(backImage, "png", stream);
