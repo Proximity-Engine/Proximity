@@ -1,5 +1,5 @@
 package dev.hephaestus.proximity.text;
 
-public enum Alignment {
+public enum TextAlignment {
     LEFT, CENTER, RIGHT
 }

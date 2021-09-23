@@ -14,7 +14,7 @@ public class SpacerLayer extends Layer {
     }
 
     @Override
-    public Rectangle draw(StatefulGraphics out, Rectangle wrap) {
-        return new Rectangle(this.getX(), this.getY(), this.width, this.height);
+    public Rectangle draw(StatefulGraphics out, Rectangle wrap, boolean draw, int scale) {
+        return new Rectangle(this.getX(), this.getY(), this.width + scale * 5, this.height + scale * 5);
     }
 }

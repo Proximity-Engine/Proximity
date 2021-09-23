@@ -36,13 +36,17 @@ public class ImageFactory extends LayerFactory<ImageLayer> {
                 String string = split[i];
 
                 if (string.equals("..")) {
-                    src = new StringBuilder(src.substring(0, src.length() - 1));
-                    src = new StringBuilder(src.substring(0, src.lastIndexOf(sep)));
+                    if (src.chars().filter(j -> Character.toString(j).equals(sep)).count() > 1) {
+                        src = new StringBuilder(src.substring(0, src.length() - 1));
+                        src = new StringBuilder(src.substring(0, src.lastIndexOf(sep)));
+                    } else {
+                        src = new StringBuilder();
+                    }
                 } else {
                     src.append(string);
                 }
 
-                if (i < split.length - 1) {
+                if (i < split.length - 1 && !src.isEmpty()) {
                     src.append(sep);
                 }
             }

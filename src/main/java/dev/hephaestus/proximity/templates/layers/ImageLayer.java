@@ -35,10 +35,12 @@ public class ImageLayer extends Layer {
     }
 
     @Override
-    public Rectangle draw(StatefulGraphics out, Rectangle wrap) {
-        out.push(this.getX(), this.getY());
-        out.drawImage(this.image, null, null);
-        out.pop();
+    public Rectangle draw(StatefulGraphics out, Rectangle wrap, boolean draw, int scale) {
+        if (draw) {
+            out.push(this.getX(), this.getY());
+            out.drawImage(this.image, null, null);
+            out.pop();
+        }
 
         return new Rectangle(this.getX(), this.getY(), this.image.getWidth(), this.image.getHeight());
     }

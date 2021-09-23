@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.templates;
 
 
+import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.templates.layers.Layer;
 import dev.hephaestus.proximity.text.Style;
@@ -62,7 +63,7 @@ public final class Template {
                 if (r.isError()) {
                     log.error("Failed to draw layer '{}': {}", factory.id, r.getError());
                 } else {
-                    r.get().draw(graphics, null);
+                    r.get().draw(graphics, null, true, 0);
                 }
             }
         } catch (Exception e) {

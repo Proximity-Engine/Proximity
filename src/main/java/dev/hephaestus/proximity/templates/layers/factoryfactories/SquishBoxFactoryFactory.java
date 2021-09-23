@@ -1,15 +1,18 @@
 package dev.hephaestus.proximity.templates.layers.factoryfactories;
 
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
+import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.templates.LayerFactory;
 import dev.hephaestus.proximity.templates.LayerFactoryFactory;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.layers.factories.SquishBoxFactory;
+import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.XMLUtil;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 
+import java.awt.*;
 import java.util.List;
 import java.util.function.Function;
 
@@ -22,9 +25,9 @@ public class SquishBoxFactoryFactory extends LayerFactoryFactory<SquishBoxFactor
         this.flex = flex;
     }
 
-    public static Result<LayerFactoryFactory<?>> parse(Element element, String id, int x, int y, List<CardPredicate> predicates, Logger log, Function<String, CardPredicate> definedPredicateGetter) {
-        Result<LayerFactoryFactory<?>> main = XMLUtil.applyToFirstElement(element, "main", e -> parse(e, x, y, log, definedPredicateGetter)).unwrap();
-        Result<LayerFactoryFactory<?>> flex = XMLUtil.applyToFirstElement(element, "flex", e -> parse(e, x, y, log, definedPredicateGetter)).unwrap();
+    public static Result<LayerFactoryFactory<?>> parse(Element element, String id, int x, int y, List<CardPredicate> predicates, Logger log, Function<String, CardPredicate> definedPredicateGetter, Function<JsonObject, Style> style, Function<JsonObject, Rectangle> wrap) {
+        Result<LayerFactoryFactory<?>> main = XMLUtil.applyToFirstElement(element, "main", e -> parse(e, x, y, log, definedPredicateGetter, style, wrap)).unwrap();
+        Result<LayerFactoryFactory<?>> flex = XMLUtil.applyToFirstElement(element, "flex", e -> parse(e, x, y, log, definedPredicateGetter, style, wrap)).unwrap();
 
         if (main.isError() ^ flex.isError()) {
             return Result.error((main.isError() ? main : flex).getError());

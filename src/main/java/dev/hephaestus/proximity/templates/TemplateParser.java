@@ -158,7 +158,7 @@ public record TemplateParser(Logger log) {
 
         XMLUtil.iterate(info.root, "layers", (layers, i) ->
                 XMLUtil.iterate(layers, (layer, j) ->
-                        LayerFactoryFactory.parse(layer, 0, 0, this.log, info.predicates::get)
+                        LayerFactoryFactory.parse(layer, 0, 0, this.log, info.predicates::get, c -> Style.EMPTY, null)
                                 .ifError(errors::add)
                                 .ifPresent(layerList::add)));
 

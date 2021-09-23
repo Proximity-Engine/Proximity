@@ -1,16 +1,20 @@
 package dev.hephaestus.proximity.templates.layers.factoryfactories;
 
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
+import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.templates.LayerFactory;
 import dev.hephaestus.proximity.templates.LayerFactoryFactory;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.layers.factories.ForkFactory;
+import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.XMLUtil;
 import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Element;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.Function;
 
 public class ForkFactoryFactory extends LayerFactoryFactory<ForkFactory> {
@@ -41,7 +45,7 @@ public class ForkFactoryFactory extends LayerFactoryFactory<ForkFactory> {
         return Result.of(new ForkFactory(this.id, this.x, this.y, this.predicates, factories, this.branches));
     }
 
-    public static Result<LayerFactoryFactory<?>> parse(Element element, String id, int x, int y, List<CardPredicate> predicates, Logger log, Function<String, CardPredicate> definedPredicateGetter) {
+    public static Result<LayerFactoryFactory<?>> parse(Element element, String id, int x, int y, List<CardPredicate> predicates, Logger log, Function<String, CardPredicate> definedPredicateGetter, Function<JsonObject, Style> style, Function<JsonObject, Rectangle> wrap) {
         List<LayerFactoryFactory<?>> factories = new ArrayList<>();
         Map<String, List<CardPredicate>> branches = new LinkedHashMap<>();
         List<String> errors = new ArrayList<>();
@@ -65,7 +69,7 @@ public class ForkFactoryFactory extends LayerFactoryFactory<ForkFactory> {
                     }
                 });
             } else if (!child.getTagName().equals("conditions")) {
-                parse(child, x, y, log, definedPredicateGetter)
+                parse(child, x, y, log, definedPredicateGetter, style, wrap)
                         .ifError(errors::add)
                         .ifPresent(factories::add);
             }
