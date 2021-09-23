@@ -68,9 +68,22 @@
       <xs:element type="StringOptionType" name="StringOption" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="LayerPropertyType">
+    <xs:sequence>
+      <xs:element type="conditionsType" name="conditions"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AttributeModifierType">
+    <xs:simpleContent>
+      <xs:extension base="conditionsType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name="StyleType" mixed="true">
     <xs:complexContent>
-      <xs:extension base="conditionsType">
+      <xs:extension base="LayerPropertyType">
         <xs:sequence>
           <xs:element type="TextShadowType" name="shadow" minOccurs="0" maxOccurs="1"/>
           <xs:element type="TextOutlineType" name="outline" minOccurs="0" maxOccurs="1"/>
@@ -142,6 +155,7 @@
       <xs:element type="conditionsType" name="conditions"/>
       <xs:element type="StyleType" name="Style"/>
       <xs:element type="wrapType" name="wrap"/>
+      <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="id" use="optional"/>
     <xs:attribute type="xs:int" name="x"/>
@@ -277,14 +291,14 @@
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="wrapType">
-    <xs:simpleContent>
-      <xs:extension base="conditionsType">
+    <xs:complexContent>
+      <xs:extension base="LayerPropertyType">
         <xs:attribute type="xs:int" name="x" use="optional"/>
         <xs:attribute type="xs:int" name="y" use="optional"/>
         <xs:attribute type="xs:int" name="width" use="optional"/>
         <xs:attribute type="xs:int" name="height" use="optional"/>
       </xs:extension>
-    </xs:simpleContent>
+    </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="TemplateType">
     <xs:sequence>

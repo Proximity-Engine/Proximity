@@ -9,6 +9,7 @@
             <EnumerationValue value="black"/>
             <EnumerationValue value="gold" id="gold"/>
             <EnumerationValue value="silver"/>
+            <EnumerationValue value="none"/>
         </Enumeration>
         <ToggleOption id="bottom_text_outline" default="false"/>
         <ToggleOption id="copyright" default="true"/>
@@ -53,7 +54,7 @@
                 </ImageLayer>
                 <ImageLayer id="gold"/>
                 <conditions>
-                    <IsEquals key="frame_effects" value="nyxtouched"/>
+                    <IsPresent key="frame_effects.nyxtouched"/>
                 </conditions>
             </Selector>
             <Selector id="standard">
@@ -352,12 +353,23 @@
                     <ImageLayer id="colorless">
                         <conditions>
                             <IsEquals key="proximity.color_count" value="0"/>
+                            <Not>
+                                <IsPresent key="proximity.types.land"/>
+                            </Not>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="hybrid">
                         <conditions>
-                            <IsEquals key="proximity.color_count" value="2"/>
-                            <IsEquals key="proximity.hybrid"/>
+                            <Or>
+                                <And>
+                                    <IsEquals key="proximity.color_count" value="2"/>
+                                    <IsEquals key="proximity.hybrid"/>
+                                </And>
+                                <And>
+                                    <IsEquals key="proximity.color_count" value="0"/>
+                                    <IsPresent key="proximity.types.land"/>
+                                </And>
+                            </Or>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="gold"/>
@@ -399,12 +411,23 @@
                 <ImageLayer id="colorless">
                     <conditions>
                         <IsEquals key="proximity.color_count" value="0"/>
+                        <Not>
+                            <IsPresent key="proximity.types.land"/>
+                        </Not>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="hybrid">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="2"/>
-                        <IsEquals key="proximity.hybrid"/>
+                        <Or>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="2"/>
+                                <IsEquals key="proximity.hybrid"/>
+                            </And>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="0"/>
+                                <IsPresent key="proximity.types.land"/>
+                            </And>
+                        </Or>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="gold"/>
@@ -422,6 +445,7 @@
                 <Selector id="name">
                     <Selector id="dfc">
                         <TextLayer x="665" y="515" value="${name}">
+                            <AttributeModifier name="value" value="Potato"/>
                             <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                             <conditions>
                                 <IsEquals key="proximity.front_face"/>
@@ -621,19 +645,25 @@
                     </conditions>
                 </VerticalLayout>
                 <wrap x="2672" y="3669" width="336" height="168">
-                    <IsEquals key="layout" value="transform"/>
-                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                    <conditions>
+                        <IsEquals key="layout" value="transform"/>
+                        <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                    </conditions>
                 </wrap>
                 <wrap x="2472" y="3669" width="535" height="515">
-                    <IsEquals key="layout" value="transform"/>
-                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                    <IsEquals key="proximity.types.creature"/>
+                    <conditions>
+                        <IsEquals key="layout" value="transform"/>
+                        <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                        <IsEquals key="proximity.types.creature"/>
+                    </conditions>
                 </wrap>
                 <wrap x="2472" y="3869" width="535" height="315">
-                    <Or>
-                        <IsPresent key="proximity.types.creature"/>
-                        <IsPresent key="proximity.types.vehicle"/>
-                    </Or>
+                    <conditions>
+                        <Or>
+                            <IsPresent key="proximity.types.creature"/>
+                            <IsPresent key="proximity.types.vehicle"/>
+                        </Or>
+                    </conditions>
                 </wrap>
             </VerticalLayout>
             <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="130"/>
@@ -691,7 +721,9 @@
             </Selector>
             <Style color="#FFFFFF">
                 <outline color="#000000" weight="10"/>
-                <IsEquals key="proximity.options.bottom_text_outline"/>
+                <conditions>
+                    <IsEquals key="proximity.options.bottom_text_outline"/>
+                </conditions>
             </Style>
             <Style color="#FFFFFF"/>
         </Group>

@@ -5,16 +5,19 @@ import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.json.*;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.TemplateLoader;
+import dev.hephaestus.proximity.templates.layers.Layer;
 import dev.hephaestus.proximity.util.Keys;
 import dev.hephaestus.proximity.util.Logging;
 import dev.hephaestus.proximity.util.ParsingUtil;
 import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.xml.layers.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonReader;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
@@ -23,6 +26,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,6 +39,35 @@ public final class Proximity {
     private final JsonObject options;
     private final JsonObject overrides;
     private final List<TemplateLoader> loaders;
+
+    static {
+        LayerElement.register(ArtElement::new, "ArtLayer");
+        LayerElement.register(FillElement::new, "Fill", "SpacingLayer", "Spacer");
+        LayerElement.register(ForkElement::new, "Fork");
+        LayerElement.register(GroupElement::new, "Group", "main");
+        LayerElement.register(ImageElement::new, "ImageLayer");
+        LayerElement.register(SelectorElement::new, "Selector", "flex");
+        LayerElement.register(SquishBoxElement::new, "SquishBox");
+        LayerElement.register(TextElement::new, "TextLayer");
+
+        LayerElement.register(element -> new LayoutElement(element,
+                Layer::setX,
+                Layer::setY,
+                Layer::getX,
+                Layer::getY,
+                Rectangle::getWidth,
+                Rectangle::getHeight
+        ), "HorizontalLayout");
+
+        LayerElement.register(element -> new LayoutElement(element,
+                Layer::setY,
+                Layer::setX,
+                Layer::getY,
+                Layer::getX,
+                Rectangle::getHeight,
+                Rectangle::getWidth
+        ), "VerticalLayout");
+    }
 
     public Proximity(JsonObject options, JsonObject overrides, TemplateLoader... loaders) {
         this.options = options;

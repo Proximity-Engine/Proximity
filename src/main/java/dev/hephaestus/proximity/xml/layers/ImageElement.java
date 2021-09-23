@@ -1,24 +1,40 @@
-package dev.hephaestus.proximity.templates.layers.factories;
+package dev.hephaestus.proximity.xml.layers;
 
-import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.templates.LayerFactory;
+import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.templates.layers.ImageLayer;
 import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.xml.Properties;
+import org.w3c.dom.Element;
 
 import java.awt.image.BufferedImage;
 import java.nio.file.FileSystems;
-import java.util.List;
 
-public class ImageFactory extends LayerFactory<ImageLayer> {
-    private final TemplateSource source;
-    private final String src;
+public class ImageElement extends LayerElement<ImageLayer> {
+    private String src;
+    private TemplateSource source;
 
-    public ImageFactory(String id, int x, int y, List<CardPredicate> predicates, TemplateSource source, String src) {
-        super(id, x, y, predicates);
-        this.source = source;
-        this.src = src;
+    public ImageElement(Element element) {
+        super(element);
+    }
+
+    @Override
+    protected Result<LayerElement<ImageLayer>> parseLayer(Context context, Properties properties) {
+        if (!this.element.hasAttribute("src") && !this.element.hasAttribute("id")) {
+            return Result.error("Image layer must have either 'src' or 'id' attribute");
+        }
+
+        this.src = this.element.hasAttribute("src") ? this.element.getAttribute("src") : this.getId();
+
+        return Result.of(this);
+    }
+
+    @Override
+    public Result<LayerElement<ImageLayer>> createFactory(Template template) {
+        this.source = template.getSource();
+
+        return Result.of(this);
     }
 
     @Override
@@ -28,9 +44,9 @@ public class ImageFactory extends LayerFactory<ImageLayer> {
                 + FileSystems.getDefault().getSeparator());
 
         if (this.src == null) {
-            src.append(this.id);
+            src.append(this.getId());
         } else {
-            String[] split = substitute(this.src, card).split("/");
+            String[] split = LayerElement.substitute(this.src, card).split("/");
 
             for (int i = 0; i < split.length; i++) {
                 String string = split[i];
@@ -58,9 +74,9 @@ public class ImageFactory extends LayerFactory<ImageLayer> {
 
         return Result.of(new ImageLayer(
                 parentId,
-                this.id,
-                this.x,
-                this.y,
+                this.getId(),
+                this.getX(),
+                this.getY(),
                 image,
                 image.getWidth(),
                 image.getHeight(),

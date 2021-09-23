@@ -5,6 +5,7 @@ import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.util.Result;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,10 @@ public interface CardPredicate {
 
         public And(List<CardPredicate> predicates) {
             this.predicates = new ArrayList<>(predicates);
+        }
+
+        public And(CardPredicate... predicates) {
+            this.predicates = Arrays.asList(predicates);
         }
 
         @Override

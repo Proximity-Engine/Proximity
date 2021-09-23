@@ -1,11 +1,9 @@
-package dev.hephaestus.proximity.templates.layers.factories;
+package dev.hephaestus.proximity.xml.layers;
 
 import dev.hephaestus.proximity.cards.TextBody;
 import dev.hephaestus.proximity.cards.TextParser;
-import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.templates.LayerFactory;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.TextFunction;
 import dev.hephaestus.proximity.templates.layers.TextLayer;
@@ -14,6 +12,9 @@ import dev.hephaestus.proximity.text.TextAlignment;
 import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.util.Keys;
 import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.xml.LayerProperty;
+import dev.hephaestus.proximity.xml.Properties;
+import org.w3c.dom.Element;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -22,27 +23,96 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class TextFactory extends LayerFactory<TextLayer> {
-    private static final Pattern SUBSTITUTE = Pattern.compile("\\$(\\w*)\\{(\\w+(?:\\.\\w+)*)?}");
+public class TextElement extends LayerElement<TextLayer> {
+    private TextAlignment alignment;
+    private Integer width, height;
+    private String value, styleName;
+    private Function<JsonObject, Style> style;
+    private Function<JsonObject, Rectangle> wrap;
+    private Template template;
 
-    private final TextAlignment alignment;
-    private final Integer width, height;
-    private final Function<JsonObject, Style> style;
-    private final Function<JsonObject, Rectangle> wrap;
-    private final String value;
-    private final Template template;
+    public TextElement(Element element) {
+        super(element);
+    }
 
-    public TextFactory(String id, int x, int y, List<CardPredicate> predicates, TextAlignment alignment, Integer width, Integer height, Function<JsonObject, Style> style, Function<JsonObject, Rectangle> wrap, String value, Template template) {
-        super(id, x, y, predicates);
-        this.alignment = alignment;
-        this.width = width;
-        this.height = height;
-        this.style = style;
-        this.wrap = wrap;
-        this.value = value;
+    @Override
+    protected Result<LayerElement<TextLayer>> parseLayer(Context context, Properties properties) {
+        if (element.hasAttribute("width") ^ element.hasAttribute("height")) {
+            return Result.error("Text layer must have both 'width' and 'height' attributes or neither");
+        }
+
+        this.alignment = element.hasAttribute("alignment") ? TextAlignment.valueOf(element.getAttribute("alignment").toUpperCase(Locale.ROOT)) : TextAlignment.LEFT;
+        this.width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
+        this.height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
+        this.value = element.getAttribute("value");
+        this.styleName = element.hasAttribute("style") ? element.getAttribute("style") : null;
+        this.style = properties.get(LayerProperty.STYLE);
+        this.wrap = properties.get(LayerProperty.WRAP);
+
+        return Result.of(this);
+    }
+
+    @Override
+    public Result<LayerElement<TextLayer>> createFactory(Template template) {
+        if (template.getStyle(this.styleName) != null) {
+            Style style = template.getStyle(this.styleName);
+            Function<JsonObject, Style> s = this.style;
+            this.style = object -> style.merge(s.apply(object));
+        }
+
         this.template = template;
+
+        return Result.of(this);
+    }
+
+    @Override
+    public Result<TextLayer> createLayer(String parentId, JsonObject card) {
+        List<List<dev.hephaestus.proximity.text.TextComponent>> text;
+        TextAlignment alignment = this.alignment;
+
+        int x = this.getX();
+
+        Style style = this.style == null ? Style.EMPTY : this.style.apply(card);
+        Rectangle wrap = this.wrap == null ? null : this.wrap.apply(card);
+
+        if (this.value.equals("$oracle_and_flavor_text{}")) {
+            TextBody oracle = new TextParser(card.getAsString("oracle_text"), this.template::getStyle, style, "\n\n", card.getAsJsonObject(Keys.OPTIONS)).parseOracle();
+
+            if (card.has("flavor_text")) {
+                text = oracle.text();
+
+                text.add(Collections.singletonList(new TextComponent(style, "\n\n")));
+                text.addAll(TextFunction.flavorText(this.template::getStyle, this.template.getStyle("flavor"), card.getAsString("flavor_text"), card.getAsJsonObject(Keys.OPTIONS)));
+            } else {
+                if (oracle.alignment() == TextAlignment.CENTER && this.width != null) {
+                    alignment = TextAlignment.CENTER;
+                    x += this.width / 2;
+                }
+
+                text = oracle.text();
+            }
+        } else {
+            text = parseText(this.template::getStyle, style, this.value, card);
+        }
+
+        text = applyCapitalization(text, style.capitalization(), style.size());
+
+        TextLayer layer = new TextLayer(
+                parentId,
+                this.getId(),
+                x,
+                this.getY(),
+                this.template,
+                style,
+                text,
+                alignment,
+                this.width != null && this.height != null ? new Rectangle(x, this.getY(), this.width, this.height) : null
+        );
+
+        layer.setWrap(wrap);
+
+        return Result.of(layer);
     }
 
     private List<List<TextComponent>> parseText(Function<String, Style> styleGetter, Style baseStyle, String string, JsonObject card) {
@@ -96,56 +166,6 @@ public class TextFactory extends LayerFactory<TextLayer> {
         }
 
         return result;
-    }
-
-
-    @Override
-    public Result<TextLayer> createLayer(String parentId, JsonObject card) {
-        List<List<dev.hephaestus.proximity.text.TextComponent>> text;
-        TextAlignment alignment = this.alignment;
-
-        int x = this.x;
-
-        Style style = this.style.apply(card);
-        Rectangle wrap = this.wrap.apply(card);
-
-        if (this.value.equals("$oracle_and_flavor_text{}")) {
-            TextBody oracle = new TextParser(card.getAsString("oracle_text"), this.template::getStyle, style, "\n\n", card.getAsJsonObject(Keys.OPTIONS)).parseOracle();
-
-            if (card.has("flavor_text")) {
-                text = oracle.text();
-
-                text.add(Collections.singletonList(new TextComponent(style, "\n\n")));
-                text.addAll(TextFunction.flavorText(this.template::getStyle, this.template.getStyle("flavor"), card.getAsString("flavor_text"), card.getAsJsonObject(Keys.OPTIONS)));
-            } else {
-                if (oracle.alignment() == TextAlignment.CENTER && this.width != null) {
-                    alignment = TextAlignment.CENTER;
-                    x += this.width / 2;
-                }
-
-                text = oracle.text();
-            }
-        } else {
-            text = parseText(this.template::getStyle, style, this.value, card);
-        }
-
-        text = applyCapitalization(text, style.capitalization(), style.size());
-
-        TextLayer layer = new TextLayer(
-                parentId,
-                this.id,
-                x,
-                this.y,
-                this.template,
-                style,
-                text,
-                alignment,
-                this.width != null && this.height != null ? new Rectangle(x, this.y, this.width, this.height) : null
-        );
-
-        layer.setWrap(wrap);
-
-        return Result.of(layer);
     }
 
     private static List<List<TextComponent>> applyCapitalization(List<List<TextComponent>> text, Style.Capitalization caps, Integer fontSize) {
