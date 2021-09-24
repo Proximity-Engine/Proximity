@@ -166,11 +166,11 @@ public final class Proximity {
                         if (key.equals("override")) {
                             if (value != null) {
                                 split = value.split(":", 2);
-                                key = split[0];
+                                String[] overrideKey = split[0].split("\\.");
                                 value = split.length == 2 ? split[1] : null;
-                            }
 
-                            overrides.add(key, ParsingUtil.parseStringValue(value));
+                                overrides.add(overrideKey, ParsingUtil.parseStringValue(value));
+                            }
                         } else {
                             cardOptions.add(key, ParsingUtil.parseStringValue(value));
                         }

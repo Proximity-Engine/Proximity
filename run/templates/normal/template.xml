@@ -635,7 +635,7 @@
                     </wrap>
                 </VerticalLayout>
             </Selector>
-            <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="130"/>
+            <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="125"/>
         </Group>
         <Group id="bottom_text">
             <HorizontalLayout x="335">

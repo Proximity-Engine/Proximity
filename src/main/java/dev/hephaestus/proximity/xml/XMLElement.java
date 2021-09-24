@@ -95,7 +95,7 @@ public abstract class XMLElement<T> {
 
                         if (result.isError()) {
                             errors.add(result.getError());
-                        } else {
+                        } else if (result.get()) {
                             return pair.right();
                         }
                     }

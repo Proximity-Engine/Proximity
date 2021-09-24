@@ -109,6 +109,7 @@ public abstract class LayerElement<L extends Layer> extends XMLElement<LayerElem
 
             this.parseElementImmediately(this.context, this.properties);
             this.createFactoryImmediately(this.template);
+            this.clearAttributes();
         }
 
         return Result.of(true);

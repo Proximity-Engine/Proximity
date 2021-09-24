@@ -1,2 +1,3 @@
 1x Brokkos, Apex of Forever
-1x birgi storytelling
+1x birgi storytelling --override=image_uris.art_crop:https://cdnb.artstation.com/p/assets/images/images/016/423/877/medium/seong-ile-jeong-web.jpg
+1x Mana drain
