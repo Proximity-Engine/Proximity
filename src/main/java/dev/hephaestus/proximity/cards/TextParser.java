@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.cards;
 
 import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.text.Alignment;
+import dev.hephaestus.proximity.text.TextAlignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
 import dev.hephaestus.proximity.text.TextComponent;
@@ -115,7 +115,7 @@ public final class TextParser {
 
         this.completeWord();
 
-        return new TextBody(this.allWordsItalic ? Alignment.CENTER : Alignment.LEFT, text);
+        return new TextBody(this.allWordsItalic ? TextAlignment.CENTER : TextAlignment.LEFT, text);
     }
 
     private String completeWord() {

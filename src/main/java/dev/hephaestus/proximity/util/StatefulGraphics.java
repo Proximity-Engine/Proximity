@@ -35,6 +35,11 @@ public class StatefulGraphics extends Graphics2D {
         setter.accept(this.wrapped, value);
     }
 
+    public void push(float scaleX, float scaleY) {
+        this.frames.addFirst(() -> StatefulGraphics.this.scale(1/scaleX, 1/scaleY));
+        this.scale(scaleX, scaleY);
+    }
+
     public void push(String frame) {
         this.frames.addFirst(new Marker(frame));
     }
