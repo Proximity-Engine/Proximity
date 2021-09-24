@@ -564,31 +564,63 @@
                     <AttributeModifier name="height" value="1050">
                         <IsPresent key="layout"/>
                         <IsEquals key="layout" value="modal_dfc"/>
-                        <Not>
-                            <IsPresent key="keywords.mutate"/>
-                        </Not>
-                    </AttributeModifier>
-                    <AttributeModifier name="height" value="655">
-                        <Not>
-                            <And>
-                                <IsPresent key="layout"/>
-                                <IsEquals key="layout" value="modal_dfc"/>
-                            </And>
-                        </Not>
-                        <IsPresent key="keywords.mutate"/>
-                    </AttributeModifier>
-                    <AttributeModifier name="height" value="315">
-                        <IsPresent key="layout"/>
-                        <IsEquals key="layout" value="modal_dfc"/>
-                        <IsPresent key="keywords.mutate"/>
-                    </AttributeModifier>
-                    <AttributeModifier name="y" value="3345">
-                        <IsPresent key="keywords.mutate"/>
-                    </AttributeModifier>
-                    <TextLayer value="$oracle_text{oracle_text}">
-                        <conditions>
-                            <IsPresent key="oracle_text"/>
-                        </conditions>
+                    </conditions>
+                </TextLayer>
+                <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}" style="oracle">
+                    <wrap x="2472" y="3869" width="535" height="315"/>
+                </TextLayer>
+                <conditions>
+                    <Or>
+                        <IsPresent key="proximity.types.creature"/>
+                        <IsPresent key="proximity.types.vehicle"/>
+                    </Or>
+                </conditions>
+            </Selector>
+            <TextLayer x="400" y="2795" width="2488" height="1070" value="$oracle_and_flavor_text{}" style="oracle">
+                <conditions>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                </conditions>
+            </TextLayer>
+            <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}" style="oracle">
+                <wrap x="2472" y="3669" width="535" height="515"/>
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                </conditions>
+            </TextLayer>
+            <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}" style="oracle"/>
+        </Selector>
+        <Selector id="bottom_text">
+            <Group>
+                <HorizontalLayout x="335">
+                    <TextLayer y="4211" value="${set}">
+                        <Style font="Relay-Medium" color="#FFFFFF" size="68" capitalization="all_caps" kerning="10"/>
+                    </TextLayer>
+                    <SpacingLayer height="5" width="13"/>
+                    <TextLayer y="4209" value="•">
+                        <Style font="Calibri" color="#FFFFFF" size="69"/>
+                    </TextLayer>
+                    <SpacingLayer height="5" width="28"/>
+                    <TextLayer id="lang" value="${lang}" y="4211">
+                        <Style font="Relay-Medium" color="#FFFFFF" size="68" capitalization="all_caps" kerning="12"/>
+                    </TextLayer>
+                    <SpacingLayer height="5" width="27"/>
+                    <HorizontalLayout>
+                        <TextLayer id="brush" y="4211" value="a">
+                            <Style font="NDPMTG" color="#FFFFFF" size="80"/>
+                        </TextLayer>
+                        <SpacingLayer height="5" width="26"/>
+                        <TextLayer id="artist" y="4209" value="${artist}">
+                            <Style font="Beleren Small Caps" color="#FFFFFF" size="75" kerning="1.5"/>
+                        </TextLayer>
+                    </HorizontalLayout>
+                </HorizontalLayout>
+                <Group>
+                    <TextLayer x="335" y="4134" value="2021 Custom Proxy">
+                        <Style font="Calibri" color="#FFFFFF" size="78"/>
+                    </TextLayer>
+                    <TextLayer value="NOT FOR SALE" x="1120" y="4136">
+                        <Style font="Beleren2016-Bold" color="#FFFFFF" size="71" kerning="1"/>
                     </TextLayer>
                     <VerticalLayout id="flavor">
                         <VerticalLayout>

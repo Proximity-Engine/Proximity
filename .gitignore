@@ -1,0 +1,38 @@
+# IDEA
+# ----
+!/.idea
+/.idea/*
+!/.idea/codeStyles
+!/.idea/inspectionProfiles
+!/.idea/icon.png
+!/.idea/icon_dark.png
+*/**/.idea
+*/**/.shelf
+.shelf
+/*.iml
+/*/*.iml
+/*/*/*.iml
+/*/*/*/*.iml
+/*/*/*/*/*.iml
+/out
+/*/out
+/*/*/out
+/*/*/*/out
+/*/*/*/*/out
+/.teamcity/target
+/gradle.ipr
+/gradle.iws
+.gradle
+**/build/
+!src/**/build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+# Cache of project
+testScripts

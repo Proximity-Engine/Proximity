@@ -20,7 +20,7 @@
     artist: {
       font: "MPlantin",
       color: "#FFFFFF",
-      size: 103,
+      size: 100,
       shadow: {
         color: 0x000000,
         dX: 5,
