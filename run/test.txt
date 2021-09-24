@@ -1,3 +1,4 @@
 1x Brokkos, Apex of Forever
-1x birgi storytelling --override=image_uris.art_crop:https://cdnb.artstation.com/p/assets/images/images/016/423/877/medium/seong-ile-jeong-web.jpg
+1x birgi storytelling
 1x Mana drain
+1x Nekusar mindrazer --override=artist:"Jue Li" --override=image_uris.art_crop:https://cdnb.artstation.com/p/assets/images/images/033/208/271/medium/jue-li-nekusar-final.jpg

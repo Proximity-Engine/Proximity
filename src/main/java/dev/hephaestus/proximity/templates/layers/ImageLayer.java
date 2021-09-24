@@ -25,11 +25,16 @@ public class ImageLayer extends Layer {
             }
 
             this.image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            float ri = image.getHeight() / (float) image.getWidth();
+            float rs = height / (float) width;
 
-            Image scaled = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            int w = rs > ri ? (int) (height / ri) : width;
+            int h = rs > ri ? height : (int) (width * ri);
+
+            Image scaled = image.getScaledInstance(w, h, Image.SCALE_SMOOTH);
             Graphics2D graphics = this.image.createGraphics();
 
-            graphics.drawImage(scaled, 0, 0, null);
+            graphics.drawImage(scaled, (width - w) / 2, (height - h) / 2, null);
             graphics.dispose();
         }
     }
