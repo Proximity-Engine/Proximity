@@ -169,6 +169,17 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="SVGLayerType">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:attribute type="xs:string" name="src" use="optional"/>
+        <xs:attribute type="xs:int" name="width" use="optional"/>
+        <xs:attribute type="xs:int" name="height" use="optional"/>
+        <xs:attribute type="content_alignment_type" name="vertical_alignment" default="middle"/>
+        <xs:attribute type="content_alignment_type" name="horizontal_alignment" default="middle"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="ImageLayerType" mixed="true">
     <xs:complexContent>
       <xs:extension base="LayerType">
@@ -200,6 +211,7 @@
           <xs:element type="SpacingLayerType" name="SpacingLayer" minOccurs="0"/>
           <xs:element type="LayoutType" name="HorizontalLayout"/>
           <xs:element type="LayoutType" name="VerticalLayout"/>
+          <xs:element type="SVGLayerType" name="SVG"/>
           <xs:element type="ArtLayerType" name="ArtLayer">
             <xs:annotation>
               <xs:documentation>The art layer is special in that it can also contain a width and/or height

@@ -12,6 +12,7 @@ import dev.hephaestus.proximity.xml.Properties;
 import dev.hephaestus.proximity.xml.XMLElement;
 import org.w3c.dom.Element;
 
+import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -196,5 +197,38 @@ public abstract class LayerElement<L extends Layer> extends XMLElement<LayerElem
         }
 
         return s;
+    }
+
+    protected static String getFileLocation(String parentId, String id, String src, JsonObject card) {
+        String sep = FileSystems.getDefault().getSeparator();
+        StringBuilder builder = new StringBuilder(parentId.isEmpty() ? "" : (parentId.replace(".", sep)
+                + FileSystems.getDefault().getSeparator()));
+
+        if (src == null) {
+            builder.append(id);
+        } else {
+            String[] split = LayerElement.substitute(src, card).split("/");
+
+            for (int i = 0; i < split.length; i++) {
+                String string = split[i];
+
+                if (string.equals("..")) {
+                    if (builder.chars().filter(j -> Character.toString(j).equals(sep)).count() > 1) {
+                        builder = new StringBuilder(builder.substring(0, builder.length() - 1));
+                        builder = new StringBuilder(builder.substring(0, builder.lastIndexOf(sep)));
+                    } else {
+                        builder = new StringBuilder();
+                    }
+                } else {
+                    builder.append(string);
+                }
+
+                if (i < split.length - 1 && !builder.isEmpty()) {
+                    builder.append(sep);
+                }
+            }
+        }
+
+        return builder.toString();
     }
 }

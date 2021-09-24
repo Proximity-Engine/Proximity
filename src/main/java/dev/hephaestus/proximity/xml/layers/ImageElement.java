@@ -39,37 +39,7 @@ public class ImageElement extends LayerElement<ImageLayer> {
 
     @Override
     public Result<ImageLayer> createLayer(String parentId, JsonObject card) {
-        String sep = FileSystems.getDefault().getSeparator();
-        StringBuilder src = new StringBuilder(parentId.replace(".", sep)
-                + FileSystems.getDefault().getSeparator());
-
-        if (this.src == null) {
-            src.append(this.getId());
-        } else {
-            String[] split = LayerElement.substitute(this.src, card).split("/");
-
-            for (int i = 0; i < split.length; i++) {
-                String string = split[i];
-
-                if (string.equals("..")) {
-                    if (src.chars().filter(j -> Character.toString(j).equals(sep)).count() > 1) {
-                        src = new StringBuilder(src.substring(0, src.length() - 1));
-                        src = new StringBuilder(src.substring(0, src.lastIndexOf(sep)));
-                    } else {
-                        src = new StringBuilder();
-                    }
-                } else {
-                    src.append(string);
-                }
-
-                if (i < split.length - 1 && !src.isEmpty()) {
-                    src.append(sep);
-                }
-            }
-        }
-
-        src.append(".png");
-
+        String src = getFileLocation(parentId, this.getId(), this.src, card) + ".png";
         BufferedImage image = this.source.getImage(src.toString());
 
         return Result.of(new ImageLayer(
@@ -80,6 +50,6 @@ public class ImageElement extends LayerElement<ImageLayer> {
                 image,
                 image.getWidth(),
                 image.getHeight(),
-                src.toString()));
+                src));
     }
 }

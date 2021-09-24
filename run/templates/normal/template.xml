@@ -480,7 +480,7 @@
         </TextLayer>
         <SquishBox id="type_line">
             <main>
-                <SpacingLayer x="2678" y="2553" width="212" height="156"/>
+                <SVG id="set_symbol" x="2806" y="2628" src="../set_symbols/${set}" width="242" height="175"/>
             </main>
             <flex>
                 <Selector id="types">

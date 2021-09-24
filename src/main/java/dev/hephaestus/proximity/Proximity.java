@@ -56,6 +56,7 @@ public final class Proximity {
         LayerElement.register(SelectorElement::new, "Selector", "flex");
         LayerElement.register(SquishBoxElement::new, "SquishBox");
         LayerElement.register(TextElement::new, "TextLayer");
+        LayerElement.register(SVGElement::new, "SVG");
 
         LayerElement.register(element -> new LayoutElement(element,
                 Layer::setX,
@@ -243,6 +244,7 @@ public final class Proximity {
            getCardInfo(prototype)
                    .ifPresent(json -> {
                        json = prototype.parse(json);
+                       json.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
                        json.copyAll(this.overrides);
 
                        cards.add(new Card(json, prototype.template()));
