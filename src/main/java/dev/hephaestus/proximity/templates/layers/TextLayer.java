@@ -1,9 +1,10 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.util.Pair;
 import dev.hephaestus.proximity.text.TextComponent;
-import dev.hephaestus.proximity.text.Alignment;
+import dev.hephaestus.proximity.text.TextAlignment;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.DrawingUtil;
 import dev.hephaestus.proximity.util.StatefulGraphics;
@@ -17,31 +18,28 @@ import java.util.List;
 
 public class TextLayer extends Layer {
     private final Template template;
-    private final Alignment alignment;
+    private final TextAlignment alignment;
     private final Style style;
     private final List<List<TextComponent>> text;
-    private final Rectangle wrap;
-    private final Rectangle textBox;
 
-    public TextLayer(String parentId, String id, int x, int y, Template template, Style style, List<List<TextComponent>> text, Alignment alignment, Rectangle textBox, Rectangle wrap) {
+    public TextLayer(String parentId, String id, int x, int y, Template template, Style style, List<List<TextComponent>> text, TextAlignment alignment, Rectangle textBox) {
         super(parentId, id, x, y);
         this.template = template;
         this.alignment = alignment;
         this.style = style;
         this.text = text;
-        this.textBox = textBox == null ? null : new Rectangle(
+        this.bounds = textBox == null ? null : new Rectangle(
                 textBox.x,
                 y,
                 textBox.width,
                 textBox.height
         );
-        this.wrap = wrap;
     }
 
     private int offset(StatefulGraphics graphics, float fontSizeChange, List<List<TextComponent>> components) {
         int x = 0;
 
-        if (this.alignment == Alignment.RIGHT) {
+        if (this.alignment == TextAlignment.RIGHT) {
             for (List<TextComponent> text : components) {
                 for (TextComponent c : text) {
                     if (c.string().isEmpty()) continue;
@@ -76,7 +74,7 @@ public class TextLayer extends Layer {
                     graphics.pop();
                 }
             }
-        } else if (this.alignment == Alignment.CENTER) {
+        } else if (this.alignment == TextAlignment.CENTER) {
             int width = 0;
 
             for (List<TextComponent> text : components) {
@@ -124,6 +122,16 @@ public class TextLayer extends Layer {
                 ? graphics.getFont().getSize()
                 : style.size() == null ? this.style.size() : style.size()) + fontSizeChange;
 
+        if (size <= 0.001) {
+            return new Pair<>(new Rectangle(
+                    (int) graphics.getTransform().getTranslateX() + x,
+                    (int) (graphics.getTransform().getTranslateY()),
+                    0,
+                  0
+            ), 0);
+
+        }
+
         Font font = style.fontName() == null && this.style.fontName() == null
                 ? graphics.getFont().deriveFont(size)
                 : DrawingUtil.getFont(this.template.getSource(), style.fontName() == null
@@ -160,7 +168,7 @@ public class TextLayer extends Layer {
         graphics.push(x, 0);
 
         // Stroke needs to apply to shadow as well, so we have to set it before shadow drawing
-        if (outline != null) {
+        if (outline != null && outline.weight() > 0) {
             graphics.push(new BasicStroke(outline.weight()), Graphics2D::setStroke, Graphics2D::getStroke);
         }
 
@@ -176,7 +184,7 @@ public class TextLayer extends Layer {
             graphics.pop(2); // Pop shadow color and the translation
         }
 
-        if (outline != null) {
+        if (outline != null && outline.weight() > 0) {
             // Draw outline
             graphics.push(DrawingUtil.getColor(outline.color()), Graphics2D::setColor, Graphics2D::getColor);
 
@@ -219,8 +227,8 @@ public class TextLayer extends Layer {
         }
 
         if (bounds != null && this.template.getOptions().getAsBoolean("debug")) {
-            this.template.log().info(text);
-            this.template.log().info(String.format(
+            Proximity.LOG.info(text);
+            Proximity.LOG.info(String.format(
                     "%s  %10s  %5d %5d %5d %5d", draw ? "DRAW" : "NOPE", "", bounds.x, bounds.y, bounds.width, bounds.height
             ));
         }
@@ -229,8 +237,8 @@ public class TextLayer extends Layer {
     }
 
     @Override
-    public Rectangle draw(StatefulGraphics graphics, Rectangle wrap) {
-        return this.draw(graphics, wrap == null ? this.wrap : wrap, 0F, true).left();
+    public Rectangle draw(StatefulGraphics graphics, Rectangle wrap, boolean draw, int scale) {
+        return this.draw(graphics, wrap == null ? this.wrap : wrap, 5 * scale, draw).left();
     }
 
     protected Pair<Rectangle, Integer> draw(StatefulGraphics graphics, Rectangle wrap, float fontSizeChange, boolean draw) {
@@ -240,14 +248,20 @@ public class TextLayer extends Layer {
 
         graphics.push("Text");
 
-        if (draw && this.textBox != null) {
+        if (draw && this.wrap != null && this.template.getOptions().getAsBoolean("debug")) {
+            graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+            graphics.push(DrawingUtil.getColor(0xF0F0F0), Graphics2D::setColor, Graphics2D::getColor);
+            graphics.drawRect((int) this.wrap.getX(), (int) this.wrap.getY(), this.wrap.width, this.wrap.height);
+            graphics.pop(2);
+        }
+
+        if (draw && this.bounds != null) {
             Pair<Rectangle, Integer> pair = this.draw(graphics, wrap, fontSizeChange, false);
-            Rectangle drawnBounds = pair.left();
             Integer drawnFirstRowHeight = pair.right();
 
-            graphics.push(0, drawnFirstRowHeight + (this.textBox.height - drawnBounds.height) / 2);
+            graphics.push(0, drawnFirstRowHeight);
             pair = this.draw(graphics, wrap, fontSizeChange, false);
-            drawnBounds = pair.left();
+            Rectangle drawnBounds = pair.left();
             drawnFirstRowHeight = pair.right();
             graphics.pop();
 
@@ -258,9 +272,9 @@ public class TextLayer extends Layer {
                 graphics.pop(2);
             }
 
-            while(this.textBox.height < drawnBounds.height) {
+            while(this.bounds.height < drawnBounds.height) {
                 fontSizeChange -= 5;
-                graphics.push(0, drawnFirstRowHeight + (drawnBounds.height - this.textBox.height) / 2);
+                graphics.push(0, drawnFirstRowHeight);
                 pair = this.draw(graphics, wrap, fontSizeChange, false);
                 drawnBounds = pair.left();
                 drawnFirstRowHeight = pair.right();
@@ -277,11 +291,11 @@ public class TextLayer extends Layer {
             if (this.template.getOptions().getAsBoolean("debug")) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
-                graphics.drawRect(this.getX(), this.getY(), this.textBox.width, this.textBox.height);
+                graphics.drawRect(this.getX(), this.getY(), this.bounds.width, this.bounds.height);
                 graphics.pop(2);
             }
 
-            graphics.push(0, drawnFirstRowHeight + (this.textBox.height - drawnBounds.height) / 2);
+            graphics.push(0, drawnFirstRowHeight);
         }
 
         graphics.push(this.getX(), this.getY());
@@ -343,7 +357,7 @@ public class TextLayer extends Layer {
                     firstRowHeight = Integer.max(firstRowHeight, pair.right());
                 }
 
-                if (this.textBox != null && rectangle.x + rectangle.width > this.textBox.x + this.textBox.width && text != lastTextComponent) {
+                if (this.bounds != null && rectangle.x + rectangle.width > this.bounds.x + this.bounds.width && text != lastTextComponent) {
                     x = minX;
                     graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
 
@@ -358,7 +372,7 @@ public class TextLayer extends Layer {
                 }
 
                 if (wrap != null) {
-                    if (this.textBox == null) {
+                    if (this.bounds == null) {
                         bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
 
                         if (bounds.intersects(wrap)) {

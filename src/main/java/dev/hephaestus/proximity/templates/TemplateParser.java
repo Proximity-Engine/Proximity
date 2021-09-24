@@ -6,7 +6,8 @@ import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.Box;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.XMLUtil;
-import org.apache.logging.log4j.Logger;
+import dev.hephaestus.proximity.xml.XMLElement;
+import dev.hephaestus.proximity.xml.layers.LayerElement;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -15,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record TemplateParser(Logger log) {
+public record TemplateParser() {
     public Result<Template> parse(Document document, TemplateSource source, JsonObject options) {
         return this.init(document, source, options)
                 .then(this::parseOptions)
@@ -153,19 +154,35 @@ public record TemplateParser(Logger log) {
     }
 
     private Result<Template> parseLayers(Info3 info) {
-        List<LayerFactoryFactory<?>> layerList = new ArrayList<>();
+        List<LayerElement<?>> layerList = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
+        XMLElement.Context context = new XMLElement.Context(info.predicates::get);
+
         XMLUtil.iterate(info.root, "layers", (layers, i) ->
-                XMLUtil.iterate(layers, (layer, j) ->
-                        LayerFactoryFactory.parse(layer, 0, 0, this.log, info.predicates::get)
-                                .ifError(errors::add)
-                                .ifPresent(layerList::add)));
+                XMLUtil.iterate(layers, (layer, j) -> {
+                    LayerElement.Factory<?> factory = LayerElement.getFactory(layer.getTagName());
+
+                    if (factory != null) {
+                        factory.create(layer).parse(context, null)
+                                .ifPresent(layerList::add)
+                                .ifError(errors::add);
+                    }
+                }));
 
         if (errors.isEmpty()) {
-            return Result.of(new Template(info.source, info.width, info.height, layerList, info.options, info.styles, this.log));
-        }
-        {
+            Template template = new Template(info.source, info.width, info.height, layerList, info.options, info.styles);
+
+            for (LayerElement<?> layer : layerList) {
+                layer.createFactory(template).ifError(errors::add);
+            }
+
+            if (!errors.isEmpty()) {
+                return Result.error("Error(s) parsing template:\n\t %s", String.join("\n\t%s", errors));
+            }
+
+            return Result.of(template);
+        } else {
             return Result.error("Error(s) parsing template:\n\t %s", String.join("\n\t%s", errors));
         }
     }

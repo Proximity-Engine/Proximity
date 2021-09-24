@@ -14,13 +14,13 @@ import java.io.IOException;
 public interface TemplateLoader {
     Result<TemplateSource> getTemplateFiles(String name);
 
-    default Result<Template> load(Logger log, TemplateSource source, JsonObject options) {
+    default Result<Template> load(TemplateSource source, JsonObject options) {
         String name = source.getTemplateName();
 
         try {
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document document = documentBuilder.parse(source.getInputStream("template.xml"));
-            TemplateParser parser = new TemplateParser(log);
+            TemplateParser parser = new TemplateParser();
 
             return parser.parse(document, source, options);
         } catch (IOException | ParserConfigurationException | SAXException e) {

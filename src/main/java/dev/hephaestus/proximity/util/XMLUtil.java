@@ -69,6 +69,26 @@ public final class XMLUtil {
         return Result.error("Element '%s' does not contain any elements", element);
     }
 
+    public static <T> T applyToFirstElement(Element element, String tagName, Function<Element, T> function, T orDefault) {
+        return applyToFirstElement(element, element.getElementsByTagName(tagName), function, orDefault);
+    }
+
+    public static <T> T applyToFirstElement(Element element, Function<Element, T> function, T orDefault) {
+        return applyToFirstElement(element, element.getChildNodes(), function, orDefault);
+    }
+
+    public static <T> T applyToFirstElement(Element element, NodeList nodes, Function<Element, T> function, T orDefault) {
+        for (int i = 0; i < nodes.getLength(); ++i) {
+            Node node = nodes.item(i);
+
+            if (node instanceof Element e && node.getParentNode() == element) {
+                return function.apply(e);
+            }
+        }
+
+        return orDefault;
+    }
+
     public static Result<CardPredicate> parsePredicate(Element element, Function<String, CardPredicate> definedPredicateGetter) {
         if (element.hasAttribute("key")) {
             CardPredicate predicate = definedPredicateGetter.apply(element.getAttribute("key"));
@@ -122,7 +142,7 @@ public final class XMLUtil {
                     return Result.error("Error(s) parsing style:\n\t%s", String.join("\n\t%s", errors));
                 }
 
-                return Result.of(element.getTagName().equals("AllCondition")
+                return Result.of(element.getTagName().equals("And")
                         ? new CardPredicate.And(predicates)
                         : new CardPredicate.Or(predicates));
             }

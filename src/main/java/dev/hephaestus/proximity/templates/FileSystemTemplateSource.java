@@ -53,8 +53,8 @@ public class FileSystemTemplateSource implements TemplateSource {
     }
 
     @Override
-    public InputStream getInputStream(String first) throws IOException {
-        return Files.newInputStream(this.pathGetter.apply(first));
+    public InputStream getInputStream(String name) throws IOException {
+        return Files.newInputStream(this.pathGetter.apply(name));
     }
 
     @Override

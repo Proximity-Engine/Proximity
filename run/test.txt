@@ -1,2 +1,5 @@
-1x Elbrus, the Binding Blade // Withengar Unbound
-1x Breeding Pool
+1x Brokkos, Apex of Forever
+1x birgi storytelling
+1x Mana drain
+1x Nekusar mindrazer --override=artist:"Jue Li" --override=image_uris.art_crop:https://cdnb.artstation.com/p/assets/images/images/033/208/271/medium/jue-li-nekusar-final.jpg
+1x Alabaster Mage (2XM)

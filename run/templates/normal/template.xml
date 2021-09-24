@@ -9,14 +9,13 @@
             <EnumerationValue value="black"/>
             <EnumerationValue value="gold" id="gold"/>
             <EnumerationValue value="silver"/>
+            <EnumerationValue value="none"/>
         </Enumeration>
-        <ToggleOption id="artist_outline" default="false"/>
+        <ToggleOption id="bottom_text_outline" default="false"/>
         <ToggleOption id="copyright" default="true"/>
+        <ToggleOption id="flavor_text" default="true"/>
+        <ToggleOption id="flavor_bar" default="true"/>
     </options>
-    <styles>
-        <Style name="oracle" font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="150"/>
-        <Style name="flavor" font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="150"/>
-    </styles>
     <condition_definitions>
         <ConditionDefinition name="colorless_artifact">
             <IsPresent key="proximity.types.artifact"/>
@@ -55,7 +54,7 @@
                 </ImageLayer>
                 <ImageLayer id="gold"/>
                 <conditions>
-                    <IsEquals key="frame_effects" value="nyxtouched"/>
+                    <IsPresent key="frame_effects.nyxtouched"/>
                 </conditions>
             </Selector>
             <Selector id="standard">
@@ -67,6 +66,7 @@
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsPresent key="proximity.types.artifact"/>
+                        <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="land">
@@ -122,6 +122,7 @@
                         <ImageLayer id="artifact">
                             <conditions>
                                 <IsEquals key="colorless_artifact"/>
+                                <IsPresent key="proximity.types.land" value="false"/>
                             </conditions>
                         </ImageLayer>
                         <ImageLayer id="colorless">
@@ -160,6 +161,7 @@
                     <ImageLayer id="artifact">
                         <conditions>
                             <IsEquals key="colorless_artifact"/>
+                            <IsPresent key="proximity.types.land" value="false"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colorless">
@@ -196,6 +198,7 @@
                 <ImageLayer id="colorless">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
+                        <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colored">
@@ -213,6 +216,7 @@
                     <ImageLayer id="artifact">
                         <conditions>
                             <IsEquals key="colorless_artifact"/>
+                            <IsPresent key="proximity.types.land" value="false"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colorless">
@@ -271,6 +275,7 @@
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
+                        <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
@@ -282,6 +287,14 @@
                                 <IsEquals key="proximity.hybrid"/>
                             </And>
                         </Or>
+                        <Not>
+                            <IsPresent key="proximity.types.land"/>
+                        </Not>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="land">
+                    <conditions>
+                        <IsPresent key="proximity.types.land"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="gold"/>
@@ -304,6 +317,7 @@
             <ImageLayer id="artifact">
                 <conditions>
                     <IsEquals key="colorless_artifact"/>
+                    <IsPresent key="proximity.types.land" value="false"/>
                 </conditions>
             </ImageLayer>
             <ImageLayer id="colorless">
@@ -333,17 +347,29 @@
                     <ImageLayer id="artifact">
                         <conditions>
                             <IsEquals key="colorless_artifact"/>
+                            <IsPresent key="proximity.types.land" value="false"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colorless">
                         <conditions>
                             <IsEquals key="proximity.color_count" value="0"/>
+                            <Not>
+                                <IsPresent key="proximity.types.land"/>
+                            </Not>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="hybrid">
                         <conditions>
-                            <IsEquals key="proximity.color_count" value="2"/>
-                            <IsEquals key="proximity.hybrid"/>
+                            <Or>
+                                <And>
+                                    <IsEquals key="proximity.color_count" value="2"/>
+                                    <IsEquals key="proximity.hybrid"/>
+                                </And>
+                                <And>
+                                    <IsEquals key="proximity.color_count" value="0"/>
+                                    <IsPresent key="proximity.types.land"/>
+                                </And>
+                            </Or>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="gold"/>
@@ -379,17 +405,29 @@
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
+                        <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
                     <conditions>
                         <IsEquals key="proximity.color_count" value="0"/>
+                        <Not>
+                            <IsPresent key="proximity.types.land"/>
+                        </Not>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="hybrid">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="2"/>
-                        <IsEquals key="proximity.hybrid"/>
+                        <Or>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="2"/>
+                                <IsEquals key="proximity.hybrid"/>
+                            </And>
+                            <And>
+                                <IsEquals key="proximity.color_count" value="0"/>
+                                <IsPresent key="proximity.types.land"/>
+                            </And>
+                        </Or>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="gold"/>
@@ -442,7 +480,7 @@
         </TextLayer>
         <SquishBox id="type_line">
             <main>
-                <SpacingLayer x="2678" y="2553" width="212" height="156"/>
+                <SVG id="set_symbol" x="2806" y="2628" src="../set_symbols/${set}" width="242" height="175"/>
             </main>
             <flex>
                 <Selector id="types">
@@ -478,6 +516,7 @@
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
+                        <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
@@ -514,41 +553,15 @@
                 </Or>
             </conditions>
         </Group>
-        <Selector id="oracle_text">
-            <Selector id="mutate">
-                <Group>
-                    <Group id="mutate">
-                        <TextLayer x="400" y="2795" width="2488" height="515" value="$oracle_text{proximity.util.mutate_text}" style="oracle"/>
-                    </Group>
-                    <Selector id="oracle">
-                        <Group>
-                            <TextLayer id="mdfc" x="400" y="3345" width="2488" height="520"  value="$oracle_and_flavor_text{}" style="oracle">
-                                <wrap x="2472" y="3869" width="535" height="315"/>
-                                <conditions>
-                                    <IsEquals key="layout" value="modal_dfc"/>
-                                </conditions>
-                            </TextLayer>
-                            <TextLayer id="transform" x="400" y="3345" width="2488" height="655"  value="$oracle_and_flavor_text{}" style="oracle">
-                                <wrap x="2472" y="3615" width="535" height="515"/>
-                                <conditions>
-                                    <IsEquals key="layout" value="transform"/>
-                                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                                </conditions>
-                            </TextLayer>
-                            <TextLayer id="standard" x="400" y="3345" width="2488" height="655" value="$oracle_and_flavor_text{}" style="oracle">
-                                <wrap x="2472" y="3869" width="535" height="315"/>
-                            </TextLayer>
-                        </Group>
-                    </Selector>
-                </Group>
+        <Group id="oracle_text">
+            <TextLayer id="mutate" value="$oracle_text{proximity.util.mutate_text}" x="400" y="2800" width="2488" height="500">
                 <conditions>
                     <IsPresent key="keywords.mutate"/>
                 </conditions>
-            </Selector>
-            <Selector id="creature">
-                <TextLayer x="400" y="2795" width="2488" height="1070" value="$oracle_and_flavor_text{}" style="oracle">
-                    <wrap x="2472" y="3869" width="535" height="315"/>
-                    <conditions>
+            </TextLayer>
+            <Selector>
+                <VerticalLayout x="400" y="2795" width="2488" height="1200" alignment="middle">
+                    <AttributeModifier name="height" value="1050">
                         <IsPresent key="layout"/>
                         <IsEquals key="layout" value="modal_dfc"/>
                     </conditions>
@@ -609,26 +622,112 @@
                     <TextLayer value="NOT FOR SALE" x="1120" y="4136">
                         <Style font="Beleren2016-Bold" color="#FFFFFF" size="71" kerning="1"/>
                     </TextLayer>
-                </Group>
-                <Selector id="copyright">
-                    <TextLayer value="™ &amp; © 2021 Wizards of the Coast" alignment="right" x="2956" y="4207">
-                        <Style font="MPlantin" color="#FFFFFF" size="68"/>
+                    <VerticalLayout id="flavor">
+                        <VerticalLayout>
+                            <SpacingLayer id="spacing1" width="10" height="75"/>
+                            <Selector>
+                                <ImageLayer id="bar" x="36" src="../../overlays/flavor_bar">
+                                    <conditions>
+                                        <IsEquals key="proximity.options.flavor_bar"/>
+                                    </conditions>
+                                </ImageLayer>
+                                <SpacingLayer width="10" height="14"/>
+                            </Selector>
+                            <SpacingLayer id="spacing2" width="10" height="65"/>
+                            <conditions>
+                                <IsPresent key="oracle_text"/>
+                            </conditions>
+                        </VerticalLayout>
+                        <TextLayer value="$flavor_text{flavor_text}"/>
+                        <conditions>
+                            <IsPresent key="flavor_text"/>
+                            <IsEquals key="proximity.options.flavor_text"/>
+                        </conditions>
+                    </VerticalLayout>
+                    <wrap x="2672" y="3669" width="336" height="168">
+                        <conditions>
+                            <IsEquals key="layout" value="transform"/>
+                            <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                        </conditions>
+                    </wrap>
+                    <wrap x="2472" y="3669" width="535" height="515">
+                        <conditions>
+                            <IsEquals key="layout" value="transform"/>
+                            <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                            <IsEquals key="proximity.types.creature"/>
+                        </conditions>
+                    </wrap>
+                    <wrap x="2472" y="3869" width="535" height="315">
                         <conditions>
                             <Or>
                                 <IsPresent key="proximity.types.creature"/>
                                 <IsPresent key="proximity.types.vehicle"/>
                             </Or>
                         </conditions>
+                    </wrap>
+                </VerticalLayout>
+            </Selector>
+            <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="125"/>
+        </Group>
+        <Group id="bottom_text">
+            <HorizontalLayout x="335">
+                <TextLayer y="4211" value="${set}">
+                    <Style font="Relay-Medium" size="68" capitalization="all_caps" kerning="10">
+                        <outline color="#000000" weight="0"/>
+                    </Style>
+                </TextLayer>
+                <SpacingLayer height="5" width="13"/>
+                <TextLayer y="4209" value="•">
+                    <Style font="Calibri" size="69"/>
+                </TextLayer>
+                <SpacingLayer height="5" width="28"/>
+                <TextLayer id="lang" value="${lang}" y="4211">
+                    <Style font="Relay-Medium" size="68" capitalization="all_caps" kerning="12"/>
+                </TextLayer>
+                <SpacingLayer height="5" width="27"/>
+                <HorizontalLayout>
+                    <TextLayer id="brush" y="4211" value="a">
+                        <Style font="NDPMTG" size="80"/>
                     </TextLayer>
-                    <TextLayer value="™ &amp; © 2021 Wizards of the Coast" alignment="right" x="2956" y="4130">
-                        <Style font="MPlantin" color="#FFFFFF" size="68"/>
+                    <SpacingLayer height="5" width="26"/>
+                    <TextLayer id="artist" y="4209" value="${artist}">
+                        <Style font="Beleren Small Caps" size="75" kerning="1.5"/>
                     </TextLayer>
-                    <conditions>
-                        <IsEquals key="proximity.options.copyright"/>
-                    </conditions>
-                </Selector>
+                </HorizontalLayout>
+            </HorizontalLayout>
+            <Group>
+                <TextLayer x="335" y="4134" value="2021 Custom Proxy">
+                    <Style font="Calibri" size="78"/>
+                </TextLayer>
+                <TextLayer value="NOT FOR SALE" x="1010" y="4136">
+                    <Style font="Beleren2016-Bold" size="71" kerning="1"/>
+                </TextLayer>
             </Group>
-        </Selector>
+            <Selector id="copyright">
+                <TextLayer value="™ &amp; © 2021 Wizards of the Coast" alignment="right" x="2956" y="4207">
+                    <Style font="MPlantin" size="68"/>
+                    <conditions>
+                        <Or>
+                            <IsPresent key="proximity.types.creature"/>
+                            <IsPresent key="proximity.types.vehicle"/>
+                        </Or>
+                    </conditions>
+                </TextLayer>
+                <TextLayer value="™ &amp; © 2021 Wizards of the Coast" alignment="right" x="2956" y="4130">
+                    <Style font="MPlantin" size="68"/>
+                </TextLayer>
+                <conditions>
+                    <IsEquals key="proximity.options.copyright"/>
+                </conditions>
+            </Selector>
+            <Style color="#FFFFFF">
+                <outline color="#000000" weight="10"/>
+                <conditions>
+                    <IsEquals key="proximity.options.bottom_text_outline"/>
+                </conditions>
+            </Style>
+            <Style color="#FFFFFF"/>
+        </Group>
         <Group id="overlays">
             <Group id="loyalty">
                 <ImageLayer src="../loyalty"/>
