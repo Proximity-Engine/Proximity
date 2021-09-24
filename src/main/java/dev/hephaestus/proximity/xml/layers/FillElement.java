@@ -16,16 +16,16 @@ public class FillElement extends LayerElement<FillLayer> {
 
     @Override
     protected Result<LayerElement<FillLayer>> parseLayer(Context context, Properties properties) {
-        this.width = Integer.decode(this.element.getAttribute("width"));
-        this.height = Integer.decode(this.element.getAttribute("height"));
-        this.color = this.element.hasAttribute("color")
-                ? Integer.decode(this.element.getAttribute("color")) : 0;
+        this.width = Integer.decode(this.getAttribute("width"));
+        this.height = Integer.decode(this.getAttribute("height"));
+        this.color = this.hasAttribute("color")
+                ? Integer.decode(this.getAttribute("color")) : 0;
 
         return Result.of(this);
     }
 
     @Override
-    public Result<LayerElement<FillLayer>> createFactory(Template template) {
+    public Result<LayerElement<FillLayer>> createFactoryImmediately(Template template) {
         return Result.of(this);
     }
 

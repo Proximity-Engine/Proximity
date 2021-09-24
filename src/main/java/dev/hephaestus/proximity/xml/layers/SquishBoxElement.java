@@ -19,8 +19,8 @@ public class SquishBoxElement extends LayerElement<SquishBoxLayer> {
 
     @Override
     protected Result<LayerElement<SquishBoxLayer>> parseLayer(Context context, Properties properties) {
-        Result<LayerElement<?>> main = XMLUtil.applyToFirstElement(this.element, "main", e -> getFactory(e.getTagName()).create(e).parse(context, properties)).unwrap();
-        Result<LayerElement<?>> flex = XMLUtil.applyToFirstElement(this.element, "flex", e -> getFactory(e.getTagName()).create(e).parse(context, properties)).unwrap();
+        Result<LayerElement<?>> main = XMLUtil.applyToFirstElement(this.getElement(), "main", e -> getFactory(e.getTagName()).create(e).parse(context, properties)).unwrap();
+        Result<LayerElement<?>> flex = XMLUtil.applyToFirstElement(this.getElement(), "flex", e -> getFactory(e.getTagName()).create(e).parse(context, properties)).unwrap();
 
         if (main.isError() ^ flex.isError()) {
             return Result.error((main.isError() ? main : flex).getError());
@@ -37,7 +37,7 @@ public class SquishBoxElement extends LayerElement<SquishBoxLayer> {
     }
 
     @Override
-    public Result<LayerElement<SquishBoxLayer>> createFactory(Template template) {
+    public Result<LayerElement<SquishBoxLayer>> createFactoryImmediately(Template template) {
         Result<? extends LayerElement<?>> main = this.main.createFactory(template);
         Result<? extends LayerElement<?>> flex = this.flex.createFactory(template);
 

@@ -35,7 +35,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Proximity {
-    private final Logger log = LogManager.getLogger("Proximity");
+    public static Logger LOG = LogManager.getLogger("Proximity");
+
     private final JsonObject options;
     private final JsonObject overrides;
     private final List<TemplateLoader> loaders;
@@ -83,10 +84,10 @@ public final class Proximity {
                 .then(this::loadCardsFromFile)
                 .then(this::getCardInfo, this::parseCardInfo)
                 .then(this::renderAndSave)
-                .ifError(log::error);
+                .ifError(LOG::error);
 
         if (!result.isError()) {
-            log.info("Done! Took {}ms", System.currentTimeMillis() - startTime);
+            LOG.info("Done! Took {}ms", System.currentTimeMillis() - startTime);
         }
     }
 
@@ -105,8 +106,8 @@ public final class Proximity {
     private Result<Template> parseTemplate(String name) {
         for (TemplateLoader loader : this.loaders) {
             Result<Template> files = loader.getTemplateFiles(name)
-                    .then(fs -> loader.load(this.log, fs, this.options))
-                    .ifError(this.log::warn);
+                    .then(fs -> loader.load(fs, this.options))
+                    .ifError(LOG::warn);
 
             if (!files.isError()) return files;
         }
@@ -183,8 +184,8 @@ public final class Proximity {
                         Result<Template> templateResult = parseTemplate(cardOptions.getAsString("template"));
 
                         if (templateResult.isError()) {
-                            log.error("Failed to parse template for card {}: {}", cardName, templateResult.getError());
-                            log.warn("Using default template");
+                            LOG.error("Failed to parse template for card {}: {}", cardName, templateResult.getError());
+                            LOG.warn("Using default template");
                         } else {
                             template = templateResult.get();
                         }
@@ -221,7 +222,7 @@ public final class Proximity {
     }
 
     private Result<Map<String, Map<String, JsonObject>>> getCardInfo(Deque<CardPrototype> prototypes) {
-        log.info("Fetching info for {} cards", prototypes.size());
+        LOG.info("Fetching info for {} cards", prototypes.size());
 
         long lastRequest = 0;
         Map<String, Map<String, JsonObject>> cardInfo = new HashMap<>();
@@ -254,7 +255,7 @@ public final class Proximity {
                     cardInfo.computeIfAbsent(object.getAsString("name"), k -> new HashMap<>())
                             .put(object.getAsString("set").toUpperCase(Locale.ROOT), object);
                 }
-            }).ifError(log::error);
+            }).ifError(LOG::error);
         }
 
         return Result.of(cardInfo);
@@ -278,7 +279,7 @@ public final class Proximity {
 
                 if (cardInfo.has("not_found")) {
                     for (JsonElement element : cardInfo.getAsJsonArray("not_found")) {
-                        log.warn("Could not find '{}'", element.getAsJsonObject().get("cardName"));
+                        LOG.warn("Could not find '{}'", element.getAsJsonObject().get("cardName"));
                     }
                 }
 
@@ -317,7 +318,7 @@ public final class Proximity {
 
         for (CardPrototype prototype : prototypes) {
             if (!cardInfo.containsKey(prototype.cardName())) {
-                log.error("Card '{}' not found.", prototype.cardName());
+                LOG.error("Card '{}' not found.", prototype.cardName());
                 continue;
             }
 
@@ -327,7 +328,7 @@ public final class Proximity {
 
             if (setCode == null) {
                 if (cardInfo.get(prototype.cardName()).size() > 1) {
-                    log.error("Cannot infer set for card {}: Multiple sets are specified: [{}]", prototype.cardName(), String.join(", ", cardInfo.get(prototype.cardName()).keySet()));
+                    LOG.error("Cannot infer set for card {}: Multiple sets are specified: [{}]", prototype.cardName(), String.join(", ", cardInfo.get(prototype.cardName()).keySet()));
                     continue;
                 }
 
@@ -335,7 +336,7 @@ public final class Proximity {
             }
 
             if (!cardInfo.containsKey(prototype.cardName()) || !cardInfo.get(prototype.cardName()).containsKey(setCode)) {
-                log.error("Could not find card '{}' in set '{}'.%n", prototype.cardName(), setCode);
+                LOG.error("Could not find card '{}' in set '{}'.%n", prototype.cardName(), setCode);
                 continue;
             }
 
@@ -360,7 +361,7 @@ public final class Proximity {
             Deque<String> finishedCards = new ConcurrentLinkedDeque<>();
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-            log.info("Rendering {} cards on {} threads", cardCount, threadCount);
+            LOG.info("Rendering {} cards on {} threads", cardCount, threadCount);
 
             for (Card card : cards) {
                 executor.submit(() -> {
@@ -407,19 +408,19 @@ public final class Proximity {
                                 }
 
                                 finishedCards.add(card.representation().getAsString("name"));
-                                log.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_GREEN, Logging.ANSI_RESET);
+                                LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_GREEN, Logging.ANSI_RESET);
                             } catch (Throwable throwable) {
                                 finishedCards.add(card.representation().getAsString("name"));
-                                log.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
-                                log.error(throwable.getMessage());
+                                LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
+                                LOG.error(throwable.getMessage());
                             }
 
                             cardTime = System.currentTimeMillis();
                         }
                     } catch (Throwable throwable) {
                         finishedCards.add(card.representation().getAsString("name"));
-                        log.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
-                        log.error(throwable.getMessage());
+                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
+                        LOG.error(throwable.getMessage());
                     }
                 });
             }

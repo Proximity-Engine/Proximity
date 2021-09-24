@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.templates;
 
 
+import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.templates.layers.Layer;
 import dev.hephaestus.proximity.text.Style;
@@ -20,15 +21,13 @@ public final class Template {
     private final List<LayerElement<?>> layers = new ArrayList<>();
     private final JsonObject options;
     private final Map<String, Style> styles;
-    private final Logger log;
 
-    public Template(TemplateSource source, int width, int height, List<LayerElement<?>> factories, JsonObject options, Map<String, Style> styles, Logger log) {
+    public Template(TemplateSource source, int width, int height, List<LayerElement<?>> factories, JsonObject options, Map<String, Style> styles) {
         this.source = source;
         this.width = width;
         this.height = height;
         this.options = options;
         this.styles = Map.copyOf(styles);
-        this.log = log;
         this.layers.addAll(factories);
     }
 
@@ -50,7 +49,7 @@ public final class Template {
                 Result<? extends Layer> r = factory.create("", card);
 
                 if (r.isError()) {
-                    log.error("Failed to draw layer '{}': {}", factory.getId(), r.getError());
+                    Proximity.LOG.error("Failed to draw layer '{}': {}", factory.getId(), r.getError());
                 } else {
                     r.get().draw(graphics, null, true, 0);
                 }
@@ -66,10 +65,6 @@ public final class Template {
 
     public JsonObject getOptions() {
         return this.options;
-    }
-
-    public Logger log() {
-        return this.log;
     }
 
     public int getWidth() {

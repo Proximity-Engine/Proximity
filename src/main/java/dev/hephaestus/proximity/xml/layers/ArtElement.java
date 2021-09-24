@@ -21,18 +21,18 @@ public class ArtElement extends LayerElement<ImageLayer> {
 
     @Override
     protected Result<LayerElement<ImageLayer>> parseLayer(Context context, Properties properties) {
-        if (!element.hasAttribute("width") && !element.hasAttribute("height")) {
+        if (!this.hasAttribute("width") && !this.hasAttribute("height")) {
             return Result.error("Image layer must have either 'width' or 'height' attribute");
         }
 
-        this.width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
-        this.height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
+        this.width = this.hasAttribute("width") ? Integer.decode(this.getAttribute("width")) : null;
+        this.height = this.hasAttribute("height") ? Integer.decode(this.getAttribute("height")) : null;
 
         return Result.of(this);
     }
 
     @Override
-    public Result<LayerElement<ImageLayer>> createFactory(Template template) {
+    public Result<LayerElement<ImageLayer>> createFactoryImmediately(Template template) {
         return Result.of(this);
     }
 

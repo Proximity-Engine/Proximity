@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.util.Pair;
 import dev.hephaestus.proximity.text.TextComponent;
@@ -226,8 +227,8 @@ public class TextLayer extends Layer {
         }
 
         if (bounds != null && this.template.getOptions().getAsBoolean("debug")) {
-            this.template.log().info(text);
-            this.template.log().info(String.format(
+            Proximity.LOG.info(text);
+            Proximity.LOG.info(String.format(
                     "%s  %10s  %5d %5d %5d %5d", draw ? "DRAW" : "NOPE", "", bounds.x, bounds.y, bounds.width, bounds.height
             ));
         }

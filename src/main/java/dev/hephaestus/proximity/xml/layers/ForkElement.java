@@ -26,7 +26,7 @@ public class ForkElement extends LayerElement<Group> {
         this.branches = new LinkedHashMap<>();
         List<String> errors = new ArrayList<>();
 
-        XMLUtil.iterate(this.element, (e, i) -> {
+        XMLUtil.iterate(this.getElement(), (e, i) -> {
             Factory<LayerElement<?>> factory = getFactory(e.getTagName());
 
             if (factory != null) {
@@ -37,7 +37,7 @@ public class ForkElement extends LayerElement<Group> {
         });
 
 
-        XMLUtil.iterate(this.element, "branches", (child, i) -> XMLUtil.iterate(child, (branch, j) -> {
+        XMLUtil.iterate(this.getElement(), "branches", (child, i) -> XMLUtil.iterate(child, (branch, j) -> {
             int conditionsCount = XMLUtil.iterate(branch, (predicate, k) -> {
                 Result<CardPredicate> r = XMLUtil.parsePredicate(predicate, context.definedPredicateGetter());
 
@@ -70,7 +70,7 @@ public class ForkElement extends LayerElement<Group> {
     }
 
     @Override
-    public Result<LayerElement<Group>> createFactory(Template template) {
+    public Result<LayerElement<Group>> createFactoryImmediately(Template template) {
         ArrayList<LayerElement<?>> children = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 

@@ -10,13 +10,35 @@ import org.w3c.dom.Element;
 import java.util.*;
 import java.util.function.Function;
 
+// I'd like to clean up the structure of these at some point
 public abstract class XMLElement<T> {
-    protected final Element element;
     private final LayerProperty<?>[] properties;
+    private final Element element;
+    private final Map<String, String> modifiedAttributes = new LinkedHashMap<>();
 
     public XMLElement(Element element, LayerProperty<?>... properties) {
         this.element = element;
         this.properties = properties;
+    }
+
+    protected Element getElement() {
+        return this.element;
+    }
+
+    protected void apply(AttributeModifier modifier) {
+        this.modifiedAttributes.put(modifier.attributeName(), modifier.value());
+    }
+
+    protected boolean hasAttribute(String name) {
+        return this.modifiedAttributes.containsKey(name) || this.element.hasAttribute(name);
+    }
+
+    protected String getAttribute(String name) {
+        return this.modifiedAttributes.getOrDefault(name, this.element.getAttribute(name));
+    }
+
+    protected void clearAttributes() {
+        this.modifiedAttributes.clear();
     }
 
     public XMLElement(Element element) {
@@ -34,7 +56,11 @@ public abstract class XMLElement<T> {
 
         if (properties.isError()) return Result.error(properties.getError());
 
-        return this.parseElement(context, modifiers.get(), new Properties(inheritedProperties, properties.get()::get));
+        Result<T> result = this.parseElement(context, modifiers.get(), new Properties(inheritedProperties, properties.get()::get));
+
+        this.clearAttributes();
+
+        return result;
     }
 
     private Result<Map<LayerProperty<?>, Function<JsonObject, ?>>> parseProperties(Context context) {

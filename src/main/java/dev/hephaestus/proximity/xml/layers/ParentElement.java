@@ -31,7 +31,7 @@ public abstract class ParentElement<L extends Layer> extends LayerElement<L> {
         this.children = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
-        XMLUtil.iterate(this.element, (e, i) -> {
+        XMLUtil.iterate(this.getElement(), (e, i) -> {
             Factory<LayerElement<?>> factory = getFactory(e.getTagName());
 
             if (factory != null) {
@@ -49,7 +49,7 @@ public abstract class ParentElement<L extends Layer> extends LayerElement<L> {
     }
 
     @Override
-    public final Result<LayerElement<L>> createFactory(Template template) {
+    public final Result<LayerElement<L>> createFactoryImmediately(Template template) {
         ArrayList<LayerElement<?>> children = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 

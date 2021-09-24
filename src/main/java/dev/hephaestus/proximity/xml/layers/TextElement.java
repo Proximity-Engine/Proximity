@@ -38,15 +38,15 @@ public class TextElement extends LayerElement<TextLayer> {
 
     @Override
     protected Result<LayerElement<TextLayer>> parseLayer(Context context, Properties properties) {
-        if (element.hasAttribute("width") ^ element.hasAttribute("height")) {
+        if (this.hasAttribute("width") ^ this.hasAttribute("height")) {
             return Result.error("Text layer must have both 'width' and 'height' attributes or neither");
         }
 
-        this.alignment = element.hasAttribute("alignment") ? TextAlignment.valueOf(element.getAttribute("alignment").toUpperCase(Locale.ROOT)) : TextAlignment.LEFT;
-        this.width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
-        this.height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
-        this.value = element.getAttribute("value");
-        this.styleName = element.hasAttribute("style") ? element.getAttribute("style") : null;
+        this.alignment = this.hasAttribute("alignment") ? TextAlignment.valueOf(this.getAttribute("alignment").toUpperCase(Locale.ROOT)) : TextAlignment.LEFT;
+        this.width = this.hasAttribute("width") ? Integer.decode(this.getAttribute("width")) : null;
+        this.height = this.hasAttribute("height") ? Integer.decode(this.getAttribute("height")) : null;
+        this.value = this.getAttribute("value");
+        this.styleName = this.hasAttribute("style") ? this.getAttribute("style") : null;
         this.style = properties.get(LayerProperty.STYLE);
         this.wrap = properties.get(LayerProperty.WRAP);
 
@@ -54,10 +54,10 @@ public class TextElement extends LayerElement<TextLayer> {
     }
 
     @Override
-    public Result<LayerElement<TextLayer>> createFactory(Template template) {
+    public Result<LayerElement<TextLayer>> createFactoryImmediately(Template template) {
         if (template.getStyle(this.styleName) != null) {
             Style style = template.getStyle(this.styleName);
-            Function<JsonObject, Style> s = this.style;
+            Function<JsonObject, Style> s = this.style == null ? o -> Style.EMPTY : this.style;
             this.style = object -> style.merge(s.apply(object));
         }
 

@@ -445,7 +445,6 @@
                 <Selector id="name">
                     <Selector id="dfc">
                         <TextLayer x="665" y="515" value="${name}">
-                            <AttributeModifier name="value" value="Potato"/>
                             <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                             <conditions>
                                 <IsEquals key="proximity.front_face"/>
@@ -554,120 +553,90 @@
                 </Or>
             </conditions>
         </Group>
-        <Selector id="oracle_text">
-<!--            <Selector id="mutate">-->
-<!--                <Group>-->
-<!--                    <Group id="mutate">-->
-<!--                        <TextLayer x="400" y="2795" width="2488" height="515" value="$oracle_text{proximity.util.mutate_text}"/>-->
-<!--                    </Group>-->
-<!--                    <Selector id="oracle">-->
-<!--                        <Group>-->
-<!--                            <TextLayer id="mdfc" x="400" y="3345" width="2488" height="520"  value="$oracle_and_flavor_text{}">-->
-<!--                                <wrap x="2472" y="3869" width="535" height="315"/>-->
-<!--                                <conditions>-->
-<!--                                    <IsEquals key="layout" value="modal_dfc"/>-->
-<!--                                </conditions>-->
-<!--                            </TextLayer>-->
-<!--                            <TextLayer id="transform" x="400" y="3345" width="2488" height="655"  value="$oracle_and_flavor_text{}">-->
-<!--                                <wrap x="2472" y="3615" width="535" height="515"/>-->
-<!--                                <conditions>-->
-<!--                                    <IsEquals key="layout" value="transform"/>-->
-<!--                                    <IsPresent key="proximity.flipped.proximity.types.creature"/>-->
-<!--                                </conditions>-->
-<!--                            </TextLayer>-->
-<!--                            <TextLayer id="standard" x="400" y="3345" width="2488" height="655" value="$oracle_and_flavor_text{}">-->
-<!--                                <wrap x="2472" y="3869" width="535" height="315"/>-->
-<!--                            </TextLayer>-->
-<!--                        </Group>-->
-<!--                    </Selector>-->
-<!--                </Group>-->
-<!--                <conditions>-->
-<!--                    <IsPresent key="keywords.mutate"/>-->
-<!--                </conditions>-->
-<!--            </Selector>-->
-<!--            <Selector id="creature">-->
-<!--                <TextLayer x="400" y="2795" width="2488" height="1070" value="$oracle_and_flavor_text{}">-->
-<!--                    <wrap x="2472" y="3869" width="535" height="315"/>-->
-<!--                    <conditions>-->
-<!--                        <IsPresent key="layout"/>-->
-<!--                        <IsEquals key="layout" value="modal_dfc"/>-->
-<!--                    </conditions>-->
-<!--                </TextLayer>-->
-<!--                <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}">-->
-<!--                    <wrap x="2472" y="3869" width="535" height="315"/>-->
-<!--                </TextLayer>-->
-<!--                <conditions>-->
-<!--                    <Or>-->
-<!--                        <IsPresent key="proximity.types.creature"/>-->
-<!--                        <IsPresent key="proximity.types.vehicle"/>-->
-<!--                    </Or>-->
-<!--                </conditions>-->
-<!--            </Selector>-->
-<!--            <TextLayer x="400" y="2795" width="2488" height="1070" value="$oracle_and_flavor_text{}">-->
-<!--                <conditions>-->
-<!--                    <IsEquals key="layout" value="modal_dfc"/>-->
-<!--                </conditions>-->
-<!--            </TextLayer>-->
-<!--            <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}">-->
-<!--                <wrap x="2472" y="3669" width="535" height="515"/>-->
-<!--                <conditions>-->
-<!--                    <IsEquals key="layout" value="transform"/>-->
-<!--                    <IsPresent key="proximity.flipped.proximity.types.creature"/>-->
-<!--                </conditions>-->
-<!--            </TextLayer>-->
-<!--            <TextLayer x="400" y="2795" width="2488" height="1200" value="$oracle_and_flavor_text{}"/>-->
-            <VerticalLayout x="400" y="2795" width="2488" height="1200" alignment="middle">
-                <TextLayer value="$oracle_text{oracle_text}">
-                    <conditions>
-                        <IsPresent key="oracle_text"/>
-                    </conditions>
-                </TextLayer>
-                <VerticalLayout id="flavor">
-                    <VerticalLayout>
-                        <SpacingLayer id="spacing1" width="10" height="75"/>
-                        <Selector>
-                            <ImageLayer id="bar" x="36" src="../../overlays/flavor_bar">
-                                <conditions>
-                                    <IsEquals key="proximity.options.flavor_bar"/>
-                                </conditions>
-                            </ImageLayer>
-                            <SpacingLayer width="10" height="14"/>
-                        </Selector>
-                        <SpacingLayer id="spacing2" width="10" height="65"/>
+        <Group id="oracle_text">
+            <TextLayer id="mutate" value="$oracle_text{proximity.util.mutate_text}" x="400" y="2800" width="2488" height="500">
+                <conditions>
+                    <IsPresent key="keywords.mutate"/>
+                </conditions>
+            </TextLayer>
+            <Selector>
+                <VerticalLayout x="400" y="2795" width="2488" height="1200" alignment="middle">
+                    <AttributeModifier name="height" value="1050">
+                        <IsPresent key="layout"/>
+                        <IsEquals key="layout" value="modal_dfc"/>
+                        <Not>
+                            <IsPresent key="keywords.mutate"/>
+                        </Not>
+                    </AttributeModifier>
+                    <AttributeModifier name="height" value="655">
+                        <Not>
+                            <And>
+                                <IsPresent key="layout"/>
+                                <IsEquals key="layout" value="modal_dfc"/>
+                            </And>
+                        </Not>
+                        <IsPresent key="keywords.mutate"/>
+                    </AttributeModifier>
+                    <AttributeModifier name="height" value="315">
+                        <IsPresent key="layout"/>
+                        <IsEquals key="layout" value="modal_dfc"/>
+                        <IsPresent key="keywords.mutate"/>
+                    </AttributeModifier>
+                    <AttributeModifier name="y" value="3345">
+                        <IsPresent key="keywords.mutate"/>
+                    </AttributeModifier>
+                    <TextLayer value="$oracle_text{oracle_text}">
                         <conditions>
                             <IsPresent key="oracle_text"/>
                         </conditions>
+                    </TextLayer>
+                    <VerticalLayout id="flavor">
+                        <VerticalLayout>
+                            <SpacingLayer id="spacing1" width="10" height="75"/>
+                            <Selector>
+                                <ImageLayer id="bar" x="36" src="../../overlays/flavor_bar">
+                                    <conditions>
+                                        <IsEquals key="proximity.options.flavor_bar"/>
+                                    </conditions>
+                                </ImageLayer>
+                                <SpacingLayer width="10" height="14"/>
+                            </Selector>
+                            <SpacingLayer id="spacing2" width="10" height="65"/>
+                            <conditions>
+                                <IsPresent key="oracle_text"/>
+                            </conditions>
+                        </VerticalLayout>
+                        <TextLayer value="$flavor_text{flavor_text}"/>
+                        <conditions>
+                            <IsPresent key="flavor_text"/>
+                            <IsEquals key="proximity.options.flavor_text"/>
+                        </conditions>
                     </VerticalLayout>
-                    <TextLayer value="$flavor_text{flavor_text}"/>
-                    <conditions>
-                        <IsPresent key="flavor_text"/>
-                        <IsEquals key="proximity.options.flavor_text"/>
-                    </conditions>
+                    <wrap x="2672" y="3669" width="336" height="168">
+                        <conditions>
+                            <IsEquals key="layout" value="transform"/>
+                            <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                        </conditions>
+                    </wrap>
+                    <wrap x="2472" y="3669" width="535" height="515">
+                        <conditions>
+                            <IsEquals key="layout" value="transform"/>
+                            <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                            <IsEquals key="proximity.types.creature"/>
+                        </conditions>
+                    </wrap>
+                    <wrap x="2472" y="3869" width="535" height="315">
+                        <conditions>
+                            <Or>
+                                <IsPresent key="proximity.types.creature"/>
+                                <IsPresent key="proximity.types.vehicle"/>
+                            </Or>
+                        </conditions>
+                    </wrap>
                 </VerticalLayout>
-                <wrap x="2672" y="3669" width="336" height="168">
-                    <conditions>
-                        <IsEquals key="layout" value="transform"/>
-                        <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                    </conditions>
-                </wrap>
-                <wrap x="2472" y="3669" width="535" height="515">
-                    <conditions>
-                        <IsEquals key="layout" value="transform"/>
-                        <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                        <IsEquals key="proximity.types.creature"/>
-                    </conditions>
-                </wrap>
-                <wrap x="2472" y="3869" width="535" height="315">
-                    <conditions>
-                        <Or>
-                            <IsPresent key="proximity.types.creature"/>
-                            <IsPresent key="proximity.types.vehicle"/>
-                        </Or>
-                    </conditions>
-                </wrap>
-            </VerticalLayout>
+            </Selector>
             <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="130"/>
-        </Selector>
+        </Group>
         <Group id="bottom_text">
             <HorizontalLayout x="335">
                 <TextLayer y="4211" value="${set}">

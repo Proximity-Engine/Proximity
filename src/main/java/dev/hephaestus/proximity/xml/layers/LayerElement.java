@@ -21,6 +21,12 @@ public abstract class LayerElement<L extends Layer> extends XMLElement<LayerElem
 
     private static final Map<String, Factory<?>> LAYER_FACTORIES = new HashMap<>();
 
+    private boolean deferred = false;
+    private Context context;
+    private List<AttributeModifier> modifiers;
+    private Properties properties;
+    private Template template;
+
     private String id;
     private Integer x, y;
     private CardPredicate predicate;
@@ -52,7 +58,18 @@ public abstract class LayerElement<L extends Layer> extends XMLElement<LayerElem
         this.predicate = new CardPredicate.And(this.predicate, predicate);
     }
 
-    public abstract Result<LayerElement<L>> createFactory(Template template);
+    public final Result<LayerElement<L>> createFactory(Template template) {
+        if (this.deferred) {
+            this.template = template;
+
+            return Result.of(this);
+        } else {
+            return this.createFactoryImmediately(template);
+        }
+    }
+
+    public abstract Result<LayerElement<L>> createFactoryImmediately(Template template);
+
     protected abstract Result<LayerElement<L>> parseLayer(Context context, Properties properties);
     protected abstract Result<L> createLayer(String parentId, JsonObject card);
 
@@ -62,19 +79,46 @@ public abstract class LayerElement<L extends Layer> extends XMLElement<LayerElem
         if (r.isError()) {
             return Result.error(r.getError());
         } else if (r.get()) {
+            Result<Boolean> result = this.applyModifiers(card);
+
+            if (result.isError()) {
+                return Result.error(result.getError());
+            }
+
             return this.createLayer(parentId, card);
         } else {
             return Result.of(Layer.EMPTY);
         }
     }
 
+    private Result<Boolean> applyModifiers(JsonObject object) {
+        if (this.deferred) {
+            List<String> errors = new ArrayList<>();
+
+            for (AttributeModifier modifier : this.modifiers) {
+                Result<Boolean> r = modifier.predicate().test(object).ifError(errors::add);
+
+                if (!r.isError() && r.get()) {
+                    this.apply(modifier);
+                }
+            }
+
+            if (!errors.isEmpty()) {
+                return Result.error("Error(s) applying attribute modifiers:\n\t%s", String.join("\n\t%s", errors));
+            }
+
+            this.parseElementImmediately(this.context, this.properties);
+            this.createFactoryImmediately(this.template);
+        }
+
+        return Result.of(true);
+    }
+
     @Override
     protected final Result<LayerElement<L>> parseElement(Context context, List<AttributeModifier> modifiers, Properties properties) {
-        this.id = this.element.hasAttribute("id") ? this.element.getAttribute("id") : "";
-        this.x = (this.element.hasAttribute("x") ? Integer.decode(this.element.getAttribute("x")) : 0);
-        this.y = (this.element.hasAttribute("y") ? Integer.decode(this.element.getAttribute("y")) : 0);
+        this.id = this.hasAttribute("id") ? this.getAttribute("id") : "";
 
-        Result<List<CardPredicate>> predicates = XMLUtil.applyToFirstElement(this.element, "conditions", e ->
+        Result<List<CardPredicate>> predicates = XMLUtil.applyToFirstElement(this.getElement(), "conditions", e ->
                 parseConditions(e, context), Result.of(Collections.emptyList()));
 
         if (predicates.isError()) {
@@ -82,6 +126,22 @@ public abstract class LayerElement<L extends Layer> extends XMLElement<LayerElem
         } else {
             this.predicate = new CardPredicate.And(predicates.get());
         }
+
+        if (modifiers.isEmpty()) {
+            return this.parseElementImmediately(context, properties);
+        } else {
+            this.deferred = true;
+            this.context = context;
+            this.modifiers = modifiers;
+            this.properties = properties;
+
+            return Result.of(this);
+        }
+    }
+
+    private Result<LayerElement<L>> parseElementImmediately(Context context, Properties properties) {
+        this.x = (this.hasAttribute("x") ? Integer.decode(this.getAttribute("x")) : 0);
+        this.y = (this.hasAttribute("y") ? Integer.decode(this.getAttribute("y")) : 0);
 
         return parseLayer(context, properties);
     }

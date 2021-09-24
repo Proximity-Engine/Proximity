@@ -8,7 +8,6 @@ import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.XMLUtil;
 import dev.hephaestus.proximity.xml.XMLElement;
 import dev.hephaestus.proximity.xml.layers.LayerElement;
-import org.apache.logging.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -17,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record TemplateParser(Logger log) {
+public record TemplateParser() {
     public Result<Template> parse(Document document, TemplateSource source, JsonObject options) {
         return this.init(document, source, options)
                 .then(this::parseOptions)
@@ -172,7 +171,7 @@ public record TemplateParser(Logger log) {
                 }));
 
         if (errors.isEmpty()) {
-            Template template = new Template(info.source, info.width, info.height, layerList, info.options, info.styles, this.log);
+            Template template = new Template(info.source, info.width, info.height, layerList, info.options, info.styles);
 
             for (LayerElement<?> layer : layerList) {
                 layer.createFactory(template).ifError(errors::add);

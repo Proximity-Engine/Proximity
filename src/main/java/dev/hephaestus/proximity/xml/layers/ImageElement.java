@@ -21,17 +21,17 @@ public class ImageElement extends LayerElement<ImageLayer> {
 
     @Override
     protected Result<LayerElement<ImageLayer>> parseLayer(Context context, Properties properties) {
-        if (!this.element.hasAttribute("src") && !this.element.hasAttribute("id")) {
+        if (!this.hasAttribute("src") && !this.hasAttribute("id")) {
             return Result.error("Image layer must have either 'src' or 'id' attribute");
         }
 
-        this.src = this.element.hasAttribute("src") ? this.element.getAttribute("src") : this.getId();
+        this.src = this.hasAttribute("src") ? this.getAttribute("src") : this.getId();
 
         return Result.of(this);
     }
 
     @Override
-    public Result<LayerElement<ImageLayer>> createFactory(Template template) {
+    public Result<LayerElement<ImageLayer>> createFactoryImmediately(Template template) {
         this.source = template.getSource();
 
         return Result.of(this);

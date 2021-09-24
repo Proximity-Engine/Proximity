@@ -38,9 +38,9 @@ public class LayoutElement extends ParentElement<Layout> {
 
     @Override
     protected Result<LayerElement<Layout>> createLayerFactory(Template template) {
-        this.width = this.element.hasAttribute("width") ? Integer.decode(this.element.getAttribute("width")) : null;
-        this.height = this.element.hasAttribute("height") ? Integer.decode(this.element.getAttribute("height")) : null;
-        this.alignment = this.element.hasAttribute("alignment") ? ContentAlignment.valueOf(this.element.getAttribute("alignment").toUpperCase(Locale.ROOT)) : ContentAlignment.START;
+        this.width = this.hasAttribute("width") ? Integer.decode(this.getAttribute("width")) : null;
+        this.height = this.hasAttribute("height") ? Integer.decode(this.getAttribute("height")) : null;
+        this.alignment = this.hasAttribute("alignment") ? ContentAlignment.valueOf(this.getAttribute("alignment").toUpperCase(Locale.ROOT)) : ContentAlignment.START;
 
         return Result.of(this);
     }
