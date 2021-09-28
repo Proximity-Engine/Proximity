@@ -15,6 +15,7 @@
         <ToggleOption id="copyright" default="true"/>
         <ToggleOption id="flavor_text" default="true"/>
         <ToggleOption id="flavor_bar" default="true"/>
+        <ToggleOption id="show_set_symbol" default="true"/>
     </options>
     <condition_definitions>
         <ConditionDefinition name="colorless_artifact">
@@ -480,64 +481,69 @@
         </TextLayer>
         <SquishBox>
             <main id="set_symbol">
-                <SVG x="2816" y="2628" src="bg/${set}" width="242" height="155">
-                    <outline color="#000000" weight="10"/>
-                    <conditions>
-                        <FileExists src="bg/${set}.svg"/>
-                    </conditions>
-                </SVG>
-                <Selector>
-                    <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#FFFFFF" force_outline="true">
-                        <outline color="#FFFFFF" weight="10"/>
+                <Group>
+                    <SVG x="2816" y="2628" src="bg/${set}" width="242" height="155">
+                        <outline color="#000000" weight="10"/>
                         <conditions>
-                            <Or>
-                                <IsEquals key="rarity" value="common"/>
-                                <IsEquals key="rarity" value="special"/>
-                            </Or>
+                            <FileExists src="bg/${set}.svg"/>
                         </conditions>
                     </SVG>
-                    <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#000000" force_outline="true">
-                        <outline color="#000000" weight="10"/>
-                    </SVG>
-                </Selector>
-                <SVG x="2816" y="2628" src="rarities/${rarity}" width="800" height="800">
-                    <Mask>
-                        <SVG x="2816" y="2628" src="${set}" width="242" height="155"/>
-                    </Mask>
-                </SVG>
-                <Group>
-                    <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
-                        <outline color="#000000" weight="10"/>
-                    </SVG>
-                    <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
-                        <outline color="#FFFFFF" weight="0">
+                    <Selector>
+                        <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#FFFFFF" force_outline="true">
+                            <outline color="#FFFFFF" weight="10"/>
                             <conditions>
                                 <Or>
                                     <IsEquals key="rarity" value="common"/>
                                     <IsEquals key="rarity" value="special"/>
                                 </Or>
                             </conditions>
-                        </outline>
-                        <outline color="#000000" weight="0">
-                            <conditions>
-                                <Not>
+                        </SVG>
+                        <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#000000" force_outline="true">
+                            <outline color="#000000" weight="10"/>
+                        </SVG>
+                    </Selector>
+                    <SVG x="2816" y="2628" src="rarities/${rarity}" width="800" height="800">
+                        <Mask>
+                            <SVG x="2816" y="2628" src="${set}" width="242" height="155"/>
+                        </Mask>
+                    </SVG>
+                    <Group>
+                        <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
+                            <outline color="#000000" weight="10"/>
+                        </SVG>
+                        <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
+                            <outline color="#FFFFFF" weight="0">
+                                <conditions>
                                     <Or>
                                         <IsEquals key="rarity" value="common"/>
                                         <IsEquals key="rarity" value="special"/>
                                     </Or>
-                                </Not>
-                            </conditions>
-                        </outline>
-                    </SVG>
-                    <conditions>
-                        <FileExists src="fg/${set}.svg"/>
-                    </conditions>
-                </Group>
-                <CardModifier key="set" value="xlcu">
+                                </conditions>
+                            </outline>
+                            <outline color="#000000" weight="0">
+                                <conditions>
+                                    <Not>
+                                        <Or>
+                                            <IsEquals key="rarity" value="common"/>
+                                            <IsEquals key="rarity" value="special"/>
+                                        </Or>
+                                    </Not>
+                                </conditions>
+                            </outline>
+                        </SVG>
+                        <conditions>
+                            <FileExists src="fg/${set}.svg"/>
+                        </conditions>
+                    </Group>
+                    <CardModifier key="set" value="xlcu">
                     <Not>
                         <FileExists src="${set}.svg"/>
                     </Not>
                 </CardModifier>
+                </Group>
+                <conditions>
+                    <IsEquals key="proximity.options.show_set_symbol"/>
+                </conditions>
             </main>
             <flex>
                 <Selector id="types">

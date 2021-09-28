@@ -1,4 +1,4 @@
 1x Elbrus
 
 
-1x Llanowar Elves
+1x Llanowar Elves --show_set_symbol=false
