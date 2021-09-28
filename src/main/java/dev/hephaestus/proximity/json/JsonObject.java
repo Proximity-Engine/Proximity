@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-public final class JsonObject extends JsonElement {
+public class JsonObject extends JsonElement {
     private final Map<String, JsonElement> members =
             new LinkedHashMap<>();
 

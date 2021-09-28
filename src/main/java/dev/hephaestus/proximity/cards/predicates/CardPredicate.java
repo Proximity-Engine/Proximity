@@ -63,7 +63,7 @@ public interface CardPredicate {
             }
 
             if (errors.size() > 0) {
-                result = Result.error(String.format("Encountered %d errors:\n\t%s", errors.size(), String.join("\n\t%s", errors)));
+                result = Result.error(String.format("Encountered %d errors:\n\t%s", errors.size(), String.join("\n\t", errors)));
             }
 
             return result;

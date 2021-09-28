@@ -2,43 +2,30 @@ package dev.hephaestus.proximity.templates.layers;
 
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
-import java.awt.*;
+import java.awt.geom.Rectangle2D;
 
 public abstract class Layer {
-    public static final Layer EMPTY = new Layer("", "", 0, 0) {
-        @Override
-        public Rectangle draw(StatefulGraphics out, Rectangle wrap, boolean draw, int scale) {
-            return new Rectangle();
-        }
-    };
-
-    private final String parentId;
     private final String id;
     private int x, y;
-    protected Rectangle bounds;
-    protected Rectangle wrap;
+    protected Rectangle2D bounds;
+    protected Rectangle2D wrap;
 
-    public Layer(String parentId, String id, int x, int y) {
-        this.parentId = parentId;
+    public Layer(String id, int x, int y) {
         this.id = id;
         this.x = x;
         this.y = y;
     }
 
-    public void setBounds(Rectangle bounds) {
+    public void setBounds(Rectangle2D bounds) {
         this.bounds = bounds;
     }
 
-    public void setWrap(Rectangle wrap) {
+    public void setWrap(Rectangle2D wrap) {
         this.wrap = wrap;
     }
 
-    public String getParentId() {
-        return this.parentId;
-    }
-
     public String getId() {
-        return id(this.parentId, this.id);
+        return this.id;
     }
 
     public void setX(int x) {
@@ -57,14 +44,10 @@ public abstract class Layer {
         return this.y;
     }
 
-    public abstract Rectangle draw(StatefulGraphics out, Rectangle wrap, boolean draw, int scale);
-
-    public static String id(String parentId, String id) {
-        return (parentId.isEmpty() ? "" : parentId) + (id.isEmpty() ? "" : ((parentId.isEmpty() ? "" : ".") + id));
-    }
+    public abstract Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale);
 
     @Override
     public String toString() {
-        return "Layer[" + this.getId() + "]";
+        return "Layer[" + this.id + "]";
     }
 }

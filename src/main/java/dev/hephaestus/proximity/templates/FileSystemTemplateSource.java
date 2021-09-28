@@ -8,14 +8,11 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 public class FileSystemTemplateSource implements TemplateSource {
     private final String templateName;
     private final Function<String, Path> pathGetter;
-    private final Map<String, BufferedImage> imageCache = new HashMap<>();
 
     public FileSystemTemplateSource(Path path) throws IOException {
         String templateName = path.getFileName().toString();
@@ -40,13 +37,9 @@ public class FileSystemTemplateSource implements TemplateSource {
                 image = image.substring(1);
             }
 
-            if (!this.imageCache.containsKey(image)) {
-                Path path = this.pathGetter.apply(image);
+            Path path = this.pathGetter.apply(image);
 
-                this.imageCache.put(image, ImageIO.read(Files.newInputStream(path)));
-            }
-
-            return this.imageCache.get(image);
+            return ImageIO.read(Files.newInputStream(path));
         } catch (IOException exception) {
             throw new RuntimeException(exception);
         }

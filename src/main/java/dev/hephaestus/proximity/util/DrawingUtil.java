@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.util;
 import dev.hephaestus.proximity.templates.TemplateSource;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -35,20 +36,20 @@ public final class DrawingUtil {
         return COLORS.computeIfAbsent(color, Color::new);
     }
 
-    public static Rectangle encompassing(Rectangle r1, Rectangle r2) {
-        int x = Math.min(r1.x, r2.x);
-        int y = Math.min(r1.y, r2.y);
+    public static Rectangle2D encompassing(Rectangle2D r1, Rectangle2D r2) {
+        double x = Math.min(r1.getX(), r2.getX());
+        double y = Math.min(r1.getY(), r2.getY());
 
-        int width = Math.max(
-                r1.x + r1.width,
-                r2.x + r2.width
+        double width = Math.max(
+                r1.getMaxX(),
+                r2.getMaxX()
         ) - x;
 
-        int height = Math.max(
-                r1.y + r1.height,
-                r2.y + r2.height
+        double height = Math.max(
+                r1.getMaxY(),
+                r2.getMaxY()
         ) - y;
 
-        return new Rectangle(x, y, width, height);
+        return new Rectangle2D.Double(x, y, width, height);
     }
 }

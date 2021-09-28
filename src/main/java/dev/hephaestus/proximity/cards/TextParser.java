@@ -21,6 +21,7 @@ public final class TextParser {
     private List<TextComponent> currentGroup;
     private boolean italic;
     private boolean allWordsItalic;
+    private int i;
 
     public TextParser(String oracle, Function<String, Style> styleGetter, Style style, String newLine, JsonObject options) {
         this.oracle = oracle;
@@ -45,7 +46,7 @@ public final class TextParser {
         this.italic = allWordsItalic;
         this.allWordsItalic = !allWordsItalic;
 
-        for (int i = 0; i < oracle.length(); ++i) {
+        for (i = 0; i < oracle.length(); ++i) {
             char c = oracle.charAt(i);
 
             switch (c) {
@@ -121,7 +122,7 @@ public final class TextParser {
     private String completeWord() {
         String word = this.currentWord.toString();
 
-        if (word.startsWith("\u2014")) {
+        if (word.startsWith("\u2014") && this.oracle.charAt(i) != '\n') {
             loop: for (int i = this.text.size() - 1; i > 0; --i) {
                 List<TextComponent> list = this.text.get(i);
 

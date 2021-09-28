@@ -7,10 +7,6 @@ public class Box<T> {
         this.value = value;
     }
 
-    public Box() {
-        this(null);
-    }
-
     public void set(T value) {
         this.value = value;
     }

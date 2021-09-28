@@ -97,7 +97,7 @@ public final class JsonPrimitive extends JsonElement {
     }
 
     @Override
-    protected void write(JsonWriter writer) throws IOException {
+    public void write(JsonWriter writer) throws IOException {
         if (this.isString()) {
             writer.value(this.getAsString());
         } else if (this.isBoolean()) {

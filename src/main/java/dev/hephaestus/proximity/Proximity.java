@@ -1,26 +1,22 @@
 package dev.hephaestus.proximity;
 
-import dev.hephaestus.proximity.cards.Card;
 import dev.hephaestus.proximity.cards.CardPrototype;
+import dev.hephaestus.proximity.cards.layers.*;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.json.JsonPrimitive;
-import dev.hephaestus.proximity.templates.Template;
 import dev.hephaestus.proximity.templates.TemplateLoader;
-import dev.hephaestus.proximity.templates.layers.Layer;
-import dev.hephaestus.proximity.util.Keys;
-import dev.hephaestus.proximity.util.Logging;
-import dev.hephaestus.proximity.util.ParsingUtil;
-import dev.hephaestus.proximity.util.Result;
-import dev.hephaestus.proximity.xml.layers.*;
+import dev.hephaestus.proximity.templates.TemplateSource;
+import dev.hephaestus.proximity.util.*;
+import dev.hephaestus.proximity.xml.LayerRenderer;
+import dev.hephaestus.proximity.xml.RenderableCard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quiltmc.json5.JsonReader;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -31,12 +27,12 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,34 +42,27 @@ public final class Proximity {
     private final JsonObject options;
     private final JsonObject overrides;
     private final List<TemplateLoader> loaders;
+    private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
 
     static {
-        LayerElement.register(ArtElement::new, "ArtLayer");
-        LayerElement.register(FillElement::new, "Fill", "SpacingLayer", "Spacer");
-        LayerElement.register(ForkElement::new, "Fork");
-        LayerElement.register(GroupElement::new, "Group", "main");
-        LayerElement.register(ImageElement::new, "ImageLayer");
-        LayerElement.register(SelectorElement::new, "Selector", "flex");
-        LayerElement.register(SquishBoxElement::new, "SquishBox");
-        LayerElement.register(TextElement::new, "TextLayer");
-        LayerElement.register(SVGElement::new, "SVG");
+        LayerRenderer.register(new ArtLayerRenderer(), "ArtLayer");
+        LayerRenderer.register(new FillLayerRenderer(), "Fill", "SpacingLayer", "Spacer");
+        LayerRenderer.register(new ForkLayerRenderer(), "Fork");
+        LayerRenderer.register(new LayerGroupRenderer(), "Group", "main");
+        LayerRenderer.register(new ImageLayerRenderer(), "ImageLayer");
+        LayerRenderer.register(new LayerSelectorRenderer(), "Selector", "flex");
+        LayerRenderer.register(new SquishBoxRenderer(), "SquishBox");
+        LayerRenderer.register(new TextLayerRenderer(), "TextLayer");
+        LayerRenderer.register(new SVGLayerRenderer(), "SVG");
 
-        LayerElement.register(element -> new LayoutElement(element,
-                Layer::setX,
-                Layer::setY,
-                Layer::getX,
-                Layer::getY,
-                Rectangle::getWidth,
-                Rectangle::getHeight
+        LayerRenderer.register(new LayoutElementRenderer("x", "y",
+                Rectangle2D::getWidth,
+                Rectangle2D::getHeight
         ), "HorizontalLayout");
 
-        LayerElement.register(element -> new LayoutElement(element,
-                Layer::setY,
-                Layer::setX,
-                Layer::getY,
-                Layer::getX,
-                Rectangle::getHeight,
-                Rectangle::getWidth
+        LayerRenderer.register(new LayoutElementRenderer("y", "x",
+                Rectangle2D::getHeight,
+                Rectangle2D::getWidth
         ), "VerticalLayout");
     }
 
@@ -87,7 +76,6 @@ public final class Proximity {
         long startTime = System.currentTimeMillis();
 
         Result<?> result = getDefaultTemplateName()
-                .then(this::parseTemplate)
                 .then(this::loadCardsFromFile)
                 .then(this::getCardInfo)
                 .then(this::renderAndSave)
@@ -110,22 +98,12 @@ public final class Proximity {
         return Result.of(options.getAsString("template"));
     }
 
-    private Result<Template> parseTemplate(String name) {
-        for (TemplateLoader loader : this.loaders) {
-            Result<Template> files = loader.getTemplateFiles(name)
-                    .then(fs -> loader.load(fs, this.options))
-                    .ifError(LOG::warn);
-
-            if (!files.isError()) return files;
-        }
-
-        return Result.error("Template '%s' not found.", name);
-    }
-
-    private Result<Deque<CardPrototype>> loadCardsFromFile(Template defaultTemplate) {
+    private Result<Deque<CardPrototype>> loadCardsFromFile(String defaultTemplate) {
         Deque<CardPrototype> result = new ArrayDeque<>();
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(this.options.getAsString("cards")))) {
+        Path path = Path.of(this.options.getAsString("cards"));
+
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
             Pattern pattern = Pattern.compile("([0-9]+)x? (.+)");
 
             int cardNumber = 1;
@@ -184,22 +162,27 @@ public final class Proximity {
                         }
                     }
 
-                    Template template = defaultTemplate;
+                    String template = defaultTemplate;
 
                     if (cardOptions.has("template")) {
-                        Result<Template> templateResult = parseTemplate(cardOptions.getAsString("template"));
+                        template = cardOptions.getAsString("template");
+                    }
 
-                        if (templateResult.isError()) {
-                            LOG.error("Failed to parse template for card {}: {}", cardName, templateResult.getError());
-                            LOG.warn("Using default template");
+                    TemplateSource source = null;
+
+                    for (TemplateLoader loader : this.loaders) {
+                        Result<TemplateSource> r = loader.getTemplateFiles(template);
+
+                        if (r.isError()) {
+                            return r.unwrap();
                         } else {
-                            template = templateResult.get();
+                            source = r.get();
+                            break;
                         }
                     }
 
-                    JsonObject options = template.getOptions().deepCopy().copyAll(cardOptions);
-
-                    result.add(new CardPrototype(cardName, cardNumber++, options, template, overrides));
+                    result.add(new CardPrototype(cardName, cardNumber, cardOptions, source, overrides));
+                    cardNumber += count;
                 } else {
                     return Result.error("Could not parse line '%s'", line);
                 }
@@ -219,12 +202,18 @@ public final class Proximity {
                 : line;
     }
 
-    private Result<Deque<Card>> getCardInfo(Deque<CardPrototype> prototypes) {
+    private Result<Deque<Pair<RenderableCard, Optional<RenderableCard>>>> getCardInfo(Deque<CardPrototype> prototypes) {
         LOG.info("Fetching info for {} cards...", prototypes.size());
 
         long lastRequest = 0;
 
-       Deque<Card> cards = new ArrayDeque<>();
+       Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards = new ArrayDeque<>();
+
+       System.out.println();
+
+       int i = 1;
+
+       int prototypeCountLength = Integer.toString(prototypes.size()).length();
 
        for (CardPrototype prototype : prototypes) {
            long time = System.currentTimeMillis();
@@ -242,17 +231,31 @@ public final class Proximity {
            lastRequest = System.currentTimeMillis();
 
            getCardInfo(prototype)
-                   .ifPresent(json -> {
-                       json = prototype.parse(json);
-                       json.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
-                       json.copyAll(this.overrides);
+                   .ifPresent(raw -> {
+                       JsonObject card = prototype.parse(raw);
+                       card.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
+                       card.copyAll(this.overrides);
 
-                       cards.add(new Card(json, prototype.template()));
+                       for (int j = 0; j < card.getAsInt(Keys.COUNT); ++j) {
+                           Result<RenderableCard> front = XMLUtil.load(prototype.source()).ifError(LOG::warn)
+                                   .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)));
+
+                           Result<Optional<RenderableCard>> back = card.getAsBoolean(Keys.DOUBLE_SIDED) ? XMLUtil.load(prototype.source()).ifError(LOG::warn)
+                                   .then(root -> Result.of(Optional.of(new RenderableCard(prototype.source(), root, card.getAsJsonObject(Keys.FLIPPED).deepCopy()))))
+                                   : Result.of(Optional.empty());
+
+                           if (front.isOk() && back.isOk()) {
+                               cards.add(new Pair<>(front.get(), back.get()));
+                           }
+                       }
                    })
                    .ifError(LOG::warn);
+           System.out.printf("%" + prototypeCountLength + "d/%d\r", i++, prototypes.size());
        }
 
-       LOG.info("Successfully found {} cards", cards.size());
+        System.out.printf("%" + prototypeCountLength + "d/%d%n", i, prototypes.size());
+
+        LOG.info("Successfully found {} cards", cards.size());
 
         return Result.of(cards);
     }
@@ -266,102 +269,55 @@ public final class Proximity {
             uri.append("&set=").append(prototype.options().getAsString("set_code"));
         }
 
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(uri.toString()))
-                .GET()
-                .build();
+        String string = uri.toString();
 
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        return this.cardInfo.computeIfAbsent(string, s -> {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(s))
+                    .GET()
+                    .build();
 
-            if (response.statusCode() == 200) {
-                String responseBody = response.body();
-                JsonObject cardInfo = JsonObject.parseObject(JsonReader.json5(responseBody));
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                return Result.of(cardInfo);
-            } else {
-                return Result.error("Response %s:", response.statusCode(), response.body());
+                if (response.statusCode() == 200) {
+                    String responseBody = response.body();
+                    JsonObject cardInfo = JsonObject.parseObject(JsonReader.json5(responseBody));
+
+                    return Result.of(cardInfo);
+                } else {
+                    return Result.error("Response %s:", response.statusCode(), response.body());
+                }
+            } catch (Exception e) {
+                return Result.error(e.getMessage());
             }
-        } catch (Exception e) {
-            return Result.error(e.getMessage());
-        }
-
+        });
     }
 
-    private Result<Deque<String>> renderAndSave(Deque<Card> cards) {
-        int cardCount = cards.stream().map(card -> card.representation().getAsInt("proximity", "options", "count"))
-                .reduce(0, Integer::sum);
-
-        int countStrLen = Integer.toString(cardCount).length();
-        int threadCount = Integer.min(options.has("threads") ? Integer.parseInt(options.getAsString("threads")) : 10, cardCount);
+    private Result<AtomicInteger> renderAndSave(Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards) {
+        int countStrLen = Integer.toString(cards.size()).length();
+        int threadCount = Integer.min(options.has("threads") ? Integer.parseInt(options.getAsString("threads")) : 10, cards.size());
 
         if (threadCount > 0) {
-            Deque<String> finishedCards = new ConcurrentLinkedDeque<>();
+            AtomicInteger finishedCards = new AtomicInteger();
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            Deque<String> errors = new ConcurrentLinkedDeque<>();
 
-            LOG.info("Rendering {} cards on {} threads", cardCount, threadCount);
+            LOG.info("Rendering {} cards on {} threads", cards.size(), threadCount);
 
-            for (Card card : cards) {
-                executor.submit(() -> {
-                    long cardTime = System.currentTimeMillis();
+            int i = 1;
 
-                    try {
-                        BufferedImage frontImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
-                        BufferedImage backImage = null;
+            for (Pair<RenderableCard, Optional<RenderableCard>> card : cards) {
+                i++;
 
-                        card.template().draw(card.representation(), frontImage);
-
-                        if (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)) {
-                            backImage = new BufferedImage(card.template().getWidth(), card.template().getHeight(), BufferedImage.TYPE_INT_ARGB);
-                            card.template().draw(card.representation().getAsJsonObject(Keys.FLIPPED), backImage);
-                        }
-
-                        for (int i = 0; i < card.representation().getAsInt(Keys.COUNT); ++i) {
-                            Path front = Path.of("images", "fronts", card.representation().getAsInt(Keys.CARD_NUMBER) + i + " " + card.representation().getAsString("name").replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
-
-                            Path back = Path.of("images", "backs", card.representation().getAsInt(Keys.CARD_NUMBER) + i + " " + (card.representation().getAsBoolean(Keys.DOUBLE_SIDED)
-                                    ? card.representation().getAsJsonObject(Keys.FLIPPED).getAsString("name")
-                                    : card.representation().getAsString("name")
-                            ).replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
-
-                            try {
-                                if (!Files.isDirectory(front.getParent())) {
-                                    Files.createDirectories(front.getParent());
-                                }
-
-                                OutputStream stream = Files.newOutputStream(front);
-
-                                ImageIO.write(frontImage, "png", stream);
-                                stream.close();
-
-                                if (!Files.isDirectory(back.getParent())) {
-                                    Files.createDirectories(back.getParent());
-                                }
-
-                                if (card.representation().getAsBoolean(Keys.DOUBLE_SIDED) && backImage != null) {
-                                    stream = Files.newOutputStream(back);
-
-                                    ImageIO.write(backImage, "png", stream);
-                                    stream.close();
-                                }
-
-                                finishedCards.add(card.representation().getAsString("name"));
-                                LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_GREEN, Logging.ANSI_RESET);
-                            } catch (Throwable throwable) {
-                                finishedCards.add(card.representation().getAsString("name"));
-                                LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
-                                LOG.error(throwable.getMessage());
-                            }
-
-                            cardTime = System.currentTimeMillis();
-                        }
-                    } catch (Throwable throwable) {
-                        finishedCards.add(card.representation().getAsString("name"));
-                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.size(), cardCount, System.currentTimeMillis() - cardTime, card.representation().getAsString("name")), Logging.ANSI_RED, Logging.ANSI_RESET);
-                        LOG.error(throwable.getMessage());
-                    }
-                });
+                if (threadCount > 1) {
+                    int finalI = i;
+                    executor.submit(() ->
+                            this.render(card, finishedCards, errors, countStrLen, finalI, cards.size()));
+                } else {
+                    this.render(card, finishedCards, errors, countStrLen, i, cards.size());
+                }
             }
 
             try {
@@ -372,12 +328,69 @@ public final class Proximity {
 
                 }
 
-                return Result.of(finishedCards);
+                return errors.isEmpty()
+                        ? Result.of(finishedCards)
+                        : Result.error("Error rendering cards:\n\t%s", String.join("\n\t", errors));
             } catch (InterruptedException e) {
                 return Result.error(e.getMessage());
             }
         }
 
         return Result.error("No cards to render");
+    }
+
+    private void render(Pair<RenderableCard, Optional<RenderableCard>> card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int i, int cardCount) {
+        long cardTime = System.currentTimeMillis();
+
+        RenderableCard front = card.left();
+        String name = front.getName() + (card.right().isPresent() ? " // " + card.right().get().getName() : "");
+
+        try {
+            BufferedImage frontImage = new BufferedImage(front.getWidth(), front.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+            Result<Void> result = front.render(new StatefulGraphics(frontImage)).ifError(errors::add);
+
+            if (result.isOk()) {
+                Path path = Path.of("images", "fronts", i + " " + front.getName().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+
+                this.save(frontImage, path);
+
+                if (card.right().isPresent()) {
+                    RenderableCard back = card.right().get();
+                    name += " // " + back.getName();
+                    BufferedImage backImage = new BufferedImage(back.getWidth(), back.getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    result = back.render(new StatefulGraphics(backImage));
+
+                    if (result.isOk()) {
+                        path = Path.of("images", "backs", i + " " + back.getName()
+                                .replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+
+                        this.save(backImage, path);
+                    } else {
+                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
+                        return;
+                    }
+                }
+
+                finishedCards.incrementAndGet();
+                LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_GREEN, Logging.ANSI_RESET);
+            } else {
+                LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
+            }
+        } catch (Throwable throwable) {
+            LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
+            LOG.error(throwable.getMessage());
+        }
+    }
+
+    private void save(BufferedImage image, Path path) throws Throwable {
+        if (!Files.isDirectory(path.getParent())) {
+            Files.createDirectories(path.getParent());
+        }
+
+        OutputStream stream = Files.newOutputStream(path);
+
+        ImageIO.write(image, "png", stream);
+        stream.close();
     }
 }

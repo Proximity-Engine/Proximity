@@ -32,7 +32,7 @@ public final class JsonArray extends JsonElement implements List<JsonElement> {
         JsonArray array = new JsonArray();
 
         while (reader.hasNext() && reader.peek() != JsonToken.END_ARRAY) {
-            array.add(parseElement(reader));
+            array.add(JsonElement.parseElement(reader));
         }
 
         reader.endArray();

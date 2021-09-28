@@ -3,23 +3,24 @@ package dev.hephaestus.proximity.templates.layers;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 public class ImageLayer extends Layer {
     private final BufferedImage image;
     private final String fileLocation;
 
-    public ImageLayer(String parentId, String id, int x, int y, BufferedImage image, Integer width, Integer height, String fileLocation) {
-        super(parentId, id, x, y);
+    public ImageLayer(String id, int x, int y, BufferedImage image, Integer width, Integer height, String fileLocation) {
+        super(id, x, y);
         this.fileLocation = fileLocation;
 
-        if (width == image.getWidth() && height == image.getHeight()) {
+        if ((width == null && height == null) || (width != null && height != null&& width == image.getWidth() && height == image.getHeight())) {
             this.image = image;
         } else {
-            if (width == null && height != null) {
+            if (width == null) {
                 double ratio = image.getWidth() / (double) image.getHeight();
                 width = (int) Math.round(ratio * height);
-            } else if (height == null && width != null) {
+            } else if (height == null) {
                 double ratio = image.getWidth() / (double) image.getHeight();
                 height = (int) Math.round(width / ratio);
             }
@@ -40,7 +41,7 @@ public class ImageLayer extends Layer {
     }
 
     @Override
-    public Rectangle draw(StatefulGraphics out, Rectangle wrap, boolean draw, int scale) {
+    public Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale) {
         if (draw) {
             out.push(this.getX(), this.getY());
             out.drawImage(this.image, null, null);

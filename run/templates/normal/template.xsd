@@ -35,7 +35,7 @@
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute type="xs:string" name="value" use="optional"/>
-        <xs:attribute type="xs:string" name="id" use="optional"/>
+        <xs:attribute type="idType" name="id" use="optional"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -43,13 +43,13 @@
     <xs:sequence>
       <xs:element type="EnumerationValueType" name="EnumerationValue" maxOccurs="unbounded" minOccurs="2"/>
     </xs:sequence>
-    <xs:attribute type="xs:string" name="id" use="required"/>
+    <xs:attribute type="idType" name="id" use="required"/>
     <xs:attribute type="xs:string" name="default" use="required"/>
   </xs:complexType>
   <xs:complexType name="ToggleOptionType">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="id" use="required"/>
+        <xs:attribute type="idType" name="id" use="required"/>
         <xs:attribute type="xs:boolean" name="default" use="required"/>
       </xs:extension>
     </xs:simpleContent>
@@ -86,7 +86,7 @@
       <xs:extension base="LayerPropertyType">
         <xs:sequence>
           <xs:element type="TextShadowType" name="shadow" minOccurs="0" maxOccurs="1"/>
-          <xs:element type="TextOutlineType" name="outline" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="OutlineType" name="outline" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="optional"/>
         <xs:attribute type="xs:string" name="font" use="optional"/>
@@ -148,16 +148,24 @@
       <xs:element type="conditionsType" name="Or"/>
       <xs:element type="conditionsType" name="And"/>
       <xs:element type="conditionsType" name="Not" minOccurs="0"/>
+      <xs:element type="FileExistsType" name="FileExists"/>
     </xs:choice>
   </xs:complexType>
+  <xs:simpleType name="idType">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="LayerType">
     <xs:sequence>
       <xs:element type="conditionsType" name="conditions"/>
       <xs:element type="StyleType" name="Style"/>
-      <xs:element type="wrapType" name="wrap"/>
+      <xs:element type="wrapType" name="Wrap"/>
+      <xs:element type="wrapType" name="Bounds"/>
       <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="GroupType" name="Mask" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
-    <xs:attribute type="xs:string" name="id" use="optional"/>
+    <xs:attribute type="idType" name="id" use="optional"/>
     <xs:attribute type="xs:int" name="x"/>
     <xs:attribute type="xs:int" name="y"/>
   </xs:complexType>
@@ -172,11 +180,16 @@
   <xs:complexType name="SVGLayerType">
     <xs:complexContent>
       <xs:extension base="LayerType">
+        <xs:sequence>
+          <xs:element type="OutlineType" name="outline"/>
+        </xs:sequence>
         <xs:attribute type="xs:string" name="src" use="optional"/>
         <xs:attribute type="xs:int" name="width" use="optional"/>
         <xs:attribute type="xs:int" name="height" use="optional"/>
         <xs:attribute type="content_alignment_type" name="vertical_alignment" default="middle"/>
         <xs:attribute type="content_alignment_type" name="horizontal_alignment" default="middle"/>
+        <xs:attribute type="xs:boolean" name="solid" default="false"/>
+        <xs:attribute type="color" name="fill"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -228,7 +241,7 @@
   <xs:complexType name="BranchType" mixed="true">
     <xs:simpleContent>
       <xs:extension base="conditionsType">
-        <xs:attribute type="xs:string" name="id" use="required"/>
+        <xs:attribute type="idType" name="id" use="required"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -284,7 +297,7 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:complexType name="TextOutlineType">
+  <xs:complexType name="OutlineType">
     <xs:simpleContent>
       <xs:extension base="xs:string">
         <xs:attribute type="color" name="color" use="required"/>
@@ -323,5 +336,8 @@
     <xs:attribute type="xs:string" name="author"/>
     <xs:attribute type="xs:string" name="width" use="required"/>
     <xs:attribute type="xs:string" name="height" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="FileExistsType">
+    <xs:attribute type="xs:string" name="src"/>
   </xs:complexType>
 </xs:schema>

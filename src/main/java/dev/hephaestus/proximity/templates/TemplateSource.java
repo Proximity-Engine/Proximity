@@ -13,4 +13,5 @@ public interface TemplateSource {
     InputStream getInputStream(String file) throws IOException;
     boolean exists(String file);
     String getTemplateName();
+
 }

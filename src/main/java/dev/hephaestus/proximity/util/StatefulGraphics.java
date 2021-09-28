@@ -70,12 +70,6 @@ public class StatefulGraphics extends Graphics2D {
         }
     }
 
-    public void reset() {
-        while (!this.frames.isEmpty()) {
-            this.frames.pop().pop();
-        }
-    }
-
     public void push(RenderingHints.Key key, Object value) {
         this.push(
                 value,
@@ -491,20 +485,8 @@ public class StatefulGraphics extends Graphics2D {
     }
 
     @Override
-    @Deprecated(since = "9")
-    public void finalize() {
-        wrapped.finalize();
-    }
-
-    @Override
     public String toString() {
         return wrapped.toString();
-    }
-
-    @Override
-    @Deprecated
-    public Rectangle getClipRect() {
-        return wrapped.getClipRect();
     }
 
     @Override

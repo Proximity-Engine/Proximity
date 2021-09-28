@@ -2,9 +2,9 @@ package dev.hephaestus.proximity.text;
 
 
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.xml.RenderableCard;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.XMLUtil;
-import org.w3c.dom.Element;
 
 import java.util.Locale;
 
@@ -58,7 +58,7 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
         return new Style(this.fontName, this.italicFontName, fontSize, this.kerning, this.shadow, this.outline, this.capitalization, this.color);
     }
 
-    public static Result<Style> parse(Element style) {
+    public static Result<Style> parse(RenderableCard.XMLElement style) {
         Style.Builder builder = new Style.Builder();
 
         builder.font(style.getAttribute("font"));
