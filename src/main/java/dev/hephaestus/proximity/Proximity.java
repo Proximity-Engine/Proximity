@@ -148,6 +148,10 @@ public final class Proximity {
                                 String[] overrideKey = split[0].split("\\.");
                                 value = split.length == 2 ? split[1] : null;
 
+                                if (value != null && value.length() > 1 && value.startsWith("\"") && value.endsWith("\"")) {
+                                    value = value.substring(1, value.length() - 1);
+                                }
+
                                 overrides.add(overrideKey, ParsingUtil.parseStringValue(value));
                             }
                         } else {
