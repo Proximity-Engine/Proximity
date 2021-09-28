@@ -1,1 +1,1 @@
-1x Llanowar Elves --show_set_symbol=false --override=image_uris.art_crop:https://cdna.artstation.com/p/assets/images/images/003/883/296/medium/grzegorz-rutkowski-elf-overlord-final-5-1920-logo.jpg --override=flavor_text:"Look at me, I've got a glowing fucking bow!"
+1x Plant (TC18)

@@ -264,34 +264,37 @@ public class TextLayer extends Layer {
             drawnFirstRowHeight = pair.right();
             graphics.pop();
 
-            if (this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+            if (drawnBounds != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
                 graphics.drawRect((int) drawnBounds.getX(), (int) drawnBounds.getY(), (int) drawnBounds.getWidth(), (int) drawnBounds.getHeight());
                 graphics.pop(2);
             }
 
-            while(this.bounds.getHeight() < drawnBounds.getHeight()) {
-                fontSizeChange -= 5;
-                graphics.push(0, drawnFirstRowHeight);
-                pair = this.draw(graphics, wrap, fontSizeChange, false);
-                drawnBounds = pair.left();
-                drawnFirstRowHeight = pair.right();
-                graphics.pop();
+            if (this.bounds != null && drawnBounds != null) {
+                while (this.bounds.getHeight() < drawnBounds.getHeight()) {
+                    fontSizeChange -= 5;
+                    graphics.push(0, drawnFirstRowHeight);
+                    pair = this.draw(graphics, wrap, fontSizeChange, false);
+                    drawnBounds = pair.left();
+                    drawnFirstRowHeight = pair.right();
+                    graphics.pop();
+
+                    if (this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+                        graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                        graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
+                        graphics.drawRect((int) drawnBounds.getX(), (int) drawnBounds.getY(), (int) drawnBounds.getWidth(), (int) drawnBounds.getHeight());
+                        graphics.pop(2);
+                    }
+                }
+
 
                 if (this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
                     graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
-                    graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
-                    graphics.drawRect((int) drawnBounds.getX(), (int) drawnBounds.getY(), (int) drawnBounds.getWidth(), (int) drawnBounds.getHeight());
+                    graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
+                    graphics.drawRect(this.getX(), this.getY(), (int) this.bounds.getWidth(), (int) this.bounds.getHeight());
                     graphics.pop(2);
                 }
-            }
-
-            if (this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
-                graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
-                graphics.push(DrawingUtil.getColor(0xFFFF0000), Graphics2D::setColor, Graphics2D::getColor);
-                graphics.drawRect(this.getX(), this.getY(), (int) this.bounds.getWidth(), (int) this.bounds.getHeight());
-                graphics.pop(2);
             }
 
             graphics.push(0, drawnFirstRowHeight);
