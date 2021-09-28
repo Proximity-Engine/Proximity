@@ -183,7 +183,7 @@ public final class Proximity {
 
                     result.add(new CardPrototype(cardName, cardNumber, cardOptions, source, overrides));
                     cardNumber += count;
-                } else {
+                } else if (!line.trim().isEmpty()) {
                     return Result.error("Could not parse line '%s'", line);
                 }
             }
