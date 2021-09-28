@@ -122,7 +122,7 @@ public final class TextParser {
     private String completeWord() {
         String word = this.currentWord.toString();
 
-        if (word.startsWith("\u2014") && this.oracle.charAt(i) != '\n') {
+        if (word.startsWith("\u2014") && i < this.oracle.length() && this.oracle.charAt(i) != '\n') {
             loop: for (int i = this.text.size() - 1; i > 0; --i) {
                 List<TextComponent> list = this.text.get(i);
 
