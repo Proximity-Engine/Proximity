@@ -1,10 +1,11 @@
 package dev.hephaestus.proximity.text;
 
 
-import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.xml.RenderableCard;
+import dev.hephaestus.proximity.util.Outline;
 import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.util.Shadow;
 import dev.hephaestus.proximity.util.XMLUtil;
+import dev.hephaestus.proximity.xml.RenderableCard;
 
 import java.util.Locale;
 
@@ -71,14 +72,14 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
 
         XMLUtil.iterate(style, (child, i) -> {
             switch (child.getTagName()) {
-                case "shadow" -> builder.shadow(new Style.Shadow(
+                case "shadow" -> builder.shadow(new Shadow(
                         Integer.decode(child.getAttribute("color")),
                         Integer.decode(child.getAttribute("dX")),
                         Integer.decode(child.getAttribute("dY"))
                 ));
-                case "outline" -> builder.outline(new Style.Outline(
+                case "outline" -> builder.outline(new Outline(
                         Integer.decode(child.getAttribute("color")),
-                        Integer.decode(child.getAttribute("weight"))
+                        Float.parseFloat(child.getAttribute("weight"))
                 ));
             }
         });
@@ -138,18 +139,6 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
 
         public Style build() {
             return new Style(this.fontName, this.italicFontName, this.size, this.kerning, this.shadow, this.outline, this.capitalization, this.color);
-        }
-    }
-
-    public static record Shadow(int color, int dX, int dY) {
-        public static Shadow parse(JsonObject object) {
-            return new Shadow(Integer.decode(object.get("color").getAsString()), object.get("dX").getAsInt(), object.get("dY").getAsInt());
-        }
-    }
-
-    public static record Outline(int color, int weight) {
-        public static Outline parse(JsonObject object) {
-            return new Outline(Integer.decode(object.get("color").getAsString()), object.get("weight").getAsInt());
         }
     }
 

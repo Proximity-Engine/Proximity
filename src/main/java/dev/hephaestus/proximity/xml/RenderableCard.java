@@ -30,9 +30,9 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
     private final Map<String, CardPredicate> predicates = new HashMap<>();
 
     public RenderableCard(TemplateSource source, Element root, JsonObject card) {
+        this.copyAll(card);
         this.source = source;
         this.root = new XMLElement(null, root);
-        this.copyAll(card);
     }
 
     public final String getName() {
@@ -224,10 +224,54 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                 this.setAttribute(element.getAttribute("name"), element.getAttribute("value"));
             });
 
+            this.iterate("CardModifier", (element, i) -> {
+                List<String> errors = new ArrayList<>();
+                List<CardPredicate> predicates = new ArrayList<>();
+
+                XMLUtil.iterate(element, (predicate, j) ->
+                        XMLUtil.parsePredicate(predicate, RenderableCard.this::getPredicate, RenderableCard.this::exists)
+                                .ifError(errors::add)
+                                .ifPresent(predicates::add));
+
+                if (!errors.isEmpty()) {
+                    Proximity.LOG.warn("Error(s) parsing predicates:\n\t{}", String.join("\n\t", errors));
+                }
+
+                for (CardPredicate predicate : predicates) {
+                    Result<Boolean> result = predicate.test(RenderableCard.this);
+
+                    if (result.isOk() && !result.get()) {
+                        return;
+                    }
+                }
+
+                RenderableCard.this.add(element.getAttribute("key").split("\\."), ParsingUtil.parseStringValue(element.getAttribute("value")));
+            });
+
             this.iterate((element, i) -> {
                 LayerProperty<?> property = LayerProperty.get(element.getTagName());
 
                 if (property != null) {
+                    List<String> errors = new ArrayList<>();
+                    List<CardPredicate> predicates = new ArrayList<>();
+
+                    element.apply("conditions", (XMLElement conditions) -> conditions.iterate((predicate, j) ->
+                            XMLUtil.parsePredicate(predicate, RenderableCard.this::getPredicate, RenderableCard.this::exists)
+                                    .ifError(errors::add)
+                                    .ifPresent(predicates::add)));
+
+                    if (!errors.isEmpty()) {
+                        Proximity.LOG.warn("Error(s) parsing predicates:\n\t{}", String.join("\n\t", errors));
+                    }
+
+                    for (CardPredicate predicate : predicates) {
+                        Result<Boolean> result = predicate.test(RenderableCard.this);
+
+                        if (result.isOk() && !result.get()) {
+                            return;
+                        }
+                    }
+
                     Result<?> result = property.parse(element);
 
                     if (result.isOk()) {
@@ -289,7 +333,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         }
 
         public int getInteger(String name) {
-            return this.hasAttribute(name) ? Integer.parseInt(this.getAttribute(name)) : 0;
+            return this.hasAttribute(name) ? Integer.decode(this.getAttribute(name)) : 0;
         }
 
         public void setAttribute(String name, String value) {

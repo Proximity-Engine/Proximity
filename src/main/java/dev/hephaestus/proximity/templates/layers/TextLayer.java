@@ -1,14 +1,11 @@
 package dev.hephaestus.proximity.templates.layers;
 
 import dev.hephaestus.proximity.Proximity;
+import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.RenderableCard;
-import dev.hephaestus.proximity.util.Keys;
-import dev.hephaestus.proximity.util.Pair;
 import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.text.TextAlignment;
 import dev.hephaestus.proximity.text.Style;
-import dev.hephaestus.proximity.util.DrawingUtil;
-import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -156,7 +153,7 @@ public class TextLayer extends Layer {
                 ? graphics.getColor()
                 : DrawingUtil.getColor(style.color() == null ? this.style.color() : style.color());
 
-        Style.Outline outline = style.outline() == null ? this.style.outline() : style.outline();
+        Outline outline = style.outline() == null ? this.style.outline() : style.outline();
 
         graphics.push(textColor, Graphics2D::setColor, Graphics2D::getColor);
         graphics.push(font, Graphics2D::setFont, Graphics2D::getFont);
@@ -426,7 +423,7 @@ public class TextLayer extends Layer {
             }
         }
 
-        if (draw && wrap != null) {
+        if (draw && wrap != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
             graphics.drawRect((int) wrap.getX(), (int) wrap.getY(), (int) wrap.getWidth(), (int) wrap.getHeight());

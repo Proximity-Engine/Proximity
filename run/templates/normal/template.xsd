@@ -81,6 +81,14 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType name="CardModifierType">
+    <xs:simpleContent>
+      <xs:extension base="conditionsType">
+        <xs:attribute name="key" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name="StyleType" mixed="true">
     <xs:complexContent>
       <xs:extension base="LayerPropertyType">
@@ -164,6 +172,7 @@
       <xs:element type="wrapType" name="Bounds"/>
       <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="GroupType" name="Mask" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="CardModifierType" name="CardModifier" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="idType" name="id" use="optional"/>
     <xs:attribute type="xs:int" name="x"/>
@@ -190,6 +199,7 @@
         <xs:attribute type="content_alignment_type" name="horizontal_alignment" default="middle"/>
         <xs:attribute type="xs:boolean" name="solid" default="false"/>
         <xs:attribute type="color" name="fill"/>
+        <xs:attribute type="xs:boolean" name="force_outline" default="false"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -297,11 +307,18 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:simpleType name="join_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="miter"/>
+      <xs:enumeration value="round"/>
+      <xs:enumeration value="bevel"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="OutlineType">
     <xs:simpleContent>
-      <xs:extension base="xs:string">
+      <xs:extension base="LayerPropertyType">
         <xs:attribute type="color" name="color" use="required"/>
-        <xs:attribute type="xs:int" name="weight" use="required"/>
+        <xs:attribute type="xs:float" name="weight" use="required"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>

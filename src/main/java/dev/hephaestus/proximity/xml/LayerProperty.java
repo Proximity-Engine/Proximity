@@ -1,7 +1,9 @@
 package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.text.Style;
+import dev.hephaestus.proximity.util.Outline;
 import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.util.Shadow;
 import dev.hephaestus.proximity.util.XMLUtil;
 
 import java.awt.Rectangle;
@@ -29,14 +31,14 @@ public abstract class LayerProperty<T> {
 
             XMLUtil.iterate(element, (child, i) -> {
                 switch (child.getTagName()) {
-                    case "shadow" -> builder.shadow(new Style.Shadow(
+                    case "shadow" -> builder.shadow(new Shadow(
                             Integer.decode(child.getAttribute("color")),
                             Integer.decode(child.getAttribute("dX")),
                             Integer.decode(child.getAttribute("dY"))
                     ));
-                    case "outline" -> builder.outline(new Style.Outline(
+                    case "outline" -> builder.outline(new Outline(
                             Integer.decode(child.getAttribute("color")),
-                            Integer.decode(child.getAttribute("weight"))
+                            Float.parseFloat(child.getAttribute("weight"))
                     ));
                 }
             });
@@ -69,6 +71,16 @@ public abstract class LayerProperty<T> {
             ));
         }
     }, "Bounds");
+
+    public static final LayerProperty<Outline> OUTLINE = register(new LayerProperty<>() {
+        @Override
+        public Result<Outline> parse(RenderableCard.XMLElement element) {
+            return Result.of(new Outline(
+                    Integer.decode(element.getAttribute("color")),
+                    Float.parseFloat(element.getAttribute("weight"))
+            ));
+        }
+    }, "Outline", "outline");
 
     public static <T> LayerProperty<T> register(LayerProperty<T> property, String... tagNames) {
         for (String tagName : tagNames) {

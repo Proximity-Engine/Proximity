@@ -209,11 +209,10 @@ public final class Proximity {
 
        Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards = new ArrayDeque<>();
 
-       System.out.println();
 
        int i = 1;
-
        int prototypeCountLength = Integer.toString(prototypes.size()).length();
+       long totalTime = System.currentTimeMillis();
 
        for (CardPrototype prototype : prototypes) {
            long time = System.currentTimeMillis();
@@ -253,9 +252,9 @@ public final class Proximity {
            System.out.printf("%" + prototypeCountLength + "d/%d\r", i++, prototypes.size());
        }
 
-        System.out.printf("%" + prototypeCountLength + "d/%d%n", i, prototypes.size());
+        System.out.printf("%" + prototypeCountLength + "d/%d%n", i - 1, prototypes.size());
 
-        LOG.info("Successfully found {} cards", cards.size());
+        LOG.info("Successfully found {} cards. Took {}ms", cards.size(), System.currentTimeMillis() - totalTime);
 
         return Result.of(cards);
     }
@@ -309,8 +308,6 @@ public final class Proximity {
             int i = 1;
 
             for (Pair<RenderableCard, Optional<RenderableCard>> card : cards) {
-                i++;
-
                 if (threadCount > 1) {
                     int finalI = i;
                     executor.submit(() ->
@@ -318,6 +315,8 @@ public final class Proximity {
                 } else {
                     this.render(card, finishedCards, errors, countStrLen, i, cards.size());
                 }
+
+                i++;
             }
 
             try {
@@ -357,28 +356,27 @@ public final class Proximity {
 
                 if (card.right().isPresent()) {
                     RenderableCard back = card.right().get();
-                    name += " // " + back.getName();
                     BufferedImage backImage = new BufferedImage(back.getWidth(), back.getHeight(), BufferedImage.TYPE_INT_ARGB);
                     result = back.render(new StatefulGraphics(backImage));
 
                     if (result.isOk()) {
                         path = Path.of("images", "backs", i + " " + back.getName()
-                                .replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+                                .replaceAll("[^a-zA-Z0-9.\\-, ']", "_") + ".png");
 
                         this.save(backImage, path);
                     } else {
-                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
+                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
                         return;
                     }
                 }
 
                 finishedCards.incrementAndGet();
-                LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}SAVED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_GREEN, Logging.ANSI_RESET);
+                LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}SAVED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_GREEN, Logging.ANSI_RESET);
             } else {
-                LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
+                LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
             }
         } catch (Throwable throwable) {
-            LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-45s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
+            LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
             LOG.error(throwable.getMessage());
         }
     }

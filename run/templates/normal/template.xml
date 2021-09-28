@@ -480,15 +480,24 @@
         </TextLayer>
         <SquishBox>
             <main id="set_symbol">
+                <SVG x="2816" y="2628" src="bg/${set}" width="242" height="155">
+                    <outline color="#000000" weight="10"/>
+                    <conditions>
+                        <FileExists src="bg/${set}.svg"/>
+                    </conditions>
+                </SVG>
                 <Selector>
-                    <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#FFFFFF">
+                    <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#FFFFFF" force_outline="true">
                         <outline color="#FFFFFF" weight="10"/>
                         <conditions>
-                            <IsEquals key="rarity" value="common"/>
+                            <Or>
+                                <IsEquals key="rarity" value="common"/>
+                                <IsEquals key="rarity" value="special"/>
+                            </Or>
                         </conditions>
                     </SVG>
-                    <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#000000">
-                        <outline color="#000000" weight="11"/>
+                    <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#000000" force_outline="true">
+                        <outline color="#000000" weight="10"/>
                     </SVG>
                 </Selector>
                 <SVG x="2816" y="2628" src="rarities/${rarity}" width="800" height="800">
@@ -496,10 +505,39 @@
                         <SVG x="2816" y="2628" src="${set}" width="242" height="155"/>
                     </Mask>
                 </SVG>
-                <conditions>
-                    <FileExists src="${set}.svg"/>
-                    <FileExists src="rarities/${rarity}.svg"/>
-                </conditions>
+                <Group>
+                    <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
+                        <outline color="#000000" weight="10"/>
+                    </SVG>
+                    <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
+                        <outline color="#FFFFFF" weight="0">
+                            <conditions>
+                                <Or>
+                                    <IsEquals key="rarity" value="common"/>
+                                    <IsEquals key="rarity" value="special"/>
+                                </Or>
+                            </conditions>
+                        </outline>
+                        <outline color="#000000" weight="0">
+                            <conditions>
+                                <Not>
+                                    <Or>
+                                        <IsEquals key="rarity" value="common"/>
+                                        <IsEquals key="rarity" value="special"/>
+                                    </Or>
+                                </Not>
+                            </conditions>
+                        </outline>
+                    </SVG>
+                    <conditions>
+                        <FileExists src="fg/${set}.svg"/>
+                    </conditions>
+                </Group>
+                <CardModifier key="set" value="xlcu">
+                    <Not>
+                        <FileExists src="${set}.svg"/>
+                    </Not>
+                </CardModifier>
             </main>
             <flex>
                 <Selector id="types">
@@ -580,14 +618,14 @@
             </TextLayer>
             <Selector>
                 <VerticalLayout x="400" y="2795" width="2488" height="1200" alignment="middle">
-                    <AttributeModifier name="height" value="1050">
+                    <AttributeModifier name="height" value="1047">
                         <IsPresent key="layout"/>
                         <IsEquals key="layout" value="modal_dfc"/>
                         <Not>
                             <IsPresent key="keywords.mutate"/>
                         </Not>
                     </AttributeModifier>
-                    <AttributeModifier name="height" value="655">
+                    <AttributeModifier name="height" value="652">
                         <Not>
                             <And>
                                 <IsPresent key="layout"/>
@@ -596,12 +634,12 @@
                         </Not>
                         <IsPresent key="keywords.mutate"/>
                     </AttributeModifier>
-                    <AttributeModifier name="height" value="315">
+                    <AttributeModifier name="height" value="312">
                         <IsPresent key="layout"/>
                         <IsEquals key="layout" value="modal_dfc"/>
                         <IsPresent key="keywords.mutate"/>
                     </AttributeModifier>
-                    <AttributeModifier name="y" value="3345">
+                    <AttributeModifier name="y" value="3342">
                         <IsPresent key="keywords.mutate"/>
                     </AttributeModifier>
                     <TextLayer value="$oracle_text{oracle_text}">
