@@ -235,6 +235,12 @@ public final class Proximity {
                        card.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
                        card.copyAll(this.overrides);
 
+                       if (card.getAsBoolean(Keys.DOUBLE_SIDED)) {
+                           JsonObject back = card.getAsJsonObject(Keys.FLIPPED);
+                           back.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
+                           back.copyAll(this.overrides);
+                       }
+
                        for (int j = 0; j < card.getAsInt(Keys.COUNT); ++j) {
                            Result<RenderableCard> front = XMLUtil.load(prototype.source()).ifError(LOG::warn)
                                    .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)));
