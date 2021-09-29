@@ -507,37 +507,64 @@
                             <SVG x="2816" y="2628" src="${set}" width="242" height="155"/>
                         </Mask>
                     </SVG>
-                    <Group>
-                        <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
-                            <outline color="#000000" weight="10"/>
-                        </SVG>
-                        <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
-                            <outline color="#FFFFFF" weight="0">
-                                <conditions>
-                                    <Or>
-                                        <IsEquals key="rarity" value="common"/>
-                                        <IsEquals key="rarity" value="special"/>
-                                    </Or>
-                                </conditions>
-                            </outline>
-                            <outline color="#000000" weight="0">
-                                <conditions>
-                                    <Not>
+                    <Selector>
+                        <Group>
+                            <SVG x="2816" y="2628" src="fg/${rarity}/${set}" width="242" height="155">
+                                <outline color="#000000" weight="10"/>
+                            </SVG>
+                            <SVG x="2816" y="2628" src="fg/${rarity}/${set}" width="242" height="155">
+                                <outline color="#FFFFFF" weight="0">
+                                    <conditions>
                                         <Or>
                                             <IsEquals key="rarity" value="common"/>
                                             <IsEquals key="rarity" value="special"/>
                                         </Or>
-                                    </Not>
-                                </conditions>
-                            </outline>
-                        </SVG>
-                        <conditions>
-                            <FileExists src="fg/${set}.svg"/>
-                        </conditions>
-                        <AttributeModifier name="id" value="${rarity}">
-                            <FileExists src="${rarity}/fg/${set}.svg"/>
-                        </AttributeModifier>
-                    </Group>
+                                    </conditions>
+                                </outline>
+                                <outline color="#000000" weight="0">
+                                    <conditions>
+                                        <Not>
+                                            <Or>
+                                                <IsEquals key="rarity" value="common"/>
+                                                <IsEquals key="rarity" value="special"/>
+                                            </Or>
+                                        </Not>
+                                    </conditions>
+                                </outline>
+                            </SVG>
+                            <conditions>
+                                <FileExists src="fg/${rarity}/${set}.svg"/>
+                            </conditions>
+                        </Group>
+                        <Group>
+                            <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
+                                <outline color="#000000" weight="10"/>
+                            </SVG>
+                            <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
+                                <outline color="#FFFFFF" weight="0">
+                                    <conditions>
+                                        <Or>
+                                            <IsEquals key="rarity" value="common"/>
+                                            <IsEquals key="rarity" value="special"/>
+                                        </Or>
+                                    </conditions>
+                                </outline>
+                                <outline color="#000000" weight="0">
+                                    <conditions>
+                                        <Not>
+                                            <Or>
+                                                <IsEquals key="rarity" value="common"/>
+                                                <IsEquals key="rarity" value="special"/>
+                                            </Or>
+                                        </Not>
+                                    </conditions>
+                                </outline>
+                            </SVG>
+                            <conditions>
+                                <FileExists src="fg/${set}.svg"/>
+                            </conditions>
+                        </Group>
+                    </Selector>
                     <CardModifier key="set" value="xlcu">
                     <Not>
                         <FileExists src="${set}.svg"/>
