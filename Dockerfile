@@ -1,9 +1,9 @@
 FROM gradle:jdk16 AS compiler
 WORKDIR /home/gradle
 
-COPY build.gradle gradlew settings.gradle ./
+COPY gradle build.gradle gradlew settings.gradle ./
 COPY src src
-RUN gradle -i --no-daemon shadowJar
+RUN gradle --no-daemon shadowJar
 
 FROM adoptopenjdk:16-jre-hotspot AS runner
 WORKDIR /app

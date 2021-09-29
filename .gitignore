@@ -1,9 +1,7 @@
+.gradle
 build
-gradle
 images
 templates
-.gradle
-
 
 *.swp
 *.txt

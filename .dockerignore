@@ -2,6 +2,8 @@
 .gradle
 build
 run
+templates
+images
 
 *.md
 *.json
