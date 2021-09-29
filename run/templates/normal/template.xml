@@ -268,9 +268,9 @@
         </Fork>
         <Fork id="crowns">
             <Selector>
-                <ImageLayer id="monocolored" src="${colors}">
+                <ImageLayer id="colored" src="${colors}">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="1"/>
+                        <IsEquals key="one_or_two_colors"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="artifact">
@@ -534,6 +534,9 @@
                         <conditions>
                             <FileExists src="fg/${set}.svg"/>
                         </conditions>
+                        <AttributeModifier name="id" value="${rarity}">
+                            <FileExists src="${rarity}/fg/${set}.svg"/>
+                        </AttributeModifier>
                     </Group>
                     <CardModifier key="set" value="xlcu">
                     <Not>
