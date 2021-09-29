@@ -1,0 +1,9 @@
+.git
+.gradle
+build
+run
+
+*.md
+*.json
+gradlew.bat
+template.xsd
