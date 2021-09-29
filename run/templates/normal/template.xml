@@ -3,7 +3,7 @@
 <Template name="Chilli's" author="ChilliAxe and Haven King" width="3288"
           height="4488"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="template.xsd">
+          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Haven-King/Proximity/master/template.xsd">
     <options>
         <Enumeration id="border" default="black">
             <EnumerationValue value="black"/>
