@@ -1,10 +1,13 @@
 FROM gradle:jdk16 AS compiler
-WORKDIR /home/gradle/project
+WORKDIR /home/gradle
+
 COPY build.gradle gradlew settings.gradle ./
 COPY src src
-RUN gradle shadowJar
+RUN gradle -i --no-daemon shadowJar
 
 FROM adoptopenjdk:16-jre-hotspot AS runner
 WORKDIR /app
-COPY --from=compiler /home/gradle/project/build/**/*.jar proximity.jar
-CMD ["java", "-jar", "proximity.jar"]
+COPY --from=compiler /home/gradle/build/**/*.jar proximity.jar
+
+CMD ["--cards=cards.txt", "--template=template.zip"]
+ENTRYPOINT ["java", "-jar", "proximity.jar"]
