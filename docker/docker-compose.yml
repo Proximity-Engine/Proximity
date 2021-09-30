@@ -1,0 +1,18 @@
+version: '3'
+services:
+  proximity:
+    build:
+      context: ../
+      dockerfile: ./Dockerfile
+    image: proximity:latest
+    volumes:
+      - ../cards.txt:/app/cards.txt
+      - ../templates:/app/templates
+      - ../images:/app/images
+    command: 
+      - sh 
+      - -c 
+      - java -jar proximity.jar --cards=$$CARDS --template=$$TEMPLATE
+    environment:
+      CARDS: cards.txt
+      TEMPLATE: chilli.zip

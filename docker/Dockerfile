@@ -7,7 +7,8 @@ RUN gradle --no-daemon shadowJar
 
 FROM adoptopenjdk:16-jre-hotspot AS runner
 WORKDIR /app
+COPY ./docker/entrypoint.sh ./entrypoint.sh
 COPY --from=compiler /home/gradle/build/**/*.jar proximity.jar
 
-CMD ["--cards=cards.txt", "--template=template.zip"]
-ENTRYPOINT ["java", "-jar", "proximity.jar"]
+CMD ["java", "-jar", "proximity.jar", "--cards=cards.txt", "--template=template.zip"]
+ENTRYPOINT ["./entrypoint.sh"]

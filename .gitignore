@@ -1,7 +1,7 @@
 .gradle
 build
 images
-templates
+templates/*
 
 *.swp
 *.txt
