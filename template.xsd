@@ -57,7 +57,8 @@
   <xs:complexType name="StringOptionType">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="value"/>
+        <xs:attribute type="idType" name="id" use="required"/>
+        <xs:attribute type="xs:string" name="default"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -172,6 +173,7 @@
       <xs:element type="wrapType" name="Bounds"/>
       <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="GroupType" name="Mask" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="GroupType" name="Erase" minOccurs="0" maxOccurs="1"/>
       <xs:element type="CardModifierType" name="CardModifier" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="idType" name="id" use="optional"/>
@@ -231,7 +233,8 @@
           <xs:element type="ForkType" name="Fork"/>
           <xs:element type="TextLayerType" name="TextLayer"/>
           <xs:element type="GroupType" name="Group"/>
-          <xs:element type="SpacingLayerType" name="SpacingLayer" minOccurs="0"/>
+          <xs:element type="SpacingLayerType" name="SpacingLayer"/>
+          <xs:element type="FillLayerType" name="Fill"/>
           <xs:element type="LayoutType" name="HorizontalLayout"/>
           <xs:element type="LayoutType" name="VerticalLayout"/>
           <xs:element type="SVGLayerType" name="SVG"/>
@@ -329,6 +332,13 @@
         <xs:attribute type="xs:int" name="y"/>
         <xs:attribute type="xs:int" name="width" use="required"/>
         <xs:attribute type="xs:int" name="height" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="FillLayerType">
+    <xs:simpleContent>
+      <xs:extension base="SpacingLayerType">
+        <xs:attribute type="color" name="color"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>

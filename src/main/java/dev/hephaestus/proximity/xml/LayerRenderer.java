@@ -47,11 +47,20 @@ public abstract class LayerRenderer {
             return new Pair<>(e, new LayerGroupRenderer());
         });
 
-        if (mask.isPresent()) {
+        Optional<Pair<RenderableCard.XMLElement, LayerRenderer>> erase = element.apply("Erase", e -> {
+            return new Pair<>(e, new LayerGroupRenderer());
+        });
+
+        if (mask.isPresent() || erase.isPresent()) {
             BufferedImage maskImage = new BufferedImage(graphics.getImage().getWidth(), graphics.getImage().getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Result<Optional<Rectangle2D>> maskResult = mask.get().right().render(card, mask.get().left(), new StatefulGraphics(maskImage), wrap, draw,scale, bounds);
+            Result<Optional<Rectangle2D>> maskResult = mask.isPresent() ? mask.get().right().render(card, mask.get().left(), new StatefulGraphics(maskImage), wrap, draw,scale, bounds) : Result.of(Optional.empty());
 
             if (maskResult.isError()) return maskResult;
+
+            BufferedImage eraseImage = new BufferedImage(graphics.getImage().getWidth(), graphics.getImage().getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Result<Optional<Rectangle2D>> eraseResult = erase.isPresent() ? erase.get().right().render(card, erase.get().left(), new StatefulGraphics(eraseImage), wrap, draw,scale, bounds) : Result.of(Optional.empty());
+
+            if (eraseResult.isError()) return eraseResult;
 
             BufferedImage layerImage = new BufferedImage(graphics.getImage().getWidth(), graphics.getImage().getHeight(), BufferedImage.TYPE_INT_ARGB);
             Result<Optional<Rectangle2D>> layerResult = this.renderLayer(card, element, new StatefulGraphics(layerImage), wrap, draw,scale, bounds);
@@ -62,11 +71,12 @@ public abstract class LayerRenderer {
             int height = layerImage.getHeight();
 
             int[] layer = layerImage.getRGB(0, 0, width, height, null, 0, width);
-            int[] masks = maskImage.getRGB(0, 0, width, height, null, 0, width);
+            int[] masks = mask.isPresent() ? maskImage.getRGB(0, 0, width, height, null, 0, width) : null;
+            int[] erasure = erase.isPresent() ? eraseImage.getRGB(0, 0, width, height, null, 0, width) : null;
 
             for (int i = 0; i < layer.length; i++) {
                 int color = layer[i] & 0x00FFFFFF;
-                int alpha = masks[i] & 0xFF000000;
+                int alpha = ((masks == null ? layer[i] : masks[i]) >>> 24) - (erasure == null ? 0x00 : (erasure[i] >>> 24)) << 24;
                 layer[i] = color | alpha;
             }
 

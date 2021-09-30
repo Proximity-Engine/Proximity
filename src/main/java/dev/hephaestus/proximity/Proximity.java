@@ -104,12 +104,13 @@ public final class Proximity {
         Path path = Path.of(this.options.getAsString("cards"));
 
         try (BufferedReader reader = Files.newBufferedReader(path)) {
-            Pattern pattern = Pattern.compile("([0-9]+)x? (.+)");
+            Pattern pattern = Pattern.compile("([0-9]+)x? (.+)( \\d+)?");
 
             int cardNumber = 1;
 
             for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                Matcher matcher = pattern.matcher(line);
+                String info = line.contains("--") ? line.substring(0, line.indexOf("--")): line;
+                Matcher matcher = pattern.matcher(info);
 
                 if (matcher.matches()) {
                     JsonObject cardOptions = new JsonObject();
@@ -119,7 +120,7 @@ public final class Proximity {
                     int count = matcher.groupCount() == 2 ? Integer.parseInt(matcher.group(1)) : 1;
                     cardOptions.addProperty("count", count);
 
-                    if (line.contains("(") && line.contains(")")) {
+                    if (info.contains("(") && info.contains(")")) {
                         cardOptions.addProperty("set_code", line.substring(line.indexOf("(") + 1, line.indexOf(")")).toUpperCase(Locale.ROOT));
                     }
 
@@ -235,8 +236,8 @@ public final class Proximity {
 
            getCardInfo(prototype)
                    .ifPresent(raw -> {
+                       raw.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
                        JsonObject card = prototype.parse(raw);
-                       card.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
                        card.copyAll(this.overrides);
 
                        if (card.getAsBoolean(Keys.DOUBLE_SIDED)) {

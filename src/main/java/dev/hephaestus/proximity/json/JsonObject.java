@@ -117,7 +117,13 @@ public class JsonObject extends JsonElement {
     }
 
     public JsonObject getAsJsonObject(String... keys) {
-        return get((o, k) -> o.get(k).getAsJsonObject(), keys);
+        return get((o, k) -> {
+            if (!o.has(k)) {
+                o.add(k, new JsonObject());
+            }
+
+            return o.get(k).getAsJsonObject();
+        }, keys);
     }
 
     public <T> T get(BiFunction<JsonObject, String, T> getter, String... keys) {

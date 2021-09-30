@@ -77,7 +77,7 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
 
         card.add(Keys.CARD_NUMBER, this.number);
         card.add(Keys.DOUBLE_SIDED, card.has("card_faces"));
-        card.add(Keys.OPTIONS, this.options.deepCopy());
+        card.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
 
         if (card.getAsJsonArray("keywords").contains("mutate")) {
             String[] split = card.getAsString("oracle_text").split("\n", 2);

@@ -17,7 +17,7 @@ public class FillLayerRenderer extends LayerRenderer {
         int width = Integer.decode(element.getAttribute("width"));
         int height = Integer.decode(element.getAttribute("height"));
         int color = element.hasAttribute("color")
-                ? Integer.decode(element.getAttribute("color")) : 0;
+                ? element.getInteger("color") : 0;
 
         return Result.of(Optional.ofNullable(new FillLayer(element.getId(), x, y, width, height, color)
                 .draw(graphics, wrap, draw, scale)

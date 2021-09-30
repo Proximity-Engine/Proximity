@@ -1,2 +1,5 @@
-1x Bloodthirsty Adversary (MID)
-1x Candlegrove Witch (MID)
+1x Brokkos, Apex of Forever
+1x Blightsteel Colossus --use_official_art=false --template=classic --border=#00000000 --override=artist:"Wayne Reynolds"
+1x Tainted Adversary --use_official_art=true
+1x Craterhoof Behemoth --use_official_art=true
+1x Auspicious Starrix

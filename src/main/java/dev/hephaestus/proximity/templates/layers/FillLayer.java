@@ -21,8 +21,8 @@ public class FillLayer extends Layer {
         Rectangle2D rectangle = new Rectangle2D.Double(this.getX(), this.getY(), this.width + scale * 5, this.height + scale * 5);
 
         if ((this.color & 0xFF000000) != 0) {
-            out.push(new Color(this.color), Graphics2D::setColor, Graphics2D::getColor);
-            out.draw(rectangle);
+            out.push(new Color(this.color, (this.color & 0xFF000000) >>> 24 != 255), Graphics2D::setColor, Graphics2D::getColor);
+            out.fill(rectangle);
             out.pop();
         }
 

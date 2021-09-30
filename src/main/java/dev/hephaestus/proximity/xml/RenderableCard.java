@@ -107,6 +107,11 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                                 options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
                             }
                         }
+                        case "StringOption" -> {
+                            if (!options.has(id)) {
+                                options.addProperty(id, option.getAttribute("default"));
+                            }
+                        }
                     }
                 })
         );
@@ -333,7 +338,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         }
 
         public int getInteger(String name) {
-            return this.hasAttribute(name) ? Integer.decode(this.getAttribute(name)) : 0;
+            return this.hasAttribute(name) ? (int) Long.decode(this.getAttribute(name)).longValue() : 0;
         }
 
         public void setAttribute(String name, String value) {

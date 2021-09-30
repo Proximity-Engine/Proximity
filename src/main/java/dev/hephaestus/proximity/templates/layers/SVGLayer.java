@@ -5,9 +5,11 @@ import dev.hephaestus.proximity.util.DrawingUtil;
 import dev.hephaestus.proximity.util.Outline;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 import org.apache.batik.gvt.*;
-import org.w3c.dom.svg.SVGRect;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 
 public class SVGLayer extends Layer {
@@ -15,12 +17,12 @@ public class SVGLayer extends Layer {
     private final Integer fillColor;
     private final Outline outline;
     private final boolean forceOutline;
-    private final SVGRect svgBounds;
+    private final Rectangle2D svgBounds;
     private final GraphicsNode svg;
     private final float scale;
     private final ContentAlignment verticalAlignment, horizontalAlignment;
 
-    public SVGLayer(String id, String src, int x, int y, Integer fillColor, Outline outline, boolean forceOutline, SVGRect svgBounds, GraphicsNode svg, float scale, ContentAlignment verticalAlignment, ContentAlignment horizontalAlignment) {
+    public SVGLayer(String id, String src, int x, int y, Integer fillColor, Outline outline, boolean forceOutline, Rectangle2D svgBounds, GraphicsNode svg, float scale, ContentAlignment verticalAlignment, ContentAlignment horizontalAlignment) {
         super(id, x, y);
         this.src = src;
         this.fillColor = fillColor;

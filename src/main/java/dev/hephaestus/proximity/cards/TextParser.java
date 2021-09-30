@@ -21,7 +21,6 @@ public final class TextParser {
     private List<TextComponent> currentGroup;
     private boolean italic;
     private boolean allWordsItalic;
-    private int i;
 
     public TextParser(String oracle, Function<String, Style> styleGetter, Style style, String newLine, JsonObject options) {
         this.oracle = oracle;
@@ -46,22 +45,25 @@ public final class TextParser {
         this.italic = allWordsItalic;
         this.allWordsItalic = !allWordsItalic;
 
-        for (i = 0; i < oracle.length(); ++i) {
-            char c = oracle.charAt(i);
+        int n = oracle.codePointCount(0, oracle.length());
+
+        int i;
+        for (i = 0; i < n; ++i) {
+            int c = oracle.codePointAt(i);
 
             switch (c) {
                 case '(' -> {
                     if (this.options.getAsBoolean("reminder_text")) {
                         this.italic = true;
-                        this.currentWord.append(c);
+                        this.currentWord.append(Character.toString(c));
                     } else {
                         while(c != ')') {
-                            c = oracle.charAt(++i);
+                            c = oracle.codePointAt(++i);
                         }
                     }
                 }
                 case ')' -> {
-                    this.currentWord.append(c);
+                    this.currentWord.append(Character.toString(c));
 
                     completeWord();
 
@@ -88,8 +90,8 @@ public final class TextParser {
 
                     StringBuilder symbolBuilder = new StringBuilder();
                     ++i;
-                    while (this.oracle.charAt(i) != '}') {
-                        symbolBuilder.append(this.oracle.charAt(i++));
+                    while (this.oracle.codePointAt(i) != '}') {
+                        symbolBuilder.append(Character.toString(this.oracle.codePointAt(i++)));
                     }
                     String symbol = symbolBuilder.toString();
 
@@ -98,7 +100,7 @@ public final class TextParser {
                     this.currentGroup.addAll(group);
                 }
                 case ' ' -> {
-                    this.currentWord.append(c);
+                    this.currentWord.append(' ');
 
                     this.completeWord();
                 }
@@ -110,7 +112,54 @@ public final class TextParser {
 
                     }
                 }
-                default -> this.currentWord.append(c);
+                case 0x2014 /* em dash */ -> {
+                    if (i > 0 && i < n - 1 && oracle.codePointAt(i - 1) == ' ' && oracle.codePointAt(i + 1) == ' ') {
+                        boolean italic = true;
+
+                        String s = oracle.substring(0, i);
+                        int nl = s.lastIndexOf('\n');
+                        int bp = s.lastIndexOf(Character.toString(0x2022));
+
+                        if (!(nl < bp)) {
+                            for (int j = i + 1; j < n; ++j) {
+                                if (oracle.charAt(j) == '(') {
+                                    italic = false;
+                                    break;
+                                } else if (oracle.charAt(j) == '\n') {
+                                    break;
+                                }
+                            }
+                        }
+
+
+                        if (nl < bp) {
+                            String word = oracle.substring(bp + 1, i).trim();
+
+                            if (oracle.substring(0, nl).contains(word)) {
+                                italic = false;
+                            }
+                        }
+
+                        if (italic) {
+                            loop: for (int j = this.text.size() - 1; j >= 0; --j) {
+                                List<TextComponent> list = this.text.get(j);
+
+                                for (int k = list.size() - 1; k >= 0; --k) {
+                                    TextComponent component = list.get(k);
+
+                                    if (component.string().equals(this.newLine)) {
+                                        break loop;
+                                    } else {
+                                        list.set(k, new TextComponent(component.style().italic(), component.string()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    this.currentWord.append(Character.toString(c));
+                }
+                default -> this.currentWord.append(Character.toString(c));
             }
         }
 
@@ -121,18 +170,6 @@ public final class TextParser {
 
     private String completeWord() {
         String word = this.currentWord.toString();
-
-        if (word.startsWith("\u2014") && i < this.oracle.length() && this.oracle.charAt(i) != '\n') {
-            loop: for (int i = this.text.size() - 1; i > 0; --i) {
-                List<TextComponent> list = this.text.get(i);
-
-                for (ListIterator<TextComponent> iterator = list.listIterator(list.size()); iterator.hasPrevious(); ) {
-                    TextComponent text = iterator.previous();
-                    if (text.string().equals(this.newLine)) break loop;
-                    iterator.set(new TextComponent(text.style().italic(), text.string()));
-                }
-            }
-        }
 
         if (!this.currentWord.isEmpty() || !this.currentGroup.isEmpty()) {
             if (!this.currentWord.isEmpty()) {

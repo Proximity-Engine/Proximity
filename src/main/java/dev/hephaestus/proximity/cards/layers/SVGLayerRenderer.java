@@ -48,27 +48,45 @@ public class SVGLayerRenderer extends LayerRenderer {
             GraphicsNode graphicsNode = builder.build(new BridgeContext(new UserAgentAdapter()), document);
             graphicsNode.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            SVGRect svgBounds = root.getViewBox().getBaseVal();
+            Rectangle2D svgBounds = graphicsNode.getBounds();
+            float s = 1;
 
-            double svgWidth = svgBounds.getWidth(), svgHeight = svgBounds.getHeight();
+            if (width != null || height != null) {
+                double svgWidth, svgHeight;
 
-            if (width == null && height != null) {
-                double ratio = svgBounds.getWidth() / svgBounds.getHeight();
-                svgHeight = height;
-                svgWidth = ratio * svgHeight;
-            } else if (height == null && width != null) {
-                double ratio = svgBounds.getWidth() / svgBounds.getHeight();
-                svgWidth = width;
-                svgHeight = svgWidth / ratio;
-            } else if (width != null) {
-                svgWidth = width;
-                svgHeight = height;
+                if (root.hasAttribute("viewBox")) {
+                    SVGRect rect = root.getViewBox().getBaseVal();
+                    svgBounds = new Rectangle2D.Double(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+                    svgWidth = svgBounds.getWidth();
+                    svgHeight = svgBounds.getHeight();
+                } else if (root.hasAttribute("width") && root.hasAttribute("height")) {
+                    String w = root.getAttribute("width");
+                    String h = root.getAttribute("height");
+                    svgWidth = Double.parseDouble(w);
+                    svgHeight = Double.parseDouble(h);
+                } else {
+                    return Result.error("SVG file must have 'viewbox' or 'width' and 'height' attributes to scale!");
+                }
+
+                double frameWidth = svgWidth, frameHeight;
+
+                if (width == null) {
+                    double ratio = frameWidth / svgHeight;
+                    frameHeight = height;
+                    frameWidth = ratio * frameHeight;
+                } else if (height == null) {
+                    double ratio = frameWidth / svgHeight;
+                    frameWidth = width;
+                    frameHeight = frameWidth / ratio;
+                } else {
+                    frameWidth = width;
+                    frameHeight = height;
+                }
+
+                double vScale = frameHeight / svgHeight;
+                double hScale = frameWidth / svgWidth;
+                s = (float) Math.min(vScale, hScale);
             }
-
-            double wr = svgWidth / svgBounds.getWidth();
-            double hr = svgHeight / svgBounds.getHeight();
-
-            float s = (float) Math.min(wr, hr);
 
             return Result.of(Optional.ofNullable(new SVGLayer(
                     element.getId(),
