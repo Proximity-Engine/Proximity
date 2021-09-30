@@ -10,5 +10,5 @@ WORKDIR /app
 COPY ./docker/entrypoint.sh ./entrypoint.sh
 COPY --from=compiler /home/gradle/build/**/*.jar proximity.jar
 
-CMD ["java", "-jar", "proximity.jar", "--cards=cards.txt", "--template=template.zip"]
+CMD ["--cards=cards.txt", "--template=template.zip"]
 ENTRYPOINT ["./entrypoint.sh"]
