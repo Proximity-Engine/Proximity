@@ -8,6 +8,7 @@ import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.xml.RenderableCard;
 
 import javax.imageio.ImageIO;
+import javax.swing.text.html.Option;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.net.URL;
@@ -26,9 +27,10 @@ public class ArtLayerRenderer extends LayerRenderer {
         Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
 
         try {
-            String fileLocation = new ArtResolver().findArt(card);
-
-            return Result.of(Optional.ofNullable(new ImageLayer(
+            Optional<String> optionalFileLocation = new ArtResolver().findArt(card);
+            if(optionalFileLocation.isPresent()) {
+                String fileLocation = optionalFileLocation.get();
+                return Result.of(Optional.ofNullable(new ImageLayer(
                     element.getId(),
                     x,
                     y,
@@ -36,7 +38,10 @@ public class ArtLayerRenderer extends LayerRenderer {
                     width,
                     height,
                     fileLocation).draw(graphics, wrap, draw, scale)
-            ));
+                ));
+            }
+            else
+                return Result.of(Optional.empty());
         } catch (IOException e) {
             return Result.error("Failed to create layer '%s': %s", element.getId(), e.getMessage());
         }
