@@ -39,6 +39,10 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         return this.getAsString("name");
     }
 
+    public final String getSet() {
+        return this.getAsString("set");
+    }
+
     public final int getWidth() {
         return Integer.decode(root.getAttribute("width"));
     }
