@@ -8,7 +8,6 @@ import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.xml.RenderableCard;
 
 import javax.imageio.ImageIO;
-import javax.swing.text.html.Option;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.net.URL;
