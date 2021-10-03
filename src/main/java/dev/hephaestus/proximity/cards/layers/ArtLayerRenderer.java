@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.cards.layers;
 
+import dev.hephaestus.proximity.cardart.ArtResolver;
 import dev.hephaestus.proximity.templates.layers.ImageLayer;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.StatefulGraphics;
@@ -25,7 +26,7 @@ public class ArtLayerRenderer extends LayerRenderer {
         Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
 
         try {
-            String fileLocation = card.getAsString("image_uris", "art_crop");
+            String fileLocation = new ArtResolver().findArt(card);
 
             return Result.of(Optional.ofNullable(new ImageLayer(
                     element.getId(),
