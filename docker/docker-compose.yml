@@ -4,15 +4,15 @@ services:
     build:
       context: ../
       dockerfile: ./Dockerfile
+      args:
+        - USER_ID: ${USER_ID}
+        - GROUP_ID: ${GROUP_ID}
     image: proximity:latest
     volumes:
-      - ../cards.txt:/app/cards.txt
-      - ../templates:/app/templates
-      - ../images:/app/images
+      - ../cards.txt:/app/cardslist       # Volume 1 - Mounts the default 'cards.txt' as decklist
+      - ../run/templates:/app/templates   # Volume 2 - Mounts templates from run/templates (i.e. normal and classic)
+      - ../images:/app/images             # Volume 3 - Mounts the output folder
     command: 
-      - sh 
-      - -c 
-      - java -jar proximity.jar --cards=$$CARDS --template=$$TEMPLATE
-    environment:
-      CARDS: cards.txt
-      TEMPLATE: chilli.zip
+      - sh
+      - -c
+      - java -jar proximity.jar --cards=cardslist --template=normal --use_official_art=true

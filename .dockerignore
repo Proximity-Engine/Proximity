@@ -1,13 +1,12 @@
 .git
 .gradle
+.idea
+art
 build
+images
 run
 templates
-images
 
-*.md
-*.json
 *.zip
-*.txt
 gradlew.bat
 template.xsd
