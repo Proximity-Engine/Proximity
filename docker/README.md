@@ -56,7 +56,7 @@ outputs cards in a folder called `images`, so you'll need to mount a folder at `
 to extract them.
 
 An example command to achieve all this would be the following. This command will run Proximity with the
-all the default flags.
+all the default flags (run it from the root of this project).
 ```
 docker run -v $PWD/cards.txt:/app/cardslist -v $PWD/run/template/normal:/app/templates/normal -v $PWD/images:/app/images proximity:latest
 ```
