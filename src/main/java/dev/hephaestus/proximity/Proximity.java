@@ -114,7 +114,7 @@ public final class Proximity {
 
                 if (matcher.matches()) {
                     JsonObject cardOptions = this.options.deepCopy();
-                    JsonObject overrides = new JsonObject();
+                    JsonObject overrides = this.overrides.deepCopy();
                     String cardName = parseCardName(matcher.group(2));
 
                     int count = matcher.groupCount() == 2 ? Integer.parseInt(matcher.group(1)) : 1;
@@ -289,7 +289,10 @@ public final class Proximity {
 
                     return Result.of(cardInfo);
                 } else {
-                    return Result.error("Response %s:", response.statusCode(), response.body());
+                    JsonObject body = JsonObject.parseObject(JsonReader.json(response.body()));
+                    String details = "[" + response.statusCode() + "] " + (body.has("details") ? body.getAsString("details") : "");
+
+                    return Result.error("Could not find card %s: %s", prototype.cardName(), details);
                 }
             } catch (Exception e) {
                 return Result.error(e.getMessage());
