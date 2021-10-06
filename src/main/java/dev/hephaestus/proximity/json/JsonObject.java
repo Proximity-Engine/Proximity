@@ -207,7 +207,11 @@ public class JsonObject extends JsonElement {
 
     public JsonObject copyAll(JsonObject object) {
         for (var entry : object.entrySet()) {
-            this.add(entry.getKey(), entry.getValue().deepCopy());
+            if (entry.getValue() instanceof JsonObject o) {
+                this.getAsJsonObject(entry.getKey()).copyAll(o);
+            } else {
+                this.add(entry.getKey(), entry.getValue().deepCopy());
+            }
         }
 
         return this;

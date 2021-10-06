@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   width="31.938999"
+   height="23.238001"
+   viewBox="0 0 31.938999 23.238001"
+   id="svg4"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- This is the gradient that will actually be used on
+     the cards. The colors themselves will be provided by the
+     template, but the x values, y values, and offsets will be
+     used from the SVG. -->
+    <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" style="stop-color:rgb(192,55,38);stop-opacity:1" id="stop2" />
+      <stop offset="0.125" style="stop-color:rgb(192,55,38);stop-opacity:1" id="stop4" />
+      <stop offset="0.5" style="stop-color:rgb(241,142,30);stop-opacity:1" id="stop6" />
+      <stop offset="0.875" style="stop-color:rgb(192,55,38);stop-opacity:1" id="stop8" />
+      <stop offset="1" style="stop-color:rgb(192,55,38);stop-opacity:1" id="stop10" />
+    </linearGradient>
+    <!-- These gradients are here so that you can visualize
+     what the set symbol would like like in that rarity. The
+     only gradient that matters in the end is the "rarity"
+     gradient. -->
+    <linearGradient id="mythic" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+      <stop offset="0.125" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+      <stop offset="0.5" style="stop-color:rgb(241,142,30);stop-opacity:1"/>
+      <stop offset="0.875" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+      <stop offset="1" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="rare" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+      <stop offset="0.125" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+      <stop offset="0.5" style="stop-color:rgb(211,178,108);stop-opacity:1"/>
+      <stop offset="0.875" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+      <stop offset="1" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="special" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+      <stop offset="0.125" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+      <stop offset="0.5" style="stop-color:rgb(201, 173, 221);stop-opacity:1"/>
+      <stop offset="0.875" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+      <stop offset="1" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="uncommon" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+      <stop offset="0.125" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+      <stop offset="0.5" style="stop-color:rgb(196,222,238);stop-opacity:1"/>
+      <stop offset="0.875" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+      <stop offset="1" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="common" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" style="stop-color:rgb(0,0,0);stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient
+            id="rarity-outline" x1="0" y1="1" x2="0" y2="1">
+      <stop offset="0" style="stop-color:rgb(0,0,0);stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  <path fill="#FFFFFF" d="M 15.947266 0.92382812 L 14.935547 1.1699219 L 13.365234 1.5527344 C 10.884878 2.1556941 9.0108887 3.7950053 7.6132812 5.9902344 C 6.1336671 5.701251 4.6844206 5.7293294 3.3085938 6.0605469 L 1.4335938 6.5117188 L 2.9257812 7.7324219 C 5.5028567 9.8376681 7.6876478 12.908596 10.822266 18.046875 L 13.007812 21.626953 L 12.123047 12.728516 L 13.363281 13.634766 L 15.970703 23.121094 L 16.892578 19.757812 L 18.576172 13.634766 L 19.816406 12.728516 L 18.933594 21.628906 L 21.117188 18.046875 C 24.254105 12.908475 26.438645 9.837724 29.013672 7.7324219 L 30.505859 6.5117188 L 28.630859 6.0605469 C 27.256681 5.729215 25.80942 5.7013281 24.330078 5.9902344 C 22.930547 3.7938681 21.055413 2.1558975 18.574219 1.5527344 L 15.992188 0.92382812 L 17.582031 3.0566406 C 18.687219 4.5372745 19.334025 6.0911235 19.751953 7.7050781 L 17.933594 8.0917969 L 15.970703 1.7167969 L 14.007812 8.0917969 L 12.1875 7.7050781 C 12.605429 6.0911233 13.252235 4.5372744 14.357422 3.0566406 L 15.947266 0.92382812 z " />
+  <path fill="url(#rarity-outline)" d="m 15.025126,1.5339761 -1.5718,0.3826231 C 10.997557,2.5135819 9.1416825,4.1294675 7.7683289,6.3798118 6.2613887,6.0484 4.7949566,6.0887819 3.3964241,6.4254656 L 2.2550766,6.699389 3.1638066,7.4428955 C 5.7985776,9.595274 8.0020948,12.704432 11.14237,17.851985 l 1.330485,2.178344 -0.804378,-8.098133 2.021815,1.476143 2.280521,8.295966 0.560891,-2.045729 1.717457,-6.250237 2.021815,-1.476143 -0.802204,8.098133 1.328312,-2.178344 C 23.939633,12.704359 26.142998,9.5953074 28.775646,7.4428955 L 29.684377,6.699389 28.543029,6.4254656 C 27.147011,6.088868 25.681629,6.0489564 24.175472,6.3798118 22.800155,4.128258 20.942882,2.5138216 18.486126,1.9165992 l -1.571799,-0.3826231 0.967428,1.2978752 c 1.223318,1.6388938 1.938949,3.3633206 2.356611,5.152369 l -2.56314,0.5456729 -1.704413,-5.5393403 -1.706586,5.5393403 -2.56314,-0.5456729 c 0.417663,-1.7890484 1.133293,-3.5134752 2.35661,-5.152369 z"/>
+  <path fill="url(#rarity)" d="m 15.969962,19.504111 1.77122,-6.447506 3.238289,-2.361624 -0.679863,6.854527 c 3.15107,-5.161582 5.385221,-8.3327793 8.106904,-10.5579848 -1.446942,-0.3488764 -2.929667,-0.4137317 -4.472774,0 -1.332887,-2.354916 -3.155542,-3.9181507 -5.584259,-4.508557 1.402215,1.8785654 2.231914,3.8689502 2.629992,5.9398449 L 17.276012,9.2100196 15.969962,4.969829 14.663912,9.2100196 10.960454,8.4228111 c 0.398078,-2.0708947 1.227777,-4.0612795 2.629992,-5.9398449 -2.428717,0.5904063 -4.2513724,2.153641 -5.5820229,4.508557 -1.5431073,-0.4137317 -3.0258321,-0.3488764 -4.4750112,0 2.7239199,2.2252055 4.9580709,5.3964028 8.1069041,10.5579848 l -0.679862,-6.854527 3.238289,2.361624 z"/>
+</svg>

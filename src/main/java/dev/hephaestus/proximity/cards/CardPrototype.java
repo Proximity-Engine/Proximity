@@ -48,8 +48,8 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
 
     private JsonObject parseTwoSidedCard(JsonObject raw) {
         JsonArray faces = raw.getAsJsonArray("card_faces");
-        JsonObject front = this.process(parseFace(raw, faces.get(0).getAsJsonObject()));
-        JsonObject back = this.process(parseFace(raw, faces.get(1).getAsJsonObject()));
+        JsonObject front = parseFace(raw, faces.get(0).getAsJsonObject());
+        JsonObject back = parseFace(raw, faces.get(1).getAsJsonObject());
 
         back.add(Keys.FLIPPED, front.deepCopy());
         back.add(Keys.FRONT_FACE, false);
@@ -57,6 +57,8 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
         front.add(Keys.FLIPPED, back);
         front.add(Keys.FRONT_FACE, true);
 
+        this.process(front);
+        this.process(back);
 
         return front;
     }

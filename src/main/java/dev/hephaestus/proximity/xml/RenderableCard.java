@@ -28,6 +28,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
     private final XMLElement root;
     private final Map<String, Style> styles = new HashMap<>();
     private final Map<String, CardPredicate> predicates = new HashMap<>();
+    private final Map<String, Element> gradients = new LinkedHashMap<>();
 
     public RenderableCard(TemplateSource source, Element root, JsonObject card) {
         this.copyAll(card);
@@ -53,6 +54,18 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
 
     public CardPredicate getPredicate(String name) {
         return this.predicates.get(name);
+    }
+
+    public boolean hasGradient(String id) {
+        return this.gradients.containsKey(id);
+    }
+
+    public Element getGradient(String id) {
+        return this.gradients.get(id);
+    }
+
+    public Iterable<Element> getGradients() {
+        return this.gradients.values();
     }
 
     public Result<Void> render(StatefulGraphics graphics) {
@@ -127,19 +140,51 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         List<String> errors = new ArrayList<>();
 
         this.root.iterate("styles", (styles, i) ->
-                styles.iterate("Style", (style, j) -> {
-                    if (!style.hasAttribute("name")) {
-                        errors.add(String.format("Style #%d missing name attribute", j));
-                    }
+                styles.iterate((style, j) -> {
+                    switch (style.getTagName()) {
+                        case "Style" -> {
+                            if (!style.hasAttribute("name")) {
+                                errors.add(String.format("Style #%d missing name attribute", j));
+                            }
 
-                    String name = style.getAttribute("name");
+                            String name = style.getAttribute("name");
 
-                    Result<Style> r = Style.parse(style);
+                            Result<Style> r = Style.parse(style);
 
-                    if (r.isError()) {
-                        errors.add(r.getError());
-                    } else {
-                        this.styles.put(name, r.get());
+                            if (r.isError()) {
+                                errors.add(r.getError());
+                            } else {
+                                this.styles.put(name, r.get());
+                            }
+                        }
+                        case "linearGradient", "radialGradient" -> {
+                            List<CardPredicate> predicates = new ArrayList<>();
+
+                            style.apply("conditions", (XMLElement conditions) -> conditions.iterate((predicate, k) ->
+                                    XMLUtil.parsePredicate(predicate, RenderableCard.this::getPredicate, RenderableCard.this::exists)
+                                            .ifError(errors::add)
+                                            .ifPresent(predicates::add)));
+
+                            if (!errors.isEmpty()) {
+                                Proximity.LOG.warn("Error(s) parsing predicates:\n\t{}", String.join("\n\t", errors));
+                            }
+
+                            for (CardPredicate predicate : predicates) {
+                                Result<Boolean> result = predicate.test(RenderableCard.this);
+
+                                if (result.isOk() && !result.get()) {
+                                    return;
+                                }
+                            }
+
+                            Element element = style.wrapped;
+
+                            Optional<Element> conditions = style.apply("conditions", e -> e.wrapped);
+
+                            conditions.ifPresent(element::removeChild);
+
+                            this.gradients.put(style.getAttribute("id"), (Element) element.cloneNode(true));
+                        }
                     }
                 })
         );
@@ -201,7 +246,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         private final Deque<Pair<String, String>> attributes = new ArrayDeque<>();
         private final XMLElement parent;
 
-        private XMLElement(XMLElement parent, Element wrapped) {
+        public XMLElement(XMLElement parent, Element wrapped) {
             this.parent = parent;
             this.wrapped = wrapped;
 

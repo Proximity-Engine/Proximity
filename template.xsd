@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:svg="http://www.w3.org/2000/svg">
   <xs:element name="Template" type="TemplateType"/>
   <xs:simpleType name="color">
     <xs:annotation>
@@ -31,6 +31,35 @@
       <xs:enumeration value="end"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="GradientUnits">
+    <xs:restriction>
+      <xs:enumeration value="objectBoundingBox"/>
+      <xs:enumeration value="userSpaceOnUse"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="stopType">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="offset" type="xs:float"/>
+        <xs:attribute name="style" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="GradientType">
+    <xs:complexContent>
+      <xs:extension base="xs:element">
+        <xs:sequence>
+          <xs:element name="stop" minOccurs="1" maxOccurs="unbounded" type="stopType"/>
+          <xs:element name="conditions" type="conditionsType"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="x1" type="xs:float" use="required"/>
+        <xs:attribute name="y1" type="xs:float" use="required"/>
+        <xs:attribute name="x2" type="xs:float" use="required"/>
+        <xs:attribute name="y2" type="xs:float" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="EnumerationValueType">
     <xs:simpleContent>
       <xs:extension base="xs:string">
@@ -108,9 +137,11 @@
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="stylesType">
-    <xs:sequence>
+    <xs:choice>
       <xs:element type="StyleType" name="Style" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
+      <xs:element type="GradientType" name="linearGradient" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="GradientType" name="radialGradient" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="RangeType">
     <xs:simpleContent>
@@ -191,9 +222,6 @@
   <xs:complexType name="SVGLayerType">
     <xs:complexContent>
       <xs:extension base="LayerType">
-        <xs:sequence>
-          <xs:element type="OutlineType" name="outline"/>
-        </xs:sequence>
         <xs:attribute type="xs:string" name="src" use="optional"/>
         <xs:attribute type="xs:int" name="width" use="optional"/>
         <xs:attribute type="xs:int" name="height" use="optional"/>
@@ -353,12 +381,12 @@
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="TemplateType">
-    <xs:sequence>
+    <xs:all>
       <xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
       <xs:element type="stylesType" name="styles" minOccurs="0" maxOccurs="1"/>
       <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="layersType" name="layers"/>
-    </xs:sequence>
+    </xs:all>
     <xs:attribute type="xs:string" name="name"/>
     <xs:attribute type="xs:string" name="author"/>
     <xs:attribute type="xs:string" name="width" use="required"/>
