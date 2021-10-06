@@ -519,13 +519,13 @@
             <flex>
                 <Selector id="name">
                     <Selector id="dfc">
-                        <TextLayer x="665" y="515" value="${name}">
+                        <TextLayer x="665" y="506" value="${name}">
                             <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                             <conditions>
                                 <IsEquals key="proximity.front_face"/>
                             </conditions>
                         </TextLayer>
-                        <TextLayer x="665" y="515" value="${name}">
+                        <TextLayer x="665" y="506" value="${name}">
                             <Style font="Beleren2016-Bold" color="#FFFFFF" size="160"/>
                             <conditions>
                                 <IsEquals key="proximity.front_face" value="false"/>
@@ -539,7 +539,7 @@
                             </Or>
                         </conditions>
                     </Selector>
-                    <TextLayer x="395" y="515" value="${name}">
+                    <TextLayer x="380" y="506" value="${name}">
                         <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                     </TextLayer>
                 </Selector>
@@ -583,14 +583,14 @@
             </main>
             <flex>
                 <Selector id="types">
-                    <TextLayer id="back" x="375" y="2675" value="${type_line}">
-                        <AttributeModifier name="x" value="525">
+                    <TextLayer id="back" x="381" y="2665" value="${type_line}">
+                        <AttributeModifier name="x" value="531">
                             <IsPresent key="color_indicator"/>
                             <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
                         </AttributeModifier>
                     </TextLayer>
-                    <Style font="Beleren2016-Bold" color="#000000" size="150"/>
-                    <Style font="Beleren2016-Bold" color="#FFFFFF" size="150">
+                    <Style font="Beleren2016-Bold" color="#000000" size="135" kerning="2"/>
+                    <Style font="Beleren2016-Bold" color="#FFFFFF" size="135" kerning="2">
                         <conditions>
                             <IsPresent key="layout"/>
                             <Or>
