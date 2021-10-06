@@ -67,11 +67,8 @@ a directory to gain access to those files once they are generated. But since the
 the root user on Linux, normal users can't access these files.
 
 Thus, we need a way for the docker process to generate files that can be accessed by the host user. There 
-are two ways you can go about it: force-set the user running the container command (i.e. the `-u` flag) or 
+are two ways you can go about it: set the user running the container command (i.e. the `-u` flag or `user` in compose) or 
 creating a user when building the docker image with matching user- and group-id, and then setting that user
-as the default user of the image. We've opted for the later, because then you are only required to pass the
-user- and group-id when you build the image, and not everytime you run the image. The hope is that ut makes
-for a slightly more convenient user experience. The drawback of this approach however is that the built
-docker image cannot be shared between users, as the built image is locked to the user- and group-id of
-whoever built the image. If we descide to one day publish pre-built docker images, we would need to  revisit
-this design descision and instead set the user on each run command.
+as the default user of the image. We first tried with the later approach, but abandoned it in favor of the first
+because of the risks of building an incorrect image and having to force-rebuild it to fix the issue. Now, worst
+case is that linux users generates a bunch of files owned by root.
