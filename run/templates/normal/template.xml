@@ -177,11 +177,17 @@
                     <IsEquals key="layout" value="modal_dfc"/>
                 </conditions>
             </ImageLayer>
-            <ImageLayer id="transform">
+            <Selector id="transform">
+                <ImageLayer id="front">
+                    <conditions>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="back"/>
                 <conditions>
                     <IsEquals key="layout" value="transform"/>
                 </conditions>
-            </ImageLayer>
+            </Selector>
             <ImageLayer id="normal"/>
         </Selector>
         <Selector id="pinlines">
@@ -545,6 +551,7 @@
                 <IsPresent key="layout"/>
                 <IsEquals key="layout" value="transform"/>
                 <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                <IsEquals key="proximity.front_face"/>
             </conditions>
         </TextLayer>
         <SquishBox>
@@ -577,7 +584,13 @@
             <flex>
                 <Selector id="types">
                     <TextLayer id="back" x="375" y="2675" value="${type_line}">
-                        <Style font="Beleren2016-Bold" color="#FFFFFF" size="150"/>
+                        <AttributeModifier name="x" value="525">
+                            <IsPresent key="color_indicator"/>
+                            <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
+                        </AttributeModifier>
+                    </TextLayer>
+                    <Style font="Beleren2016-Bold" color="#000000" size="150"/>
+                    <Style font="Beleren2016-Bold" color="#FFFFFF" size="150">
                         <conditions>
                             <IsPresent key="layout"/>
                             <Or>
@@ -586,13 +599,16 @@
                             </Or>
                             <IsEquals key="proximity.front_face" value="false"/>
                         </conditions>
-                    </TextLayer>
-                    <TextLayer id="front" x="375" y="2675" value="${type_line}">
-                        <Style font="Beleren2016-Bold" color="#000000" size="150"/>
-                    </TextLayer>
+                    </Style>
                 </Selector>
             </flex>
         </SquishBox>
+        <ImageLayer src="overlays/color_indicators/${color_indicator}">
+            <conditions>
+                <IsPresent key="color_indicator"/>
+                <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
+            </conditions>
+        </ImageLayer>
         <Group id="pt">
             <Selector>
                 <ImageLayer id="vehicle">
