@@ -18,7 +18,7 @@ public class FillLayer extends Layer {
 
     @Override
     public Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale) {
-        Rectangle2D rectangle = new Rectangle2D.Double(this.getX(), this.getY(), this.width + scale * 5, this.height + scale * 5);
+        Rectangle2D rectangle = new Rectangle2D.Double(this.getX(), this.getY(), this.width, this.height);
 
         if ((this.color & 0xFF000000) != 0) {
             out.push(new Color(this.color, (this.color & 0xFF000000) >>> 24 != 255), Graphics2D::setColor, Graphics2D::getColor);
