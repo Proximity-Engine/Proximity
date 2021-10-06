@@ -5,8 +5,8 @@ services:
       context: ../
       dockerfile: ./Dockerfile
       args:
-        - USER_ID: ${USER_ID}
-        - GROUP_ID: ${GROUP_ID}
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
     image: proximity:latest
     volumes:
       - ../cards.txt:/app/cardslist       # Volume 1 - Mounts the default 'cards.txt' as decklist
