@@ -1,17 +1,10 @@
-# Building the docker image
-To build the docker image, depending on platform, run the below command from the root of the project:
+# Running the docker image via compose
+To run this tool in docker, clone the repository, then, depending on platform, run the below command from the root of the project:
 ```
--- LINUX
-docker build -t proximity:latest -f docker/Dockerfile --build-arg GROUP_ID=$(id -g) --build-arg USER_ID=$(id -u) .
+--LINUX 
+GROUP_ID=$(id -g) USER_ID=$(id -u) docker-compose -f docker/docker-compose.yml up
 
 -- WINDOWS or MAC
-docker build -t proximity:latest -f docker/Dockerfile .
-```
-
-# Running the docker image via compose
-Once it's done building, run the command below from the root of the project. Output of proximity will 
-end up in a folder named `images`.
-```
 docker-compose -f docker/docker-compose.yml up
 ```
 
