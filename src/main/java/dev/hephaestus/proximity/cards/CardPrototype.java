@@ -142,7 +142,7 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
                             if (oracle.contains(entry.getKey())) colors.add(new JsonPrimitive(entry.getValue()));
                         }
 
-                        if (oracle.contains("of any color")) {
+                        if (oracle.contains("of any color") || oracle.contains("Search your library for a basic land card, put it onto the battlefield") && (card.getAsString("rarity").equals("rare") || card.getAsString("rarity").equals("mythic"))) {
                             for (var color : MANA_COLORS) {
                                 colors.add(new JsonPrimitive(color));
                             }

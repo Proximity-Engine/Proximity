@@ -1,1 +1,2 @@
-1x Storm Crow (9ED) --override=set:TEST --override=rarity:special
+1x Evolving Wilds
+1x Prismatic Vista
