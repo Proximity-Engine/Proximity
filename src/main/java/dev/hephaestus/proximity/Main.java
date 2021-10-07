@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.json.JsonPrimitive;
 import dev.hephaestus.proximity.templates.FileSystemTemplateLoader;
+import dev.hephaestus.proximity.templates.FileSystemTemplateSource;
 import dev.hephaestus.proximity.templates.TemplateLoader;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.util.Pair;
@@ -135,6 +136,8 @@ public class Main {
                             break;
                         }
                     }
+
+                    source = new TemplateSource.Compound(new FileSystemTemplateSource(Path.of("template_overrides")), source);
 
                     result.add(new CardPrototype(cardName, cardNumber, cardOptions, source, cardOverrides));
                     cardNumber += cardOptions.getAsInt("count");
