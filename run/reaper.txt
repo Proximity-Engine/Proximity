@@ -4,7 +4,7 @@
 1x Elbrus, the Binding Blade // Withengar Unbound
 1x Avacyn, Angel of Hope (2xm) --use_official_art=false --border=none --artist_outline=true --artist=SomeCustomArtist
 1x Avenger of Zendikar (cmr)
-1x Douse in Gloom (MB1)
+1x Douse in Gloom (FRF)
 1x Douse in Gloom (GPT)
 1x Takklemaggot
 1x Beetleback Chief (jmp)
@@ -21,7 +21,7 @@
 1x Cultivate (afc)
 1x Cyclonic Rift (2xm)
 1x Damn (mh2)
-1x Demonic Tutor (plist)
+1x Demonic Tutor (UMA)
 1x Diabolic Tutor (cma)
 1x Divine Reckoning (c19)
 1x Dockside Extortionist (c19)

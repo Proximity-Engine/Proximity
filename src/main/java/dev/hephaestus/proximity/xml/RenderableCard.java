@@ -295,7 +295,13 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                     }
                 }
 
-                RenderableCard.this.add(element.getAttribute("key").split("\\."), ParsingUtil.parseStringValue(element.getAttribute("value")));
+                Result<JsonElement> value = ParsingUtil.parseStringValue(element.getAttribute("value"));
+
+                if (value.isOk()) {
+                    RenderableCard.this.add(element.getAttribute("key").split("\\."), value.get());
+                } else {
+                    Proximity.LOG.warn("Error parsing value:\n\t{}", value.getError());
+                }
             });
 
             this.iterate((element, i) -> {
