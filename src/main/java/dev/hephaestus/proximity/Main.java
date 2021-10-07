@@ -137,9 +137,9 @@ public class Main {
                         }
                     }
 
-                    source = new TemplateSource.Compound(new FileSystemTemplateSource(Path.of("template_overrides")), source);
+                    TemplateSource.Compound compound = new TemplateSource.Compound(new FileSystemTemplateSource(Path.of("template_overrides")), source);
 
-                    result.add(new CardPrototype(cardName, cardNumber, cardOptions, source, cardOverrides));
+                    result.add(new CardPrototype(cardName, cardNumber, cardOptions, compound, cardOverrides));
                     cardNumber += cardOptions.getAsInt("count");
                 } else if (!line.trim().isEmpty()) {
                     return Result.error("Could not parse line '%s'", line);

@@ -1,7 +1,4 @@
-1x Forest (AFR) 279
-Forest (AFR)
-forest (AFR) 278
-1x Storm Crow (ALL) 36a
-1x Storm Crow (ALL) 36b
-1x Crow Storm --override=flavor_text:"Hey dawg we heard you like Storm Crows, so we put a Storm Crow in your Storm Crow\n—Some super wise old man" --override=colors:["W","U","B","G","R"] --override=proximity.color_count:5
-1x Aeve, Progenitor Ooze --override=set:custom
+1x Captain Sisay (INV)
+1x Tainted Adversary (MID)
+1x Ardent Recruit
+1x Gnoll Hunter

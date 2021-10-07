@@ -1,5 +1,5 @@
-<Template name="Chilli's" author="ChilliAxe and Haven King" width="3288"
-          height="4488"
+<Template name="Chilli's" author="ChilliAxe and Haven King" width="3288" height="4488"
+          proximity_version="0.5.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="../../../template.xsd">
     <options>
@@ -19,6 +19,9 @@
             <Range key="proximity.color_count" min="1" max="2"/>
         </ConditionDefinition>
     </condition_definitions>
+    <resources>
+        <resource type="assets" location="https://hephaestus.dev/proximity/resources/set_symbols" version="1.0.0"/>
+    </resources>
     <styles>
         <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
             <stop offset="0" style="stop-color:rgb(192,55,38);stop-opacity:1"/>

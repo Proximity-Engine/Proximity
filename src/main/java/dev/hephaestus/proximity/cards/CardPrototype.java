@@ -10,7 +10,7 @@ import dev.hephaestus.proximity.util.Keys;
 
 import java.util.*;
 
-public record CardPrototype(String cardName, int number, JsonObject options, TemplateSource source, JsonObject overrides) {
+public record CardPrototype(String cardName, int number, JsonObject options, TemplateSource.Compound source, JsonObject overrides) {
     private static final Set<String> MANA_COLORS = new HashSet<>();
     private static final Map<String, String> LAND_TYPES = new WeakHashMap<>();
 

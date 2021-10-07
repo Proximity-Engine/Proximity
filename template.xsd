@@ -1,6 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:svg="http://www.w3.org/2000/svg">
   <xs:element name="Template" type="TemplateType"/>
+  <xs:simpleType name="version">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="resource_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="assets"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="resource">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="type" type="resource_type" use="required"/>
+        <xs:attribute name="location" type="xs:anyURI" use="required"/>
+        <xs:attribute name="version" type="version" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ResourcesType">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:sequence>
+          <xs:element type="resource" name="resource" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:simpleType name="color">
     <xs:annotation>
       <xs:documentation>The color entity indicates the color of an element. Color may be represented as hexadecimal RGB triples, as in HTML, or as hexadecimal ARGB tuples, with the A indicating alpha of transparency. An alpha value of 00 is totally transparent; FF is totally opaque. If RGB is used, the A value is assumed to be FF. For instance, the RGB value "#800080" represents purple. An ARGB value of "#40800080" would be a transparent purple. As in SVG 1.1, colors are defined in terms of the sRGB color space (IEC 61966).</xs:documentation>
@@ -385,12 +413,15 @@
       <xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
       <xs:element type="stylesType" name="styles" minOccurs="0" maxOccurs="1"/>
       <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="ResourcesType" name="resources" minOccurs="0" maxOccurs="1"/>
       <xs:element type="layersType" name="layers"/>
     </xs:all>
     <xs:attribute type="xs:string" name="name"/>
     <xs:attribute type="xs:string" name="author"/>
     <xs:attribute type="xs:string" name="width" use="required"/>
     <xs:attribute type="xs:string" name="height" use="required"/>
+    <xs:attribute type="version" name="template_version"/>
+    <xs:attribute type="version" name="proximity_version" use="required"/>
   </xs:complexType>
   <xs:complexType name="FileExistsType">
     <xs:attribute type="xs:string" name="src"/>

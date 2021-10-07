@@ -13,6 +13,7 @@ import org.quiltmc.json5.JsonReader;
 import javax.imageio.ImageIO;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -80,8 +81,15 @@ public final class Proximity {
 
        Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards = new ArrayDeque<>();
 
+        RemoteFileCache cache;
 
-       int i = 1;
+        try {
+             cache = RemoteFileCache.load();
+        } catch (IOException e) {
+            return Result.error("Failed to load cache: %s" ,e.getMessage());
+        }
+
+        int i = 1;
        int prototypeCountLength = Integer.toString(prototypes.size()).length();
        long totalTime = System.currentTimeMillis();
 
@@ -106,10 +114,10 @@ public final class Proximity {
 
                        for (int j = 0; j < card.getAsInt(Keys.COUNT); ++j) {
                            Result<RenderableCard> front = XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                   .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)));
+                                   .then(root -> Result.of(new RenderableCard(prototype.source(), cache, root, card)));
 
                            Result<Optional<RenderableCard>> back = card.getAsBoolean(Keys.DOUBLE_SIDED) ? XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                   .then(root -> Result.of(Optional.of(new RenderableCard(prototype.source(), root, card.getAsJsonObject(Keys.FLIPPED).deepCopy()))))
+                                   .then(root -> Result.of(Optional.of(new RenderableCard(prototype.source(), cache, root, card.getAsJsonObject(Keys.FLIPPED).deepCopy()))))
                                    : Result.of(Optional.empty());
 
                            if (front.isOk() && back.isOk()) {
