@@ -51,14 +51,14 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
         JsonObject front = parseFace(raw, faces.get(0).getAsJsonObject());
         JsonObject back = parseFace(raw, faces.get(1).getAsJsonObject());
 
+        this.process(front);
+        this.process(back);
+
         back.add(Keys.FLIPPED, front.deepCopy());
         back.add(Keys.FRONT_FACE, false);
 
         front.add(Keys.FLIPPED, back);
         front.add(Keys.FRONT_FACE, true);
-
-        this.process(front);
-        this.process(back);
 
         return front;
     }

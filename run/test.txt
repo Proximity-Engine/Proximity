@@ -1,4 +1,2 @@
-1x Captain Sisay (INV)
-1x Tainted Adversary (MID)
-1x Ardent Recruit
-1x Gnoll Hunter
+1x Reaper King --flavor_bar=true
+1x Reaper King --flavor_bar=false

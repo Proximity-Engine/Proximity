@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.Color;
@@ -17,7 +18,7 @@ public class FillLayer extends Layer {
     }
 
     @Override
-    public Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale) {
+    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale) {
         Rectangle2D rectangle = new Rectangle2D.Double(this.getX(), this.getY(), this.width, this.height);
 
         if ((this.color & 0xFF000000) != 0) {
@@ -26,6 +27,6 @@ public class FillLayer extends Layer {
             out.pop();
         }
 
-        return rectangle;
+        return Rectangles.singleton(rectangle);
     }
 }

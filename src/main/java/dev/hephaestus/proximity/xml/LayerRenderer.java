@@ -2,10 +2,7 @@ package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.cards.layers.LayerGroupRenderer;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
-import dev.hephaestus.proximity.util.Pair;
-import dev.hephaestus.proximity.util.Result;
-import dev.hephaestus.proximity.util.StatefulGraphics;
-import dev.hephaestus.proximity.util.XMLUtil;
+import dev.hephaestus.proximity.util.*;
 
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -14,9 +11,16 @@ import java.util.*;
 public abstract class LayerRenderer {
     private static final Map<String, LayerRenderer> LAYERS = new HashMap<>();
 
-    public abstract Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds);
+    protected LayerRenderer() {
+    }
 
-    public final Result<Optional<Rectangle2D>> render(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public boolean scales(RenderableCard card, RenderableCard.XMLElement element) {
+        return false;
+    }
+
+    public abstract Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds);
+
+    public final Result<Optional<Rectangles>> render(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
         List<String> errors = new ArrayList<>();
         List<CardPredicate> predicates = new ArrayList<>();
         boolean render = true;
@@ -53,17 +57,17 @@ public abstract class LayerRenderer {
 
         if (mask.isPresent() || erase.isPresent()) {
             BufferedImage maskImage = new BufferedImage(graphics.getImage().getWidth(), graphics.getImage().getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Result<Optional<Rectangle2D>> maskResult = mask.isPresent() ? mask.get().right().render(card, mask.get().left(), new StatefulGraphics(maskImage), wrap, draw,scale, bounds) : Result.of(Optional.empty());
+            Result<Optional<Rectangles>> maskResult = mask.isPresent() ? mask.get().right().render(card, mask.get().left(), new StatefulGraphics(maskImage), wrap, draw,scale, bounds) : Result.of(Optional.empty());
 
             if (maskResult.isError()) return maskResult;
 
             BufferedImage eraseImage = new BufferedImage(graphics.getImage().getWidth(), graphics.getImage().getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Result<Optional<Rectangle2D>> eraseResult = erase.isPresent() ? erase.get().right().render(card, erase.get().left(), new StatefulGraphics(eraseImage), wrap, draw,scale, bounds) : Result.of(Optional.empty());
+            Result<Optional<Rectangles>> eraseResult = erase.isPresent() ? erase.get().right().render(card, erase.get().left(), new StatefulGraphics(eraseImage), wrap, draw,scale, bounds) : Result.of(Optional.empty());
 
             if (eraseResult.isError()) return eraseResult;
 
             BufferedImage layerImage = new BufferedImage(graphics.getImage().getWidth(), graphics.getImage().getHeight(), BufferedImage.TYPE_INT_ARGB);
-            Result<Optional<Rectangle2D>> layerResult = this.renderLayer(card, element, new StatefulGraphics(layerImage), wrap, draw,scale, bounds);
+            Result<Optional<Rectangles>> layerResult = this.renderLayer(card, element, new StatefulGraphics(layerImage), wrap, draw,scale, bounds);
 
             if (layerResult.isError()) return layerResult;
 

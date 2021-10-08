@@ -27,55 +27,67 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
     }
 
     @Override
-    protected Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children) {
+    protected Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children) {
         int x = (element.hasAttribute("x") ? Integer.decode(element.getAttribute("x")) : 0);
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
         Integer width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
         Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
         ContentAlignment alignment = element.hasAttribute("alignment") ? ContentAlignment.valueOf(element.getAttribute("alignment").toUpperCase(Locale.ROOT)) : ContentAlignment.START;
         Rectangle2D outerBounds = width == null || height == null ? null : new Rectangle2D.Float(x, y, width, height);
-        wrap = element.getProperty(LayerProperty.WRAP);
+        wrap = Rectangles.singleton(element.getProperty(LayerProperty.WRAP));
 
         List<String> errors = new ArrayList<>();
 
-        Rectangle2D resultBounds;
+        Rectangles renderBounds;
 
         int tries = 100;
         int inLine = element.getInteger(this.inLine);
+        float originalScale = scale;
+        boolean scales = this.scales(card, element);
 
         do {
             --tries;
 
-            resultBounds = render(card, graphics, wrap, false, scale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
+            renderBounds = render(card, graphics, wrap, false, scale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
+            Rectangle2D renderBoundsRectangle = renderBounds.getBounds();
 
-            if (resultBounds != null && outerBounds != null) {
-                inLine = (int) (element.getInteger(this.inLine) + switch (alignment) {
+            if (!renderBounds.isEmpty() && outerBounds != null) {
+                int finalInLine = inLine = (int) (element.getInteger(this.inLine) + switch (alignment) {
                     case START -> 0;
-                    case MIDDLE -> ((this.inLineSizeGetter.apply(outerBounds) - this.inLineSizeGetter.apply(resultBounds)) / 2);
-                    case END -> (this.inLineSizeGetter.apply(outerBounds) - this.inLineSizeGetter.apply(resultBounds));
+                    case MIDDLE -> ((this.inLineSizeGetter.apply(outerBounds) - this.inLineSizeGetter.apply(renderBoundsRectangle)) / 2);
+                    case END -> (this.inLineSizeGetter.apply(outerBounds) - this.inLineSizeGetter.apply(renderBoundsRectangle));
                 });
 
-                resultBounds.setRect(resultBounds.getX(), inLine, resultBounds.getWidth(), resultBounds.getHeight());
+                if (this.inLine.equals("y")) {
+                    renderBounds.apply(r -> r.setRect(r.getX(), finalInLine, r.getWidth(), r.getHeight()));
+                } else {
+                    renderBounds.apply(r -> r.setRect(finalInLine, r.getY(), r.getWidth(), r.getHeight()));
+                }
             }
 
-            if (resultBounds != null && ((outerBounds != null && !outerBounds.contains(resultBounds)) || wrap != null && resultBounds.intersects(wrap))) {
+            if (!renderBounds.isEmpty() && scales && ((outerBounds != null && !renderBounds.fitsWithin(outerBounds)) || !wrap.isEmpty() && renderBounds.intersects(wrap))) {
                 scale -= 0.25;
-                resultBounds = null;
+                renderBounds = new Rectangles();
             } else {
-                resultBounds = render(card, graphics, wrap, draw, scale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
+                renderBounds = render(card, graphics, wrap, draw, scale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
             }
-        } while (resultBounds == null && tries > 0);
+        } while (renderBounds.isEmpty() && tries > 0);
 
         if (!errors.isEmpty()) {
             return Result.error("Error creating child factories for layer %s:\n\t%s", element.getId(), String.join("\n\t", errors));
         }
 
-        return Result.of(Optional.ofNullable(resultBounds));
+        if (renderBounds.isEmpty()) {
+            Rectangles rectangles = render(card, graphics, wrap, draw, originalScale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
+            return Result.of(rectangles.isEmpty() ? Optional.empty() : Optional.of(rectangles));
+        } else {
+            return Result.of(Optional.of(renderBounds));
+        }
     }
 
-    private Rectangle2D render(RenderableCard card, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children, int inLine, int offLine, Rectangle2D outerBounds, List<String> errors) {
+    private Rectangles render(RenderableCard card, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children, int inLine, int offLine, Rectangle2D outerBounds, List<String> errors) {
         int dInLine = inLine;
-        Rectangle2D resultBounds = null;
+        Rectangles resultBounds = new Rectangles();
 
         for (var pair : children) {
             RenderableCard.XMLElement e = pair.left();
@@ -91,7 +103,7 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
                 );
             }
 
-            Result<Optional<Rectangle2D>> result = pair.right().render(card, e, graphics, wrap, draw, scale, outerBounds);
+            Result<Optional<Rectangles>> result = pair.right().render(card, e, graphics, wrap, draw, scale, outerBounds);
 
             if (outerBounds != null) {
                 e.popAttribute();
@@ -102,17 +114,11 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
             if (result.isError()) {
                 errors.add(result.getError());
             } else if (errors.isEmpty() && result.get().isPresent()) {
-                Rectangle2D layerBounds = result.get().get();
+                Rectangles layerBounds = result.get().get();
 
-                resultBounds = resultBounds == null
-                        ? this.offLineSizeGetter.apply(layerBounds) > 0 && this.inLineSizeGetter.apply(layerBounds) > 0
-                        ? layerBounds
-                        : null
-                        : this.offLineSizeGetter.apply(layerBounds) > 0 && this.inLineSizeGetter.apply(layerBounds) > 0
-                        ? DrawingUtil.encompassing(resultBounds, layerBounds)
-                        : resultBounds;
+                resultBounds.addAll(layerBounds);
 
-                dInLine += this.inLineSizeGetter.apply(layerBounds);
+                dInLine += this.inLineSizeGetter.apply(layerBounds.getBounds());
             }
         }
 

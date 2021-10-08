@@ -12,12 +12,15 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class RemoteFileCache {
     private static final char[] CHARS = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
 
     private final JsonObject index;
+    private final Map<String, Boolean> existenceCache = new ConcurrentHashMap<>();
 
     private RemoteFileCache(JsonObject index) {
         this.index = index;
@@ -34,7 +37,7 @@ public final class RemoteFileCache {
     }
 
     public boolean exists(URI file) {
-        return this.index.has(file.toString()) || existsRemotely(file);
+        return this.existenceCache.computeIfAbsent(file.toString(), key -> this.index.has(file.toString()) || existsRemotely(file));
     }
 
     private boolean existsRemotely(URI file) {

@@ -116,7 +116,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                         switch (resource.getAttribute("type")) {
                             case "assets" -> {
                                 if (this.cache != null) {
-                                    this.source.wrapped.add(1, new RemoteFileSource(this.cache, location));
+                                    this.source.wrapped.add(new RemoteFileSource(this.cache, location));
                                 }
                             }
                         }

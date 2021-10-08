@@ -35,7 +35,7 @@ import java.util.Optional;
 
 public class SVGLayerRenderer extends LayerRenderer {
     @Override
-    public Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
         int x = (element.hasAttribute("x") ? Integer.decode(element.getAttribute("x")) : 0);
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
         String src = element.hasAttribute("src") ? element.getAttribute("src") : element.getId();

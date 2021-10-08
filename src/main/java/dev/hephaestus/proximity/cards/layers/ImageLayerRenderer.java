@@ -2,6 +2,7 @@ package dev.hephaestus.proximity.cards.layers;
 
 import dev.hephaestus.proximity.templates.layers.ImageLayer;
 import dev.hephaestus.proximity.util.ParsingUtil;
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 import dev.hephaestus.proximity.xml.LayerRenderer;
@@ -13,7 +14,7 @@ import java.util.Optional;
 
 public class ImageLayerRenderer extends LayerRenderer {
     @Override
-    public Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
         if (!element.hasAttribute("src") && !element.hasAttribute("id")) {
             return Result.error("Image layer must have either 'src' or 'id' attribute");
         }

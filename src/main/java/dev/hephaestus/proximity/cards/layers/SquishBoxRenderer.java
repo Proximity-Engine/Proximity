@@ -1,6 +1,6 @@
 package dev.hephaestus.proximity.cards.layers;
 
-import dev.hephaestus.proximity.util.DrawingUtil;
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 import dev.hephaestus.proximity.xml.LayerRenderer;
@@ -11,9 +11,9 @@ import java.util.Optional;
 
 public class SquishBoxRenderer extends LayerRenderer {
     @Override
-    public Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
         float finalScale1 = scale;
-        Optional<Result<Optional<Rectangle2D>>> main = element.apply("main", (RenderableCard.XMLElement e) -> {
+        Optional<Result<Optional<Rectangles>>> main = element.apply("main", (RenderableCard.XMLElement e) -> {
             LayerRenderer renderer = LayerRenderer.get(e.getTagName());
 
             if (renderer == null) {
@@ -27,9 +27,9 @@ public class SquishBoxRenderer extends LayerRenderer {
             return main.get();
         }
 
-        Rectangle2D flexWrap = main.isPresent() && main.get().isOk() && main.get().get().isPresent() ? main.get().get().get() : wrap;
+        Rectangles flexWrap = main.isPresent() && main.get().isOk() && main.get().get().isPresent() ? main.get().get().get() : wrap;
 
-        Optional<Result<Optional<Rectangle2D>>> flex;
+        Optional<Result<Optional<Rectangles>>> flex;
 
         do {
             float finalScale = scale;
@@ -62,7 +62,9 @@ public class SquishBoxRenderer extends LayerRenderer {
         }
 
         if (main.isPresent() && main.get().get().isPresent() && flex.isPresent() && flex.get().get().isPresent()) {
-            return Result.of(Optional.of(DrawingUtil.encompassing(main.get().get().get(), flex.get().get().get())));
+            Rectangles rs = main.get().get().get();
+            rs.addAll(flex.get().get().get());
+            return Result.of(Optional.of(rs));
         } else if (main.isPresent() && main.get().get().isPresent()) {
             return Result.of(Optional.of(main.get().get().get()));
         } else if (flex.isPresent() && flex.get().get().isPresent()) {

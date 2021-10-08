@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.templates.layers;
 
 import dev.hephaestus.proximity.util.ContentAlignment;
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 import org.apache.batik.gvt.CompositeGraphicsNode;
 import org.apache.batik.gvt.GraphicsNode;
@@ -27,7 +28,7 @@ public class SVGLayer extends Layer {
     }
 
     @Override
-    public Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale) {
+    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale) {
         int x = this.getX();
         int y = this.getY();
 
@@ -51,7 +52,7 @@ public class SVGLayer extends Layer {
 
         out.pop(3);
 
-        return new Rectangle(x, y, (int) (this.svgBounds.getWidth() * this.scale), (int) (this.svgBounds.getHeight() * this.scale));
+        return Rectangles.singleton(new Rectangle(x, y, (int) (this.svgBounds.getWidth() * this.scale), (int) (this.svgBounds.getHeight() * this.scale)));
     }
 
     private void adjust(Object object) {
