@@ -11,7 +11,7 @@ else
   exec "$@"
 fi
 
-# if the USER_ID  and GROUP_ID env vars are not 0, and the /app/images 
+# if the USER_ID and GROUP_ID env vars are not 0, and the /app/images 
 # directory exists, chown /app/images to user USER_ID:GROUP_ID
 if [ "$USER_ID" -ne "0" -a "$GROUP_ID" -ne "0" -a -d "/app/images" ]; then
   echo "Running: chown -R $USER_ID:$GROUP_ID /app/images"
