@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.cards.layers;
 
+import dev.hephaestus.proximity.cardart.ArtInputStreamWrapper;
 import dev.hephaestus.proximity.cardart.ArtResolver;
 import dev.hephaestus.proximity.templates.layers.ImageLayer;
 import dev.hephaestus.proximity.util.Rectangles;
@@ -11,7 +12,6 @@ import dev.hephaestus.proximity.xml.RenderableCard;
 import javax.imageio.ImageIO;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Optional;
 
 public class ArtLayerRenderer extends LayerRenderer {
@@ -27,21 +27,16 @@ public class ArtLayerRenderer extends LayerRenderer {
         Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
 
         try {
-            Optional<String> optionalFileLocation = new ArtResolver().findArt(card);
-            if(optionalFileLocation.isPresent()) {
-                String fileLocation = optionalFileLocation.get();
-                return Result.of(Optional.ofNullable(new ImageLayer(
-                    element.getId(),
-                    x,
-                    y,
-                    ImageIO.read(new URL(fileLocation)),
-                    width,
-                    height,
-                    fileLocation).draw(graphics, wrap, draw, scale)
+            ArtInputStreamWrapper artInputStreamWrapper = ArtResolver.findArt(card);
+            return Result.of(Optional.ofNullable(new ImageLayer(
+                element.getId(),
+                x,
+                y,
+                ImageIO.read(artInputStreamWrapper.inputStream()),
+                width,
+                height,
+                artInputStreamWrapper.locationString()).draw(graphics, wrap, draw, scale)
                 ));
-            }
-            else
-                return Result.of(Optional.empty());
         } catch (IOException e) {
             return Result.error("Failed to create layer '%s': %s", element.getId(), e.getMessage());
         }
