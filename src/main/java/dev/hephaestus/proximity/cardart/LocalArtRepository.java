@@ -54,44 +54,19 @@ public class LocalArtRepository implements ArtRepository
 		// art with a set assigned to it over art without a set assigned
 		if(l.hasSet()) return -1;
 		if(r.hasSet()) return 1;
-		return l.getCardName().compareTo(r.getCardName());
+		return l.cardName().compareTo(r.cardName());
 	}
 
-	private static boolean setFilter(ArtFile artFile, String set) {
-		// Discard art with set assigned, but the set doesn't match. Art without set is OK
-		if(artFile.hasSet())
-			return artFile.getSet().equals(set);
-		return true;
-	}
-
-	private static synchronized List<ArtFile> findAllArt(Path root) {
-		// Cache the found art files so we don't need to scan the file system several times per run
-		// This is also the reason why this method is synchronized, so that several threads don't need to battle
-		// to run this method
-		if(LocalArtRepository.artFilesCache != null) {
-			LOG.debug("{} cached art files found", artFilesCache.size());
-			return artFilesCache;
-		}
-
-		LOG.debug("No cached art files found. Building cache");
-		artFilesCache = findFiles(root);
-		LOG.debug("{} art files found and cached", artFilesCache.size());
-		return artFilesCache;
-	}
-
-	private static synchronized List<ArtFile> findFiles(Path directoryPath) {
-		File artDirectory = directoryPath.toFile();
-		if(!artDirectory.exists())
+	private static List<ArtFile> findFiles(Path directoryPath) throws IOException
+	{
+		if(!Files.exists(directoryPath))
 			return new ArrayList<>();
 
-		File[] files = artDirectory.listFiles();
-		if(files == null)
-			return new ArrayList<>();
-
-		List<ArtFile> allFiles = new ArrayList<ArtFile>();
-		for(File file : files) {
-			if(file.isDirectory())
-				allFiles.addAll(findFiles(file.toPath()));
+		List<Path> files = Files.list(directoryPath).toList();
+		List<ArtFile> allFiles = new ArrayList<>();
+		for(Path file : files) {
+			if(Files.isDirectory(file))
+				allFiles.addAll(findFiles(file));
 			else
 				ArtFile.of(file).ifPresent(allFiles::add);
 		}
@@ -103,35 +78,24 @@ public class LocalArtRepository implements ArtRepository
 		return s.replaceAll("[.,'-]", "").toLowerCase(Locale.ROOT).trim();
 	}
 
-	private static class ArtFile {
+	record ArtFile(String cardName, String set, Path filePath)
+	{
 		private static final Pattern cardNamePattern = Pattern.compile("^([^(\\[.])+"); //Match everything up to [ ( or .
 		private static final Pattern setNamePattern = Pattern.compile("\\[(.*?)]"); //Match everything between [ and ]
-		private final String cardName;
-		private final String set;
-		private final String path;
 
-		private ArtFile(String cardName, String set, String path) {
-			this.cardName = cardName;
-			this.set = set;
-			this.path = path;
-		}
+		public boolean hasSet() { return set != null; }
 
-		private boolean hasSet() { return set != null; }
-		private String getCardName() { return cardName; }
-		private String getSet() { return set; }
-		private String getPath() { return path; }
+		private static Optional<ArtFile> of(Path filePath) throws IOException {
+			if (Files.isHidden(filePath)) return Optional.empty();
+			if (Files.isDirectory(filePath)) return Optional.empty();
+			if (!Files.isReadable(filePath)) return Optional.empty();
 
-		private static Optional<ArtFile> of(File file) {
-			if(file.isHidden()) return Optional.empty();
-			if(file.isDirectory()) return Optional.empty();
-			if(!file.canRead()) return Optional.empty();
-
-			String filePath = file.getPath();
-			if(!allowedFileExtensions.contains( filePath.substring(filePath.lastIndexOf(".")+1) ))
+			String filePathStr = filePath.toString();
+			if (!LocalArtRepository.allowedFileExtensions.contains(filePathStr.substring(filePathStr.lastIndexOf(".") + 1)))
 				return Optional.empty();
 
-			String parentDirectory = file.getParentFile().getName();
-			String fileName = file.getName();
+			String parentDirectoryName = filePath.getParent().toFile().getName();
+			String fileName = filePath.toFile().getName();
 
 			Matcher cardNameMatches = cardNamePattern.matcher(fileName);
 			String cardName = cardNameMatches.find() ? cleanString(cardNameMatches.group()) : null;
@@ -139,12 +103,13 @@ public class LocalArtRepository implements ArtRepository
 			// Set can be set either by a string between [], or by the folder the images are in under the "art" folder
 			Matcher setMatches = setNamePattern.matcher(fileName);
 			String set = setMatches.find()
-				? cleanString( setMatches.group(1) )
-				: parentDirectory.equals("art")
+				? cleanString(setMatches.group(1))
+				: parentDirectoryName.equals("art")
 				? null
-				: parentDirectory;
+				: parentDirectoryName;
 
 			return Optional.of(new ArtFile(cardName, set, filePath));
 		}
 	}
 }
+
