@@ -16,13 +16,28 @@ import org.apache.logging.log4j.Logger;
 
 import dev.hephaestus.proximity.xml.RenderableCard;
 
-public class LocalArtRepository implements ArtRepository
+public class LocalArtRepository
 {
 	private static final Logger LOG = LogManager.getLogger("LocalArtRepository");
 	private static final Set<String> allowedFileExtensions = Set.of("png", "jpg", "jpeg", "tif", "tiff", "bmp", "svg", "gif");
-	private static volatile List<ArtFile> artFilesCache;
+	private static final List<ArtFile> artFilesCache;
 
-	@Override public String findArt(RenderableCard card)
+	static {
+		// Cache the found art files so we don't need to scan the file system several times per run
+		// This is also the reason why this method is synchronized, so that several threads don't need to battle
+		// to run this method
+		LOG.debug("Building local art cache");
+		List<ArtFile> artFiles = new ArrayList<>();
+		try {
+			artFiles.addAll( findFiles(Path.of("art")) );
+			LOG.debug("{} art files found and cached", artFiles.size());
+		}
+		catch (IOException e) {
+			LOG.error(e);
+			LOG.error("An error occurred when building local art cache. Local art will not be used.");
+		}
+		artFilesCache = artFiles;
+	}
 	{
 		String name = cleanString(card.getName());
 		String set = cleanString(card.getSet());
