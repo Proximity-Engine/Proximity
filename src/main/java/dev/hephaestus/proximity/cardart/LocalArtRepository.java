@@ -1,7 +1,10 @@
 package dev.hephaestus.proximity.cardart;
 
 import java.io.File;
-import java.net.URI;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,30 +41,31 @@ public class LocalArtRepository
 		}
 		artFilesCache = artFiles;
 	}
+
+	private LocalArtRepository(){}
+
+	public static Optional<ArtInputStreamWrapper> findArt(RenderableCard card)
 	{
 		String name = cleanString(card.getName());
 		String set = cleanString(card.getSet());
 		LOG.debug("Attempting to find local art for card {} [{}]", name, set);
-		// List of all paths to art files that contains the card name
-		Path artDirectory = Path.of("art");
-		String match = findAllArt(artDirectory)
-			.stream()
-			.filter(artFile -> name.equals(artFile.getCardName()) )
-			.filter(artFile -> setFilter(artFile, set))
-			.sorted(LocalArtRepository::artFileSorter)
-			.findFirst()
-			.map(ArtFile::getPath)
-			.map(Path::of)
-			.map(Path::toAbsolutePath)
+
+		List<ArtFile> artFiles = new ArrayList<>(artFilesCache);
+		List<ArtFile> filteredArtFiles = new ArrayList<>();
+		for(ArtFile artFile : artFiles) {
+			if(!name.equals(artFile.cardName())) continue;
+			if(artFile.hasSet() && !set.equals(artFile.set())) continue;
+			filteredArtFiles.add(artFile);
+		}
+		filteredArtFiles.sort(LocalArtRepository::artFileSorter);
+		ArtFile match = filteredArtFiles.size() > 0 ? filteredArtFiles.get(0) : null;
+		if(match != null) LOG.debug("Found local art for {} [{}]. Location was {}", name, set, match.filePath);
+		else LOG.debug("Found no local art for {} [{}]", name, set);
+		return Optional.ofNullable(match)
+			.map(ArtFile::filePath)
 			.map(Path::toFile)
-			.map(File::toURI)
-			.map(URI::toString)
-			.orElse(null);
-
-		if(match != null) LOG.debug("Local art found for card {} [{}] at location {}", name, set, match);
-		else LOG.debug("No local art found for card {} [{}]", name, set);
-
-		return match;
+			.map(LocalArtRepository::toInputStream)
+			.map(is -> new ArtInputStreamWrapper(is, match.filePath().toString()));
 	}
 
 	private static int artFileSorter(ArtFile l, ArtFile r) {
@@ -91,6 +95,15 @@ public class LocalArtRepository
 	private static String cleanString(String s) {
 		if(s == null) return null;
 		return s.replaceAll("[.,'-]", "").toLowerCase(Locale.ROOT).trim();
+	}
+
+	private static FileInputStream toInputStream(File file) {
+		try { return new FileInputStream(file); }
+		catch (FileNotFoundException e) {
+			LOG.error(e);
+			LOG.error("An error occurred when loading a local art file at {}", file.getAbsolutePath());
+			return null;
+		}
 	}
 
 	record ArtFile(String cardName, String set, Path filePath)
