@@ -1,5 +1,7 @@
 package dev.hephaestus.proximity.util;
 
+import org.apache.batik.ext.awt.image.GraphicsUtil;
+
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
@@ -23,7 +25,7 @@ public class StatefulGraphics extends Graphics2D {
 
     public StatefulGraphics(BufferedImage image) {
         this.image = image;
-        this.wrapped = image.createGraphics();
+        this.wrapped = GraphicsUtil.createGraphics(image);
     }
 
     public BufferedImage getImage() {

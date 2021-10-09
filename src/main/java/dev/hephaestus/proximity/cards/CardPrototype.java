@@ -10,7 +10,7 @@ import dev.hephaestus.proximity.util.Keys;
 
 import java.util.*;
 
-public record CardPrototype(String cardName, int number, JsonObject options, TemplateSource source, JsonObject overrides) {
+public record CardPrototype(String cardName, int number, JsonObject options, TemplateSource.Compound source, JsonObject overrides) {
     private static final Set<String> MANA_COLORS = new HashSet<>();
     private static final Map<String, String> LAND_TYPES = new WeakHashMap<>();
 
@@ -48,15 +48,17 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
 
     private JsonObject parseTwoSidedCard(JsonObject raw) {
         JsonArray faces = raw.getAsJsonArray("card_faces");
-        JsonObject front = this.process(parseFace(raw, faces.get(0).getAsJsonObject()));
-        JsonObject back = this.process(parseFace(raw, faces.get(1).getAsJsonObject()));
+        JsonObject front = parseFace(raw, faces.get(0).getAsJsonObject());
+        JsonObject back = parseFace(raw, faces.get(1).getAsJsonObject());
+
+        this.process(front);
+        this.process(back);
 
         back.add(Keys.FLIPPED, front.deepCopy());
         back.add(Keys.FRONT_FACE, false);
 
         front.add(Keys.FLIPPED, back);
         front.add(Keys.FRONT_FACE, true);
-
 
         return front;
     }
@@ -77,7 +79,7 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
 
         card.add(Keys.CARD_NUMBER, this.number);
         card.add(Keys.DOUBLE_SIDED, card.has("card_faces"));
-        card.add(Keys.OPTIONS, this.options.deepCopy());
+        card.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
 
         if (card.getAsJsonArray("keywords").contains("mutate")) {
             String[] split = card.getAsString("oracle_text").split("\n", 2);
@@ -140,7 +142,7 @@ public record CardPrototype(String cardName, int number, JsonObject options, Tem
                             if (oracle.contains(entry.getKey())) colors.add(new JsonPrimitive(entry.getValue()));
                         }
 
-                        if (oracle.contains("of any color")) {
+                        if (oracle.contains("of any color") || oracle.contains("Search your library for a basic land card, put it onto the battlefield") && (card.getAsString("rarity").equals("rare") || card.getAsString("rarity").equals("mythic"))) {
                             for (var color : MANA_COLORS) {
                                 colors.add(new JsonPrimitive(color));
                             }

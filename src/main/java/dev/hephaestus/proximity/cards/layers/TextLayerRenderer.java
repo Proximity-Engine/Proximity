@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.cards.layers;
 
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.xml.RenderableCard;
 import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.json.JsonElement;
@@ -21,7 +22,7 @@ import java.util.regex.Matcher;
 
 public class TextLayerRenderer extends LayerRenderer {
     @Override
-    public Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
         if (element.hasAttribute("width") ^ element.hasAttribute("height")) {
             return Result.error("Text layer must have both 'width' and 'height' attributes or neither");
         }
@@ -33,7 +34,7 @@ public class TextLayerRenderer extends LayerRenderer {
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
         Integer width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
         Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
-        wrap = element.getProperty(LayerProperty.WRAP);
+        wrap = Rectangles.singleton(element.getProperty(LayerProperty.WRAP));
         Style style = element.getProperty(LayerProperty.STYLE, Style.EMPTY).merge(
                 card.getStyle(element.getAttribute("style"))
         );
@@ -64,6 +65,11 @@ public class TextLayerRenderer extends LayerRenderer {
         layer.setBounds(bounds);
 
         return Result.of(Optional.ofNullable(layer.draw(graphics, wrap, draw, scale)));
+    }
+
+    @Override
+    public boolean scales(RenderableCard card, RenderableCard.XMLElement element) {
+        return true;
     }
 
     private List<List<TextComponent>> parseText(RenderableCard card, Style baseStyle, String string) {

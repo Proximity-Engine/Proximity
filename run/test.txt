@@ -1,2 +1,2 @@
-1x Bloodthirsty Adversary (MID)
-1x Candlegrove Witch (MID)
+1x Reaper King --flavor_bar=true
+1x Reaper King --flavor_bar=false

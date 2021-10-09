@@ -117,7 +117,13 @@ public class JsonObject extends JsonElement {
     }
 
     public JsonObject getAsJsonObject(String... keys) {
-        return get((o, k) -> o.get(k).getAsJsonObject(), keys);
+        return get((o, k) -> {
+            if (!o.has(k)) {
+                o.add(k, new JsonObject());
+            }
+
+            return o.get(k).getAsJsonObject();
+        }, keys);
     }
 
     public <T> T get(BiFunction<JsonObject, String, T> getter, String... keys) {
@@ -201,7 +207,11 @@ public class JsonObject extends JsonElement {
 
     public JsonObject copyAll(JsonObject object) {
         for (var entry : object.entrySet()) {
-            this.add(entry.getKey(), entry.getValue().deepCopy());
+            if (entry.getValue() instanceof JsonObject o) {
+                this.getAsJsonObject(entry.getKey()).copyAll(o);
+            } else {
+                this.add(entry.getKey(), entry.getValue().deepCopy());
+            }
         }
 
         return this;

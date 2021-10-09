@@ -4,9 +4,11 @@ import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.util.*;
+import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -24,14 +26,18 @@ import java.util.regex.Pattern;
 public final class RenderableCard extends JsonObject implements TemplateSource {
     public static final Pattern SUBSTITUTE = Pattern.compile("\\$(\\w*)\\{(\\w+(?:\\.\\w+)*)?}");
 
-    private final TemplateSource source;
+    private final TemplateSource.Compound source;
+    private final RemoteFileCache cache;
     private final XMLElement root;
     private final Map<String, Style> styles = new HashMap<>();
     private final Map<String, CardPredicate> predicates = new HashMap<>();
+    private final Map<String, Element> gradients = new LinkedHashMap<>();
 
-    public RenderableCard(TemplateSource source, Element root, JsonObject card) {
+    public RenderableCard(TemplateSource.Compound source, @Nullable RemoteFileCache cache, Element root, JsonObject card) {
         this.copyAll(card);
         this.source = source;
+        this.cache = cache;
+        this.parseResources(root);
         this.root = new XMLElement(null, root);
     }
 
@@ -59,6 +65,18 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         return this.predicates.get(name);
     }
 
+    public boolean hasGradient(String id) {
+        return this.gradients.containsKey(id);
+    }
+
+    public Element getGradient(String id) {
+        return this.gradients.get(id);
+    }
+
+    public Iterable<Element> getGradients() {
+        return this.gradients.values();
+    }
+
     public Result<Void> render(StatefulGraphics graphics) {
         Result<Void> init = this.parseOptions()
                 .then(this::parseStyles)
@@ -81,6 +99,35 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
             return errors.isEmpty() ? Result.of(null)
                     : Result.error("Error rendering cards:\n\t%s", String.join("\n\t", errors));
         }).orElse(Result.of(null));
+    }
+
+    private void parseResources(Element root) {
+        NodeList resourceList = root.getElementsByTagName("resources");
+
+        for (int i = 0; i < resourceList.getLength(); ++i) {
+            Node r = resourceList.item(i);
+
+            if (r instanceof Element) {
+                NodeList resources = r.getChildNodes();
+
+                for (int j = 0; j < resources.getLength(); ++j) {
+                    r = resources.item(j);
+
+                    if (r instanceof Element resource) {
+                        String location = resource.getAttribute("location") + "/" + resource.getAttribute("version");
+
+                        //noinspection SwitchStatementWithTooFewBranches TODO: Add more kinds of resources
+                        switch (resource.getAttribute("type")) {
+                            case "assets" -> {
+                                if (this.cache != null) {
+                                    this.source.wrapped.add(new RemoteFileSource(this.cache, location));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private Result<Void> parseOptions() {
@@ -111,6 +158,11 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                                 options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
                             }
                         }
+                        case "StringOption" -> {
+                            if (!options.has(id)) {
+                                options.addProperty(id, option.getAttribute("default"));
+                            }
+                        }
                     }
                 })
         );
@@ -126,19 +178,51 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         List<String> errors = new ArrayList<>();
 
         this.root.iterate("styles", (styles, i) ->
-                styles.iterate("Style", (style, j) -> {
-                    if (!style.hasAttribute("name")) {
-                        errors.add(String.format("Style #%d missing name attribute", j));
-                    }
+                styles.iterate((style, j) -> {
+                    switch (style.getTagName()) {
+                        case "Style" -> {
+                            if (!style.hasAttribute("name")) {
+                                errors.add(String.format("Style #%d missing name attribute", j));
+                            }
 
-                    String name = style.getAttribute("name");
+                            String name = style.getAttribute("name");
 
-                    Result<Style> r = Style.parse(style);
+                            Result<Style> r = Style.parse(style);
 
-                    if (r.isError()) {
-                        errors.add(r.getError());
-                    } else {
-                        this.styles.put(name, r.get());
+                            if (r.isError()) {
+                                errors.add(r.getError());
+                            } else {
+                                this.styles.put(name, r.get());
+                            }
+                        }
+                        case "linearGradient", "radialGradient" -> {
+                            List<CardPredicate> predicates = new ArrayList<>();
+
+                            style.apply("conditions", (XMLElement conditions) -> conditions.iterate((predicate, k) ->
+                                    XMLUtil.parsePredicate(predicate, RenderableCard.this::getPredicate, RenderableCard.this::exists)
+                                            .ifError(errors::add)
+                                            .ifPresent(predicates::add)));
+
+                            if (!errors.isEmpty()) {
+                                Proximity.LOG.warn("Error(s) parsing predicates:\n\t{}", String.join("\n\t", errors));
+                            }
+
+                            for (CardPredicate predicate : predicates) {
+                                Result<Boolean> result = predicate.test(RenderableCard.this);
+
+                                if (result.isOk() && !result.get()) {
+                                    return;
+                                }
+                            }
+
+                            Element element = style.wrapped;
+
+                            Optional<Element> conditions = style.apply("conditions", e -> e.wrapped);
+
+                            conditions.ifPresent(element::removeChild);
+
+                            this.gradients.put(style.getAttribute("id"), (Element) element.cloneNode(true));
+                        }
                     }
                 })
         );
@@ -200,7 +284,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         private final Deque<Pair<String, String>> attributes = new ArrayDeque<>();
         private final XMLElement parent;
 
-        private XMLElement(XMLElement parent, Element wrapped) {
+        public XMLElement(XMLElement parent, Element wrapped) {
             this.parent = parent;
             this.wrapped = wrapped;
 
@@ -249,7 +333,13 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                     }
                 }
 
-                RenderableCard.this.add(element.getAttribute("key").split("\\."), ParsingUtil.parseStringValue(element.getAttribute("value")));
+                Result<JsonElement> value = ParsingUtil.parseStringValue(element.getAttribute("value"));
+
+                if (value.isOk()) {
+                    RenderableCard.this.add(element.getAttribute("key").split("\\."), value.get());
+                } else {
+                    Proximity.LOG.warn("Error parsing value:\n\t{}", value.getError());
+                }
             });
 
             this.iterate((element, i) -> {
@@ -337,7 +427,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         }
 
         public int getInteger(String name) {
-            return this.hasAttribute(name) ? Integer.decode(this.getAttribute(name)) : 0;
+            return this.hasAttribute(name) ? (int) Long.decode(this.getAttribute(name)).longValue() : 0;
         }
 
         public void setAttribute(String name, String value) {

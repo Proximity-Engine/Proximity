@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.geom.Rectangle2D;
@@ -8,7 +9,7 @@ public abstract class Layer {
     private final String id;
     private int x, y;
     protected Rectangle2D bounds;
-    protected Rectangle2D wrap;
+    protected Rectangles wrap;
 
     public Layer(String id, int x, int y) {
         this.id = id;
@@ -20,7 +21,7 @@ public abstract class Layer {
         this.bounds = bounds;
     }
 
-    public void setWrap(Rectangle2D wrap) {
+    public void setWrap(Rectangles wrap) {
         this.wrap = wrap;
     }
 
@@ -44,7 +45,7 @@ public abstract class Layer {
         return this.y;
     }
 
-    public abstract Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale);
+    public abstract Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale);
 
     @Override
     public String toString() {
