@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -39,7 +40,7 @@ public class LocalArtRepository
 			LOG.error(e);
 			LOG.error("An error occurred when building local art cache. Local art will not be used.");
 		}
-		artFilesCache = artFiles;
+		artFilesCache = Collections.unmodifiableList(artFiles);
 	}
 
 	private LocalArtRepository(){}
@@ -50,9 +51,8 @@ public class LocalArtRepository
 		String set = cleanString(card.getSet());
 		LOG.debug("Attempting to find local art for card {} [{}]", name, set);
 
-		List<ArtFile> artFiles = new ArrayList<>(artFilesCache);
 		List<ArtFile> filteredArtFiles = new ArrayList<>();
-		for(ArtFile artFile : artFiles) {
+		for(ArtFile artFile : artFilesCache) {
 			if(!name.equals(artFile.cardName())) continue;
 			if(artFile.hasSet() && !set.equals(artFile.set())) continue;
 			filteredArtFiles.add(artFile);
