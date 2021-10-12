@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.text;
 
 
+import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.util.Outline;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.Shadow;
@@ -57,6 +58,33 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
 
     public Style size(int fontSize) {
         return new Style(this.fontName, this.italicFontName, fontSize, this.kerning, this.shadow, this.outline, this.capitalization, this.color);
+    }
+
+    public JsonObject toJson() {
+        JsonObject result = new JsonObject();
+
+        if (this.fontName != null) result.addProperty("fontName", this.fontName);
+        if (this.italicFontName != null) result.addProperty("italicFontName", this.italicFontName);
+        if (this.size != null) result.addProperty("size", this.size);
+        if (this.kerning != null) result.addProperty("kerning", this.kerning);
+
+        if (this.shadow != null) {
+            JsonObject shadow = result.getAsJsonObject("shadow");
+            shadow.addProperty("color", this.shadow.color());
+            shadow.addProperty("dX", this.shadow.dX());
+            shadow.addProperty("dY", this.shadow.dY());
+        }
+
+        if (this.outline != null) {
+            JsonObject outline = result.getAsJsonObject("outline");
+            outline.addProperty("color", this.outline.color());
+            outline.addProperty("weight", this.outline.weight());
+        }
+
+        if (this.capitalization != null) result.addProperty("capitalization", this.capitalization.toString());
+        if (this.color != null) result.addProperty("color", this.color);
+
+        return result;
     }
 
     public static Result<Style> parse(RenderableCard.XMLElement style) {

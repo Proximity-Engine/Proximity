@@ -7,6 +7,8 @@ import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.text.Style;
+import dev.hephaestus.proximity.text.Symbol;
+import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.util.*;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Element;
@@ -24,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class RenderableCard extends JsonObject implements TemplateSource {
-    public static final Pattern SUBSTITUTE = Pattern.compile("\\$(\\w*)\\{(\\w+(?:\\.\\w+)*)?}");
+    public static final Pattern SUBSTITUTE = Pattern.compile("\\$(?<function>[\\w.]*)\\{(?<value>[.[^}]]+)}");
 
     private final TemplateSource.Compound source;
     private final RemoteFileCache cache;
@@ -32,6 +34,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
     private final Map<String, Style> styles = new HashMap<>();
     private final Map<String, CardPredicate> predicates = new HashMap<>();
     private final Map<String, Element> gradients = new LinkedHashMap<>();
+    private final List<Symbol> symbols = new ArrayList<>();
 
     public RenderableCard(TemplateSource.Compound source, @Nullable RemoteFileCache cache, Element root, JsonObject card) {
         this.copyAll(card);
@@ -73,15 +76,29 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         return this.gradients.values();
     }
 
+    public List<Symbol> getApplicable(String text) {
+        List<Symbol> result = null;
+
+        for (Symbol symbol : this.symbols) {
+            if (symbol.anyMatches(this, text)) {
+                if (result == null) result = new ArrayList<>();
+                result.add(symbol);
+            }
+        }
+
+        return result == null ? Collections.emptyList() : result;
+    }
+
     public Result<Void> render(StatefulGraphics graphics) {
         Result<Void> init = this.parseOptions()
                 .then(this::parseStyles)
-                .then(this::parsePredicates);
+                .then(this::parsePredicates)
+                .then(this::parseSymbols);
 
         if (init.isError()) return init;
 
         return this.root.apply("layers", (Function<XMLElement, Result<Void>>) layers -> {
-            List<String> errors = new ArrayList<>();
+            List<String> errors = new ArrayList<>(0);
 
             layers.iterate((layer, i) -> {
                 LayerRenderer renderable = LayerRenderer.get(layer.getTagName());
@@ -93,8 +110,38 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
             });
 
             return errors.isEmpty() ? Result.of(null)
-                    : Result.error("Error rendering cards:\n\t%s", String.join("\n\t", errors));
+                    : Result.error("Error(s) rendering cards:\n\t%s", String.join("\n\t", errors));
         }).orElse(Result.of(null));
+    }
+
+    private Result<Void> parseSymbols() {
+        List<String> errors = new ArrayList<>(0);
+
+        this.root.iterate("symbols", (symbols, i) -> symbols.iterate((symbol, j) -> {
+            String representation = symbol.getAttribute("representation");
+            List<CardPredicate> predicates = new ArrayList<>(0);
+            List<TextComponent> glyphs = new ArrayList<>(3);
+
+            XMLUtil.iterate(symbol, "conditions", (predicate, k) ->
+                    XMLUtil.parsePredicate(predicate, e -> null, this::exists)
+                            .ifError(errors::add)
+                            .ifPresent(predicates::add));
+
+            symbol.iterate((glyph, k) -> {
+                Result<Style> style = Style.parse(glyph);
+
+                if (style.isOk()) {
+                    glyphs.add(new TextComponent.Literal(style.get(), glyph.getAttribute("glyphs")));
+                } else {
+                    errors.add(style.getError());
+                }
+            });
+
+            this.symbols.add(new Symbol(representation, glyphs, predicates));
+        }));
+
+        return errors.isEmpty() ? Result.of(null)
+                : Result.error("Error(s) parsing symbols:\n\t%s", String.join("\n\t", errors));
     }
 
     private void parseResources(Element root) {
@@ -272,6 +319,10 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
     @Override
     public String getTemplateName() {
         return this.source.getTemplateName();
+    }
+
+    public Map<String, Style> getStyles() {
+        return this.styles;
     }
 
     public final class XMLElement {

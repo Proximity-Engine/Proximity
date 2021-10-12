@@ -28,6 +28,10 @@ public final class JsonPrimitive extends JsonElement {
         return this;
     }
 
+    public Object getValue() {
+        return this.value;
+    }
+
     public boolean isBoolean() {
         return value instanceof Boolean;
     }

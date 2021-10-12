@@ -1,11 +1,12 @@
 package dev.hephaestus.proximity.text;
 
-public record TextComponent(Style style, String string) {
-    public TextComponent(String string) {
-        this(null, string);
-    }
+public interface TextComponent {
+    Style style();
+    String string();
 
-    public TextComponent(Style style, char c) {
-        this(style, "" + c);
+    record Literal(Style style, String string) implements TextComponent {
+        public Literal(Style style, char c) {
+            this(style, "" + c);
+        }
     }
 }

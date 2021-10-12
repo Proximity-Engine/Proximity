@@ -116,9 +116,11 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
             } else if (errors.isEmpty() && result.get().isPresent()) {
                 Rectangles layerBounds = result.get().get();
 
-                resultBounds.addAll(layerBounds);
+                if (!layerBounds.isEmpty()) {
+                    resultBounds.addAll(layerBounds);
 
-                dInLine += this.inLineSizeGetter.apply(layerBounds.getBounds());
+                    dInLine += this.inLineSizeGetter.apply(layerBounds.getBounds());
+                }
             }
         }
 

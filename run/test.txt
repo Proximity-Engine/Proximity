@@ -1,2 +1,1 @@
-1x Reaper King --flavor_bar=true
-1x Reaper King --flavor_bar=false
+1x Avenger of Zendikar

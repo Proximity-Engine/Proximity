@@ -211,8 +211,7 @@ public final class Proximity {
             for (Pair<RenderableCard, Optional<RenderableCard>> card : cards) {
                 if (threadCount > 1) {
                     int finalI = i;
-                    executor.submit(() ->
-                            this.render(card, finishedCards, errors, countStrLen, finalI, cards.size()));
+                    executor.submit(() -> this.render(card, finishedCards, errors, countStrLen, finalI, cards.size()));
                 } else {
                     this.render(card, finishedCards, errors, countStrLen, i, cards.size());
                 }

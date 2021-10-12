@@ -268,7 +268,7 @@ public class TextLayer extends Layer {
             drawnFirstRowHeight = pair.right();
             graphics.pop();
 
-            if (drawnBounds != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+            if (drawnBounds != null && !drawnBounds.isEmpty() && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
 
@@ -279,7 +279,7 @@ public class TextLayer extends Layer {
                 graphics.pop(2);
             }
 
-            if (this.bounds != null && drawnBounds != null) {
+            if (this.bounds != null && drawnBounds != null && !drawnBounds.isEmpty()) {
                 while (this.bounds.getHeight() < drawnBounds.getHeight()) {
                     fontSizeChange -= 5;
                     graphics.push(0, drawnFirstRowHeight);
@@ -356,7 +356,7 @@ public class TextLayer extends Layer {
                         text = deque.pop();
 
                         if (text.get(0).string().startsWith(" ")) {
-                            text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                            text.set(0, new TextComponent.Literal(text.get(0).style(), text.get(0).string().substring(1)));
                         }
                     }
                 }
@@ -376,7 +376,7 @@ public class TextLayer extends Layer {
                     graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
 
                     if (text.get(0).string().startsWith(" ")) {
-                        text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                        text.set(0, new TextComponent.Literal(text.get(0).style(), text.get(0).string().substring(1)));
                     }
 
                     deque.addFirst(text);
@@ -399,7 +399,7 @@ public class TextLayer extends Layer {
                         graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
 
                         if (text.get(0).string().startsWith(" ")) {
-                            text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                            text.set(0, new TextComponent.Literal(text.get(0).style(), text.get(0).string().substring(1)));
                         }
 
                         deque.addFirst(text);
