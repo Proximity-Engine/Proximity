@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.scripting.Context;
 import dev.hephaestus.proximity.scripting.ScriptingUtil;
+import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerRenderer;
@@ -13,6 +14,7 @@ import dev.hephaestus.proximity.xml.RenderableCard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quiltmc.json5.JsonReader;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -120,11 +122,13 @@ public final class Proximity {
                    .ifPresent(raw -> {
                        for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
                            int finalJ = j + prototype.number();
-                           XMLUtil.load(prototype.source()).ifError(LOG::warn)
+                           XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
                                    .then(root -> Result.of(this.runInitScripts(raw, prototype.source(), root, finalJ, prototype.options(), prototype.overrides())))
                                    .then((List<JsonObject> list) -> {
-                                       list.forEach(card -> XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                               .then(root -> Result.of(new RenderableCard(prototype.source(), cache, root, card)))
+                                       list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                               .then(e -> this.resolveResources(e, prototype.source(), cache))
+                                               .then(e -> this.resolveImports(e, prototype.source()))
+                                               .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)))
                                                .then(renderable -> {
                                                    cards.add(renderable);
                                                    return Result.of((Void) null);
@@ -144,6 +148,77 @@ public final class Proximity {
         LOG.info("Successfully found {} cards. Took {}ms", cards.size(), System.currentTimeMillis() - totalTime);
 
         return Result.of(cards);
+    }
+
+    private Result<Element> resolveResources(Element root, TemplateSource.Compound source, RemoteFileCache cache) {
+        NodeList resourceList = root.getElementsByTagName("resources");
+
+        for (int i = 0; i < resourceList.getLength(); ++i) {
+            Node r = resourceList.item(i);
+
+            if (r instanceof Element) {
+                NodeList resources = r.getChildNodes();
+
+                for (int j = 0; j < resources.getLength(); ++j) {
+                    r = resources.item(j);
+
+                    if (r instanceof Element resource) {
+                        String location = resource.getAttribute("location") + "/" + resource.getAttribute("version");
+
+                        //noinspection SwitchStatementWithTooFewBranches May add more kinds of resources later
+                        switch (resource.getAttribute("type")) {
+                            case "assets" -> {
+                                if (cache != null) {
+                                    source.wrapped.add(new RemoteFileSource(cache, location));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return Result.of(root);
+    }
+
+    private Result<Element> resolveImports(Element root, TemplateSource source) {
+        Node firstChild = root.getFirstChild();
+        Document document = root.getOwnerDocument();
+        NodeList importsList = root.getElementsByTagName("imports");
+
+        for (int i = 0; i < importsList.getLength(); ++i) {
+            Node n = importsList.item(i);
+
+            if (n instanceof Element) {
+                NodeList imports = n.getChildNodes();
+
+                for (int j = 0; j < imports.getLength(); ++j) {
+                    n = imports.item(j);
+
+                    if (n instanceof Element element) {
+                        String src = element.getAttribute("src") + ".xml";
+
+                        XMLUtil.load(source, src)
+                                .ifError(LOG::warn)
+                                .then(imported -> {
+                                    NodeList children = imported.getChildNodes();
+
+                                    for (int k = 0; k < children.getLength(); ++k) {
+                                        Node m = children.item(k);
+
+                                        if (m instanceof Element e) {
+                                            root.insertBefore(document.adoptNode(e), firstChild);
+                                        }
+                                    }
+
+                                    return Result.of((Void) null);
+                                });
+                    }
+                }
+            }
+        }
+
+        return Result.of(root);
     }
 
     private List<JsonObject> runInitScripts(JsonObject raw, TemplateSource source, Element root, int number, JsonObject options, JsonObject overrides) {

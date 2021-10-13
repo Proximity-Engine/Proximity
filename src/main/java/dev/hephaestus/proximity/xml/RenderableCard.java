@@ -6,13 +6,11 @@ import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
 import dev.hephaestus.proximity.scripting.Context;
 import dev.hephaestus.proximity.scripting.ScriptingUtil;
-import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
 import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.util.*;
-import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -31,18 +29,15 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
     public static final Pattern SUBSTITUTE = Pattern.compile("\\$(?<function>[\\w.]*)\\{(?<value>[.[^}]]*)}");
 
     private final TemplateSource.Compound source;
-    private final RemoteFileCache cache;
     private final XMLElement root;
     private final Map<String, Style> styles = new HashMap<>();
     private final Map<String, CardPredicate> predicates = new HashMap<>();
     private final Map<String, Element> gradients = new LinkedHashMap<>();
     private final List<Symbol> symbols = new ArrayList<>();
 
-    public RenderableCard(TemplateSource.Compound source, @Nullable RemoteFileCache cache, Element root, JsonObject card) {
+    public RenderableCard(TemplateSource.Compound source, Element root, JsonObject card) {
         this.copyAll(card);
         this.source = source;
-        this.cache = cache;
-        this.parseResources(root);
         this.root = new XMLElement(null, root);
     }
 
@@ -144,35 +139,6 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
 
         return errors.isEmpty() ? Result.of(null)
                 : Result.error("Error(s) parsing symbols:\n\t%s", String.join("\n\t", errors));
-    }
-
-    private void parseResources(Element root) {
-        NodeList resourceList = root.getElementsByTagName("resources");
-
-        for (int i = 0; i < resourceList.getLength(); ++i) {
-            Node r = resourceList.item(i);
-
-            if (r instanceof Element) {
-                NodeList resources = r.getChildNodes();
-
-                for (int j = 0; j < resources.getLength(); ++j) {
-                    r = resources.item(j);
-
-                    if (r instanceof Element resource) {
-                        String location = resource.getAttribute("location") + "/" + resource.getAttribute("version");
-
-                        //noinspection SwitchStatementWithTooFewBranches TODO: Add more kinds of resources
-                        switch (resource.getAttribute("type")) {
-                            case "assets" -> {
-                                if (this.cache != null) {
-                                    this.source.wrapped.add(new RemoteFileSource(this.cache, location));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private Result<Void> parseOptions() {

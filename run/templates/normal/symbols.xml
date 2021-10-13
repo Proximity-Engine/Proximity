@@ -1,0 +1,410 @@
+<?xml version="1.0"?>
+
+<Content xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../template.xsd">
+    <symbols>
+        <!-- REGULAR MANA SYMBOLS -->
+        <Symbol representation="{W}">
+            <glyphs font="NDPMTG" glyphs="o" color="#FFFDEA"/>
+            <glyphs font="NDPMTG" glyphs="w" color="#000000">
+                <!-- This shadow prevents the foremost glyphs from having shadows -->
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{U}">
+            <glyphs font="NDPMTG" glyphs="o" color="#A7E0F9"/>
+            <glyphs font="NDPMTG" glyphs="u" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{B}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="b" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{R}">
+            <glyphs font="NDPMTG" glyphs="o" color="#FFAA92"/>
+            <glyphs font="NDPMTG" glyphs="r" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{G}">
+            <glyphs font="NDPMTG" glyphs="o" color="#A6DEBB"/>
+            <glyphs font="NDPMTG" glyphs="g" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{C}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="c" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+
+        <!-- PHYREXIAN MANA SYMBOLS -->
+        <Symbol representation="{W/P}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#FFFDEA"/>
+            <glyphs font="NDPMTG" glyphs="p" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{U/P}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#A7E0F9"/>
+            <glyphs font="NDPMTG" glyphs="p" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{B/P}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="p" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{R/P}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#FFAA92"/>
+            <glyphs font="NDPMTG" glyphs="p" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{G/P}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#A6DEBB"/>
+            <glyphs font="NDPMTG" glyphs="p" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{P}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="p" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+
+        <!-- HYBRID MANA SYMBOLS -->
+        <Symbol representation="{W/U}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#FFFDEA"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#A7E0F9">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="L" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="S" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{W/B}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#FFFDEA"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#BEBCB5">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="L" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="T" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{B/R}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#FFAA92">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="N" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="U" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{B/G}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#A6DEBB">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="N" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="V" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{U/B}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#A7E0F9"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#BEBCB5">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="M" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="T" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{U/R}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#A7E0F9"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#FFAA92">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="M" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="W" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{R/G}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#FFAA92"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#A6DEBB">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="O" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="V" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{R/W}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#FFAA92"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#FFFDEA">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="O" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="R" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{G/W}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#A6DEBB"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#FFFDEA">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="P" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="R" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{G/U}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#A6DEBB"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#A7E0F9">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="P" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="S" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{2/W}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#FFFDEA">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="W" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="R" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{2/U}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#A7E0F9">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="W" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="S" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{2/B}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#AB9E9A">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="W" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="T" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{2/R}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#FFAA92">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="W" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="U" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{2/G}">
+            <glyphs font="NDPMTG" glyphs="Q" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="q" color="#A6DEBB">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="W" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="V" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+
+        <!-- MISCELLANEOUS -->
+        <Symbol representation="{S}">
+            <!-- SNOW MANA -->
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="m" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+            <glyphs font="NDPMTG" glyphs="n" color="#FFFFFF">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{X}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="x" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+
+        <!-- GENERIC MANA -->
+        <Symbol representation="{0}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="0" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{1}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="1" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{2}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="2" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{3}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="3" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{4}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="4" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{5}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="5" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{6}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="6" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{7}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="7" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{8}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="8" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{9}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="9" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{10}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="A" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{11}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="B" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{12}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="C" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{13}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="D" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{14}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="E" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{15}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="F" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{16}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="G" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{20}">
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="H" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{T}">
+            <!-- TAP SYMBOL -->
+            <glyphs font="NDPMTG" glyphs="o" color="#BEBCB5"/>
+            <glyphs font="NDPMTG" glyphs="t" color="#000000">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{Q}">
+            <!-- UNTAP SYMBOL -->
+            <glyphs font="NDPMTG" glyphs="o" color="#000000"/>
+            <glyphs font="NDPMTG" glyphs="l" color="#FFFFFF">
+                <shadow color="#00000000" dX="0" dY="0"/>
+            </glyphs>
+        </Symbol>
+        <Symbol representation="{E}">
+            <!-- ENERGY SYMBOL -->
+            <glyphs glyphs="e" color="#000000"/>
+        </Symbol>
+    </symbols>
+</Content>

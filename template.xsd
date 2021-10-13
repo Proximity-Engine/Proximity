@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:svg="http://www.w3.org/2000/svg">
   <xs:element name="Template" type="TemplateType"/>
+  <xs:element name="Content" type="ContentType"/>
   <xs:complexType name="script_type">
     <xs:attribute name="src" use="required"/>
   </xs:complexType>
@@ -448,22 +449,41 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="TemplateType">
-    <xs:all>
+  <xs:complexType name="ContentType">
+    <xs:sequence>
       <xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="imports" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="import" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="src" type="xs:string" use="required"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="stylesType" name="styles" minOccurs="0" maxOccurs="1"/>
       <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="ResourcesType" name="resources" minOccurs="0" maxOccurs="1"/>
       <xs:element type="SymbolsType" name="symbols" minOccurs="0" maxOccurs="1"/>
       <xs:element type="ScriptStagesType" name="scripts" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="layersType" name="layers"/>
-    </xs:all>
-    <xs:attribute type="xs:string" name="name"/>
-    <xs:attribute type="xs:string" name="author"/>
-    <xs:attribute type="xs:string" name="width" use="required"/>
-    <xs:attribute type="xs:string" name="height" use="required"/>
-    <xs:attribute type="version" name="template_version"/>
-    <xs:attribute type="version" name="proximity_version" use="required"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="TemplateType">
+    <xs:complexContent>
+      <xs:extension base="ContentType">
+        <xs:sequence>
+          <xs:element type="layersType" name="layers" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="name"/>
+        <xs:attribute type="xs:string" name="author"/>
+        <xs:attribute type="xs:string" name="width" use="required"/>
+        <xs:attribute type="xs:string" name="height" use="required"/>
+        <xs:attribute type="version" name="template_version"/>
+        <xs:attribute type="version" name="proximity_version" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="FileExistsType">
     <xs:attribute type="xs:string" name="src"/>
