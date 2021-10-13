@@ -2,13 +2,20 @@ package dev.hephaestus.proximity;
 
 import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.cards.layers.*;
+import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.scripting.Context;
+import dev.hephaestus.proximity.scripting.ScriptingUtil;
+import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.xml.RenderableCard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quiltmc.json5.JsonReader;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.imageio.ImageIO;
 import java.awt.geom.Rectangle2D;
@@ -29,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public final class Proximity {
     public static Logger LOG = LogManager.getLogger("Proximity");
@@ -74,12 +82,12 @@ public final class Proximity {
         }
     }
 
-    private Result<Deque<Pair<RenderableCard, Optional<RenderableCard>>>> getCardInfo(Deque<CardPrototype> prototypes) {
+    private Result<Deque<RenderableCard>> getCardInfo(Deque<CardPrototype> prototypes) {
         LOG.info("Fetching info for {} cards...", prototypes.size());
 
         long lastRequest = 0;
 
-       Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards = new ArrayDeque<>();
+       Deque<RenderableCard> cards = new ArrayDeque<>();
 
         RemoteFileCache cache;
 
@@ -110,19 +118,21 @@ public final class Proximity {
 
            getCardInfo(prototype)
                    .ifPresent(raw -> {
-                       JsonObject card = prototype.parse(raw);
+                       for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
+                           int finalJ = j + prototype.number();
+                           XMLUtil.load(prototype.source()).ifError(LOG::warn)
+                                   .then(root -> Result.of(this.runInitScripts(raw, prototype.source(), root, finalJ, prototype.options(), prototype.overrides())))
+                                   .then((List<JsonObject> list) -> {
+                                       list.forEach(card -> XMLUtil.load(prototype.source()).ifError(LOG::warn)
+                                               .then(root -> Result.of(new RenderableCard(prototype.source(), cache, root, card)))
+                                               .then(renderable -> {
+                                                   cards.add(renderable);
+                                                   return Result.of((Void) null);
+                                               })
+                                       );
 
-                       for (int j = 0; j < card.getAsInt(Keys.COUNT); ++j) {
-                           Result<RenderableCard> front = XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                   .then(root -> Result.of(new RenderableCard(prototype.source(), cache, root, card)));
-
-                           Result<Optional<RenderableCard>> back = card.getAsBoolean(Keys.DOUBLE_SIDED) ? XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                   .then(root -> Result.of(Optional.of(new RenderableCard(prototype.source(), cache, root, card.getAsJsonObject(Keys.FLIPPED).deepCopy()))))
-                                   : Result.of(Optional.empty());
-
-                           if (front.isOk() && back.isOk()) {
-                               cards.add(new Pair<>(front.get(), back.get()));
-                           }
+                                       return Result.of((Void) null);
+                                   });
                        }
                    })
                    .ifError(LOG::warn);
@@ -134,6 +144,65 @@ public final class Proximity {
         LOG.info("Successfully found {} cards. Took {}ms", cards.size(), System.currentTimeMillis() - totalTime);
 
         return Result.of(cards);
+    }
+
+    private List<JsonObject> runInitScripts(JsonObject raw, TemplateSource source, Element root, int number, JsonObject options, JsonObject overrides) {
+        NodeList scriptBlocks = root.getElementsByTagName("scripts");
+
+        Map<String, List<Function<Object[], Object>>> tasks = new HashMap<>();
+        List<JsonObject> cards = new ArrayList<>();
+        cards.add(raw);
+        Context context = Context.create(null, Collections.emptyMap(), Collections.emptyList(), (string, task) ->
+                tasks.computeIfAbsent(string, s -> new ArrayList<>()).add(task)
+        );
+
+        for (int i = 0; i < scriptBlocks.getLength(); ++i) {
+            Node r = scriptBlocks.item(i);
+
+            if (r instanceof Element) {
+                NodeList scriptsBlock = r.getChildNodes();
+
+                for (int j = 0; j < scriptsBlock.getLength(); ++j) {
+                    r = scriptsBlock.item(j);
+
+                    if (r instanceof Element e && e.getTagName().equals("init")) {
+                        NodeList scripts = r.getChildNodes();
+
+                        for (int k = 0; k < scripts.getLength(); ++k) {
+                            r = scripts.item(k);
+
+                            if (r instanceof Element script) {
+                                String src = script.getAttribute("src");
+
+                                List<JsonObject> nextCards = new ArrayList<>();
+
+                                for (var card : cards) {
+                                    nextCards.addAll(ScriptingUtil.applyFunction(context, source, src, this::handleScriptResult, null, card, number, options, overrides));
+                                }
+
+                                cards = nextCards;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (var task : tasks.getOrDefault("postInit", Collections.emptyList())) {
+            task.apply(new Object[0]);
+        }
+
+        return cards;
+    }
+
+    private List<JsonObject> handleScriptResult(Object object) {
+        if (object instanceof List list) {
+            return list;
+        } else if (object instanceof JsonObject json) {
+            return Collections.singletonList(json);
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private Result<JsonObject> getCardInfo(CardPrototype prototype) {
@@ -195,7 +264,7 @@ public final class Proximity {
         });
     }
 
-    private Result<AtomicInteger> renderAndSave(Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards) {
+    private Result<AtomicInteger> renderAndSave(Deque<RenderableCard> cards) {
         int countStrLen = Integer.toString(cards.size()).length();
         int threadCount = Integer.min(options.has("threads") ? Integer.parseInt(options.getAsString("threads")) : 10, cards.size());
 
@@ -206,17 +275,14 @@ public final class Proximity {
 
             LOG.info("Rendering {} cards on {} threads", cards.size(), threadCount);
 
-            int i = 1;
-
-            for (Pair<RenderableCard, Optional<RenderableCard>> card : cards) {
+            for (RenderableCard card : cards) {
                 if (threadCount > 1) {
-                    int finalI = i;
-                    executor.submit(() -> this.render(card, finishedCards, errors, countStrLen, finalI, cards.size()));
+                    //                    this.render(card, finishedCards, errors, countStrLen, finalI, cards.size());
+                    executor.submit(() -> this.render(card, finishedCards, errors, countStrLen, cards.size()));
                 } else {
-                    this.render(card, finishedCards, errors, countStrLen, i, cards.size());
+                    this.render(card, finishedCards, errors, countStrLen, cards.size());
                 }
 
-                i++;
             }
 
             try {
@@ -238,37 +304,26 @@ public final class Proximity {
         return Result.error("No cards to render");
     }
 
-    private void render(Pair<RenderableCard, Optional<RenderableCard>> card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int i, int cardCount) {
+    private void render(RenderableCard card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int cardCount) {
         long cardTime = System.currentTimeMillis();
 
-        RenderableCard front = card.left();
-        String name = front.getName() + (card.right().isPresent() ? " // " + card.right().get().getName() : "");
+        String name = card.getName();
 
         try {
-            BufferedImage frontImage = new BufferedImage(front.getWidth(), front.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(card.getWidth(), card.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-            Result<Void> result = front.render(new StatefulGraphics(frontImage)).ifError(errors::add);
+            Result<Void> result = card.render(new StatefulGraphics(image)).ifError(errors::add);
 
             if (result.isOk()) {
-                Path path = Path.of("images", "fronts", i + " " + front.getName().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+                Path path = Path.of("images");
 
-                this.save(frontImage, path);
-
-                if (card.right().isPresent()) {
-                    RenderableCard back = card.right().get();
-                    BufferedImage backImage = new BufferedImage(back.getWidth(), back.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                    result = back.render(new StatefulGraphics(backImage));
-
-                    if (result.isOk()) {
-                        path = Path.of("images", "backs", i + " " + back.getName()
-                                .replaceAll("[^a-zA-Z0-9.\\-, ']", "_") + ".png");
-
-                        this.save(backImage, path);
-                    } else {
-                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
-                        return;
-                    }
+                for (JsonElement element : card.getAsJsonArray("proximity", "path")) {
+                    path = path.resolve(element.getAsString());
                 }
+
+                path = path.resolveSibling(path.getFileName().toString() + ".png");
+
+                this.save(image, path);
 
                 finishedCards.incrementAndGet();
                 LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}SAVED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_GREEN, Logging.ANSI_RESET);

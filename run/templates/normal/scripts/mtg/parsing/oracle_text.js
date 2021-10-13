@@ -1,4 +1,8 @@
 
+function getOrNull(object, key, func) {
+    return object.has(key) ? func(object.get(key)) : null
+}
+
 /**
  * Text functions allow templates to transform text in novel ways
  *
@@ -21,13 +25,13 @@ function apply(context, input, card, styles, base_style) {
             this.allWordsItalic = italics;
 
             this.italicStyle = {
-                fontName: base_style.italicFontName,
-                size: base_style.size,
-                kerning: base_style.kerning,
-                shadow: base_style.shadow,
-                outline: base_style.outline,
-                capitalization: base_style.capitalization,
-                color: base_style.color
+                fontName: getOrNull(base_style, "italicFontName", x => x.getAsString()),
+                size: getOrNull(base_style, "size", x => x.getAsInt()),
+                kerning: getOrNull(base_style, "kerning", x => x.getAsFloat()),
+                shadow: getOrNull(base_style, "shadow", x => x.deepCopy()),
+                outline: getOrNull(base_style, "outline", x => x.deepCopy()),
+                capitalization: getOrNull(base_style, "capitalization", x => x.getAsString()),
+                color: getOrNull(base_style, "color", x => x.getAsInt())
             }
         }
 
@@ -37,7 +41,7 @@ function apply(context, input, card, styles, base_style) {
 
                 switch (c) {
                     case '(':
-                        if (this.card.proximity.options.reminder_text) {
+                        if (this.card.getAsBoolean(["proximity", "options", "reminder_text"])) {
                             this.italic = true;
                             this.currentWord.push(c);
                         } else {

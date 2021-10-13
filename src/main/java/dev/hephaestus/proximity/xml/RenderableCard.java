@@ -4,6 +4,8 @@ import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.scripting.Context;
+import dev.hephaestus.proximity.scripting.ScriptingUtil;
 import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.text.Style;
@@ -26,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class RenderableCard extends JsonObject implements TemplateSource {
-    public static final Pattern SUBSTITUTE = Pattern.compile("\\$(?<function>[\\w.]*)\\{(?<value>[.[^}]]+)}");
+    public static final Pattern SUBSTITUTE = Pattern.compile("\\$(?<function>[\\w.]*)\\{(?<value>[.[^}]]*)}");
 
     private final TemplateSource.Compound source;
     private final RemoteFileCache cache;
@@ -443,34 +445,66 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
         public String getAttribute(String name) {
             String value = this.wrapped.getAttribute(name);
             Matcher matcher = SUBSTITUTE.matcher(value);
+            StringBuilder result = new StringBuilder();
+
+            int previousEnd = 0;
+
+            String priors;
 
             while (matcher.find()) {
-                String[] key = matcher.group(2).split("\\.");
+                 priors = value.substring(previousEnd, matcher.start());
 
-                JsonElement element = RenderableCard.this.get(key);
+                if (!priors.isEmpty()) {
+                    result.append(priors);
+                }
 
+                String function = matcher.group("function");
                 String replacement;
 
-                if (element == null) {
+                String[] key = matcher.group("value").split("\\.");
+                JsonElement e = RenderableCard.this.get(key);
+
+                if (e == null) {
                     replacement = "null";
-                } else if (element.isJsonArray()) {
+                } else if (e.isJsonArray()) {
                     StringBuilder builder = new StringBuilder();
 
-                    for (JsonElement e : element.getAsJsonArray()) {
-                        builder.append(e.getAsString());
+                    for (JsonElement j : e.getAsJsonArray()) {
+                        builder.append(j.getAsString());
                     }
 
                     replacement = builder.toString();
-                } else if (element.isJsonPrimitive()) {
-                    replacement = element.getAsString();
+                } else if (e.isJsonPrimitive()) {
+                    replacement = e.getAsString();
                 } else {
                     throw new UnsupportedOperationException();
                 }
 
-                value = value.replace("${" + matcher.group(2) + "}", replacement);
+                previousEnd = matcher.end();
+
+                Map<String, String> namedContexts = new LinkedHashMap<>();
+                List<String> looseContexts = new ArrayList<>();
+
+                Context context = Context.create(this.getId(), namedContexts, looseContexts, (step, task) -> {});
+
+                result.append(ScriptingUtil.applyFunction(context, RenderableCard.this, function, XMLElement::handleFunctionResult, replacement, RenderableCard.this, replacement));
             }
 
-            return value;
+            String tail = value.substring(previousEnd);
+
+            if (!tail.isEmpty()) {
+                result.append(tail);
+            }
+
+            return result.toString();
+        }
+
+        private static String handleFunctionResult(Object object) {
+            if (object instanceof String string) {
+                return string;
+            }
+
+            throw new RuntimeException("Attribute functions must return a String! Got " + object);
         }
 
         public int getInteger(String name) {
@@ -592,6 +626,10 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
 
         public XMLElement getParent() {
             return this.parent;
+        }
+
+        public String getAttributeRaw(String key) {
+            return this.wrapped.getAttribute(key);
         }
     }
 }

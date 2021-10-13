@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:svg="http://www.w3.org/2000/svg">
   <xs:element name="Template" type="TemplateType"/>
+  <xs:complexType name="script_type">
+    <xs:attribute name="src" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="ScriptsType">
+    <xs:sequence>
+      <xs:element name="script" type="script_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ScriptStagesType">
+    <xs:sequence>
+      <xs:element name="init" type="ScriptsType" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:simpleType name="version">
     <xs:restriction base="xs:token">
       <xs:pattern value="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"/>
@@ -442,6 +455,7 @@
       <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="ResourcesType" name="resources" minOccurs="0" maxOccurs="1"/>
       <xs:element type="SymbolsType" name="symbols" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="ScriptStagesType" name="scripts" minOccurs="0" maxOccurs="1"/>
       <xs:element type="layersType" name="layers"/>
     </xs:all>
     <xs:attribute type="xs:string" name="name"/>

@@ -27,7 +27,7 @@ public class TextLayerRenderer extends LayerRenderer {
             return Result.error("Text layer must have both 'width' and 'height' attributes or neither");
         }
 
-        String value = element.getAttribute("value");
+        String value = element.getAttributeRaw("value");
 
         TextAlignment alignment = element.hasAttribute("alignment") ? TextAlignment.valueOf(element.getAttribute("alignment").toUpperCase(Locale.ROOT)) : TextAlignment.LEFT;
         int x = (element.hasAttribute("x") ? Integer.decode(element.getAttribute("x")) : 0);
@@ -113,7 +113,7 @@ public class TextLayerRenderer extends LayerRenderer {
             Map<String, String> namedContexts = new LinkedHashMap<>();
             List<String> looseContexts = new ArrayList<>();
 
-            String context = Context.create(element.getId(), namedContexts, looseContexts);
+            Context context = Context.create(element.getId(), namedContexts, looseContexts, (step, task) -> {});
 
             if (function == null) {
                 result.add(Collections.singletonList(new TextComponent.Literal(baseStyle, replacement)));

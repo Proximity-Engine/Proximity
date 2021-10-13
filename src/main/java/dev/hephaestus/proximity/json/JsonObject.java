@@ -1,22 +1,21 @@
 package dev.hephaestus.proximity.json;
 
-import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.proxy.ProxyObject;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
 import org.quiltmc.json5.JsonWriter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
-public class JsonObject extends JsonElement implements ProxyObject {
-    private final Map<String, JsonElement> members =
-            new LinkedHashMap<>();
+public class JsonObject extends JsonElement {
+    private final Map<String, JsonElement> members = new LinkedHashMap<>();
 
     public JsonObject() {
-
     }
 
     public JsonObject(String key, JsonElement entry) {
@@ -38,6 +37,8 @@ public class JsonObject extends JsonElement implements ProxyObject {
                 object.add(key, new JsonPrimitive(b));
             } else if (value instanceof JsonElement element) {
                 object.add(key, element);
+            } else if (value instanceof Map valueMap) {
+                object.add(key, interpret(valueMap));
             } else if (value != null) {
                 throw new UnsupportedOperationException();
             }
@@ -81,6 +82,10 @@ public class JsonObject extends JsonElement implements ProxyObject {
 
     public void addProperty(String property, Boolean value) {
         add(property, value == null ? JsonNull.INSTANCE : new JsonPrimitive(value));
+    }
+
+    public void remove(String key) {
+        this.members.remove(key);
     }
 
     public Set<Map.Entry<String, JsonElement>> entrySet() {
@@ -244,34 +249,5 @@ public class JsonObject extends JsonElement implements ProxyObject {
 
     public float getAsFloat(String... keys) {
         return get((o, k) -> o.get(k).getAsFloat(), keys);
-    }
-
-    @Override
-    public Object getMember(String key) {
-        JsonElement element = this.members.get(key);
-
-        if (element instanceof JsonPrimitive primitive) {
-            return primitive.getValue();
-        } else if (element instanceof JsonNull) {
-            return null;
-        } else {
-            return element;
-        }
-    }
-
-    @Override
-    public Object getMemberKeys() {
-        return this.members.keySet().toArray(new String[0]);
-    }
-
-    @Override
-    public boolean hasMember(String key) {
-        return this.members.containsKey(key);
-    }
-
-    @Override
-    public void putMember(String key, Value value) {
-        // TODO: Allow object writing
-        throw new UnsupportedOperationException();
     }
 }

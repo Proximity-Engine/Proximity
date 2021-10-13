@@ -1,7 +1,5 @@
 package dev.hephaestus.proximity.json;
 
-import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.proxy.ProxyArray;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
@@ -13,7 +11,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.function.UnaryOperator;
 
-public final class JsonArray extends JsonElement implements List<JsonElement>, ProxyArray {
+public final class JsonArray extends JsonElement implements List<JsonElement> {
     private final List<JsonElement> elements;
 
     public JsonArray() {
@@ -308,20 +306,5 @@ public final class JsonArray extends JsonElement implements List<JsonElement>, P
     @Override
     public Spliterator<JsonElement> spliterator() {
         return elements.spliterator();
-    }
-
-    @Override
-    public Object get(long index) {
-        return this.elements.get((int) index);
-    }
-
-    @Override
-    public void set(long index, Value value) {
-        // TODO: Support writes
-    }
-
-    @Override
-    public long getSize() {
-        return this.elements.size();
     }
 }

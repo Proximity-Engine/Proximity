@@ -5,14 +5,22 @@ import dev.hephaestus.proximity.json.JsonObject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
-public final class Context {
-    private Context() {
+public final class Context extends JsonObject {
+    private final BiConsumer<String, Function<Object[], Object>> taskHandler;
+
+    private Context(BiConsumer<String, Function<Object[], Object>> taskHandler) {
+        this.taskHandler = taskHandler;
     }
 
-    public static String create(String layerId, Map<String, String> namedContexts, List<String> contextFlags) {
+    public void submit(String step, Function<Object[], Object> task) {
+        this.taskHandler.accept(step, task);
+    }
 
-        JsonObject result = new JsonObject();
+    public static Context create(String layerId, Map<String, String> namedContexts, List<String> contextFlags, BiConsumer<String, Function<Object[], Object>> taskHandler) {
+        Context result = new Context(taskHandler);
 
         result.addProperty("layer", layerId);
         JsonObject named = result.getAsJsonObject("named");
@@ -26,6 +34,6 @@ public final class Context {
             flags.add(flag);
         }
 
-        return result.toString();
+        return result;
     }
 }

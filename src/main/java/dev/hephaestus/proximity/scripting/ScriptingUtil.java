@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.scripting;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.TextComponent;
 import dev.hephaestus.proximity.util.Outline;
@@ -12,6 +13,8 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import java.io.IOException;
@@ -30,15 +33,19 @@ public final class ScriptingUtil {
     private ScriptingUtil() {
     }
 
-    public static <T> T applyFunction(String context, RenderableCard card, String name, Function<Object, T> handler, T defaultValue, Object... args) {
+    public static <T> T applyFunction(dev.hephaestus.proximity.scripting.Context context, TemplateSource source, String name, Function<Object, T> handler, T defaultValue, Object... args) {
         String sep = FileSystems.getDefault().getSeparator();
         String file = "scripts" + sep + name.replace(".", sep) + ".js";
 
-        if (card.exists(file)) {
+        if (source.exists(file)) {
             try {
                 ScriptEngine engine = ENGINE.get();
 
-                engine.eval(new InputStreamReader(card.getInputStream(file)));
+                Bindings bindings = engine.createBindings();
+                bindings.put("polyglot.js.allowAllAccess", true);
+                engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+
+                engine.eval(new InputStreamReader(source.getInputStream(file)));
                 Function<Object[], Object> fn = (Function<Object[], Object>) engine.eval("apply");
 
                 Object[] passedArgs = new Object[args.length + 1];
@@ -53,14 +60,14 @@ public final class ScriptingUtil {
             } catch (IOException | ScriptException e) {
                 e.printStackTrace();
             }
-        } else {
+        } else if (!name.isEmpty()) {
             Proximity.LOG.warn("Tried to use missing function '{}'", name);
         }
 
         return defaultValue;
     }
 
-    public static List<List<TextComponent>> applyTextFunction(String context, String name, String input, RenderableCard card, Map<String, Style> styles, Style base) {
+    public static List<List<TextComponent>> applyTextFunction(dev.hephaestus.proximity.scripting.Context context, String name, String input, RenderableCard card, Map<String, Style> styles, Style base) {
         JsonObject stylesJson = new JsonObject();
 
         for (var entry : styles.entrySet()) {
@@ -79,7 +86,16 @@ public final class ScriptingUtil {
             List<TextComponent> group = new ArrayList<>(list.size());
 
             for (var components : list) {
-                JsonObject styleJson = JsonObject.interpret((Map) components.get("style"));
+                Object styleObject = components.get("style");
+                JsonObject styleJson;
+
+                if (styleObject instanceof Map) {
+                    styleJson = JsonObject.interpret((Map) components.get("style"));
+                } else if (styleObject instanceof JsonObject) {
+                    styleJson = (JsonObject) components.get("style");
+                } else {
+                    throw new RuntimeException();
+                }
 
                 Style.Builder style = new Style.Builder();
 
