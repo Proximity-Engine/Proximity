@@ -326,6 +326,7 @@
           <xs:element type="LayoutType" name="HorizontalLayout"/>
           <xs:element type="LayoutType" name="VerticalLayout"/>
           <xs:element type="SVGLayerType" name="SVG"/>
+          <xs:element type="SpacingLayerType" name="Noise"/>
           <xs:element type="ArtLayerType" name="ArtLayer">
             <xs:annotation>
               <xs:documentation>The art layer is special in that it can also contain a width and/or height

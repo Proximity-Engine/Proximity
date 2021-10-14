@@ -56,6 +56,7 @@ public final class Proximity {
         LayerRenderer.register(new SquishBoxRenderer(), "SquishBox");
         LayerRenderer.register(new TextLayerRenderer(), "TextLayer");
         LayerRenderer.register(new SVGLayerRenderer(), "SVG");
+        LayerRenderer.register(new NoiseLayerRenderer(), "Noise");
 
         LayerRenderer.register(new LayoutElementRenderer("x", "y",
                 Rectangle2D::getWidth,

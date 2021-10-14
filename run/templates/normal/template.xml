@@ -887,5 +887,6 @@
                 <IsEquals key="layout" value="modal_dfc"/>
             </conditions>
         </SquishBox>
+        <Noise x="0" y="4478" width="3288" height="10"/>
     </layers>
 </Template>
