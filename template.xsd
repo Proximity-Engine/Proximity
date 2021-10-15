@@ -1,6 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:svg="http://www.w3.org/2000/svg">
   <xs:element name="Template" type="TemplateType"/>
+  <xs:element name="Content" type="ContentType"/>
+  <xs:complexType name="script_type">
+    <xs:attribute name="src" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="ScriptsType">
+    <xs:sequence>
+      <xs:element name="script" type="script_type" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ScriptStagesType">
+    <xs:sequence>
+      <xs:element name="init" type="ScriptsType" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="version">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="SymbolType">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:sequence>
+          <xs:element type="glyph_type" name="glyphs" minOccurs="1" maxOccurs="unbounded"/>
+          <xs:element type="conditionsType" name="conditions" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="representation" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="glyph_type">
+    <xs:complexContent>
+      <xs:extension base="StyleType">
+        <xs:attribute type="xs:string" name="glyphs" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:simpleType name="resource_type">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="assets"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="resource">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="type" type="resource_type" use="required"/>
+        <xs:attribute name="location" type="xs:anyURI" use="required"/>
+        <xs:attribute name="version" type="version" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ResourcesType">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:sequence>
+          <xs:element type="resource" name="resource" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:simpleType name="color">
     <xs:annotation>
       <xs:documentation>The color entity indicates the color of an element. Color may be represented as hexadecimal RGB triples, as in HTML, or as hexadecimal ARGB tuples, with the A indicating alpha of transparency. An alpha value of 00 is totally transparent; FF is totally opaque. If RGB is used, the A value is assumed to be FF. For instance, the RGB value "#800080" represents purple. An ARGB value of "#40800080" would be a transparent purple. As in SVG 1.1, colors are defined in terms of the sRGB color space (IEC 61966).</xs:documentation>
@@ -31,6 +91,35 @@
       <xs:enumeration value="end"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="GradientUnits">
+    <xs:restriction>
+      <xs:enumeration value="objectBoundingBox"/>
+      <xs:enumeration value="userSpaceOnUse"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="stopType">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="offset" type="xs:float"/>
+        <xs:attribute name="style" type="xs:string"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="GradientType">
+    <xs:complexContent>
+      <xs:extension base="xs:element">
+        <xs:sequence>
+          <xs:element name="stop" minOccurs="1" maxOccurs="unbounded" type="stopType"/>
+          <xs:element name="conditions" type="conditionsType"/>
+        </xs:sequence>
+        <xs:attribute name="id" type="xs:string" use="required"/>
+        <xs:attribute name="x1" type="xs:float" use="required"/>
+        <xs:attribute name="y1" type="xs:float" use="required"/>
+        <xs:attribute name="x2" type="xs:float" use="required"/>
+        <xs:attribute name="y2" type="xs:float" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="EnumerationValueType">
     <xs:simpleContent>
       <xs:extension base="xs:string">
@@ -57,7 +146,8 @@
   <xs:complexType name="StringOptionType">
     <xs:simpleContent>
       <xs:extension base="xs:string">
-        <xs:attribute type="xs:string" name="value"/>
+        <xs:attribute type="idType" name="id" use="required"/>
+        <xs:attribute type="xs:string" name="default"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -107,9 +197,11 @@
     </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="stylesType">
-    <xs:sequence>
+    <xs:choice>
       <xs:element type="StyleType" name="Style" maxOccurs="unbounded" minOccurs="0"/>
-    </xs:sequence>
+      <xs:element type="GradientType" name="linearGradient" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="GradientType" name="radialGradient" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:choice>
   </xs:complexType>
   <xs:complexType name="RangeType">
     <xs:simpleContent>
@@ -172,6 +264,7 @@
       <xs:element type="wrapType" name="Bounds"/>
       <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="GroupType" name="Mask" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="GroupType" name="Erase" minOccurs="0" maxOccurs="1"/>
       <xs:element type="CardModifierType" name="CardModifier" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="idType" name="id" use="optional"/>
@@ -189,9 +282,6 @@
   <xs:complexType name="SVGLayerType">
     <xs:complexContent>
       <xs:extension base="LayerType">
-        <xs:sequence>
-          <xs:element type="OutlineType" name="outline"/>
-        </xs:sequence>
         <xs:attribute type="xs:string" name="src" use="optional"/>
         <xs:attribute type="xs:int" name="width" use="optional"/>
         <xs:attribute type="xs:int" name="height" use="optional"/>
@@ -231,10 +321,12 @@
           <xs:element type="ForkType" name="Fork"/>
           <xs:element type="TextLayerType" name="TextLayer"/>
           <xs:element type="GroupType" name="Group"/>
-          <xs:element type="SpacingLayerType" name="SpacingLayer" minOccurs="0"/>
+          <xs:element type="SpacingLayerType" name="SpacingLayer"/>
+          <xs:element type="FillLayerType" name="Fill"/>
           <xs:element type="LayoutType" name="HorizontalLayout"/>
           <xs:element type="LayoutType" name="VerticalLayout"/>
           <xs:element type="SVGLayerType" name="SVG"/>
+          <xs:element type="SpacingLayerType" name="Noise"/>
           <xs:element type="ArtLayerType" name="ArtLayer">
             <xs:annotation>
               <xs:documentation>The art layer is special in that it can also contain a width and/or height
@@ -332,6 +424,13 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
+  <xs:complexType name="FillLayerType">
+    <xs:simpleContent>
+      <xs:extension base="SpacingLayerType">
+        <xs:attribute type="color" name="color"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name="wrapType">
     <xs:complexContent>
       <xs:extension base="LayerPropertyType">
@@ -342,17 +441,50 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  <xs:complexType name="TemplateType">
+  <xs:complexType name="SymbolsType">
+    <xs:complexContent>
+      <xs:extension base="xs:string">
+        <xs:sequence>
+          <xs:element name="Symbol" type="SymbolType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ContentType">
     <xs:sequence>
       <xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="imports" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="import" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:attribute name="src" type="xs:string" use="required"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element type="stylesType" name="styles" minOccurs="0" maxOccurs="1"/>
       <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="layersType" name="layers"/>
+      <xs:element type="ResourcesType" name="resources" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="SymbolsType" name="symbols" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="ScriptStagesType" name="scripts" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
-    <xs:attribute type="xs:string" name="name"/>
-    <xs:attribute type="xs:string" name="author"/>
-    <xs:attribute type="xs:string" name="width" use="required"/>
-    <xs:attribute type="xs:string" name="height" use="required"/>
+  </xs:complexType>
+  <xs:complexType name="TemplateType">
+    <xs:complexContent>
+      <xs:extension base="ContentType">
+        <xs:sequence>
+          <xs:element type="layersType" name="layers" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="name"/>
+        <xs:attribute type="xs:string" name="author"/>
+        <xs:attribute type="xs:string" name="width" use="required"/>
+        <xs:attribute type="xs:string" name="height" use="required"/>
+        <xs:attribute type="version" name="template_version"/>
+        <xs:attribute type="version" name="proximity_version" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
   <xs:complexType name="FileExistsType">
     <xs:attribute type="xs:string" name="src"/>

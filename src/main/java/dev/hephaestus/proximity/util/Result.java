@@ -97,4 +97,8 @@ public class Result<T> {
     public static <T> Result<T> of(T value) {
         return new Result<>(false, value, null);
     }
+
+    public T orElse(T value) {
+        return this.isError ? value : this.value;
+    }
 }

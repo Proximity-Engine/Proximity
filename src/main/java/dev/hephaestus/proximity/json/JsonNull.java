@@ -7,7 +7,8 @@ import java.io.IOException;
 public final class JsonNull extends JsonElement {
     public static final JsonNull INSTANCE = new JsonNull();
 
-    private JsonNull() {}
+    private JsonNull() {
+    }
 
     @Override
     public JsonNull deepCopy() {

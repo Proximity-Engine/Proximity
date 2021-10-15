@@ -1,0 +1,286 @@
+<Template name="Chilli's" author="ChilliAxe and Haven King" width="3288" height="4488"
+          proximity_version="0.5.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="../../../template.xsd">
+    <options>
+        <ToggleOption id="bottom_text_outline" default="false"/>
+        <ToggleOption id="copyright" default="true"/>
+        <ToggleOption id="flavor_text" default="true"/>
+        <ToggleOption id="flavor_bar" default="true"/>
+        <ToggleOption id="show_set_symbol" default="true"/>
+        <StringOption id="border" default="#FF000000"/>
+    </options>
+    <condition_definitions>
+        <ConditionDefinition name="colorless_artifact">
+            <IsPresent key="proximity.types.artifact"/>
+            <IsEquals key="proximity.color_count" value="0"/>
+        </ConditionDefinition>
+        <ConditionDefinition name="one_or_two_colors">
+            <Range key="proximity.color_count" min="1" max="2"/>
+        </ConditionDefinition>
+    </condition_definitions>
+    <resources>
+        <resource type="assets" location="https://hephaestus.dev/proximity/resources/set_symbols" version="1.0.0"/>
+    </resources>
+    <styles>
+        <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+            <stop offset="0.125" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+            <stop offset="0.5" style="stop-color:rgb(241,142,30);stop-opacity:1"/>
+            <stop offset="0.875" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+            <stop offset="1" style="stop-color:rgb(192,55,38);stop-opacity:1"/>
+            <conditions>
+                <IsEquals key="rarity" value="mythic"/>
+            </conditions>
+        </linearGradient>
+        <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+            <stop offset="0.125" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+            <stop offset="0.5" style="stop-color:rgb(211,178,108);stop-opacity:1"/>
+            <stop offset="0.875" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+            <stop offset="1" style="stop-color:rgb(146,116,67);stop-opacity:1"/>
+            <conditions>
+                <IsEquals key="rarity" value="rare"/>
+            </conditions>
+        </linearGradient>
+        <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+            <stop offset="0.125" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+            <stop offset="0.5" style="stop-color:rgb(201, 173, 221);stop-opacity:1"/>
+            <stop offset="0.875" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+            <stop offset="1" style="stop-color:rgb(76, 56, 106);stop-opacity:1"/>
+            <conditions>
+                <IsEquals key="rarity" value="special"/>
+            </conditions>
+        </linearGradient>
+        <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+            <stop offset="0.125" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+            <stop offset="0.5" style="stop-color:rgb(196,222,238);stop-opacity:1"/>
+            <stop offset="0.875" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+            <stop offset="1" style="stop-color:rgb(98,110,119);stop-opacity:1"/>
+            <conditions>
+                <IsEquals key="rarity" value="uncommon"/>
+            </conditions>
+        </linearGradient>
+        <linearGradient id="rarity" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(0,0,0);stop-opacity:1"/>
+            <conditions>
+                <IsEquals key="rarity" value="common"/>
+            </conditions>
+        </linearGradient>
+        <linearGradient id="rarity-outline" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(255,255,255);stop-opacity:1"/>
+            <conditions>
+                <Or>
+                    <IsEquals key="rarity" value="common"/>
+                    <IsEquals key="rarity" value="special"/>
+                </Or>
+            </conditions>
+        </linearGradient>
+        <linearGradient id="rarity-outline" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" style="stop-color:rgb(0,0,0);stop-opacity:1"/>
+            <conditions>
+                <Not>
+                    <Or>
+                        <IsEquals key="rarity" value="common"/>
+                        <IsEquals key="rarity" value="special"/>
+                    </Or>
+                </Not>
+            </conditions>
+        </linearGradient>
+    </styles>
+    <layers>
+        <Fill x="0" y="0" width="3288" height="4488" color="${proximity.options.border}">
+            <conditions>
+                <Not>
+                    <IsEquals key="proximity.options.border" value="none"/>
+                </Not>
+            </conditions>
+            <Erase>
+                <Fill x="423" y="2636" width="2442" height="1264" color="#FF000000"/>
+            </Erase>
+        </Fill>
+        <ArtLayer x="476" y="549" width="2337" height="1875">
+            <conditions>
+                <IsEquals key="proximity.options.use_official_art"/>
+            </conditions>
+        </ArtLayer>
+        <Selector id="frames">
+            <Fork>
+                <Selector>
+                    <ImageLayer id="artifact">
+                        <conditions>
+                            <IsPresent key="proximity.types.artifact"/>
+                            <IsPresent key="proximity.types.land" value="false"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colorless">
+                        <conditions>
+                            <IsEquals key="proximity.color_count" value="0"/>
+                            <IsPresent key="proximity.types.land" value="false"/>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="colored" src="${colors}">
+                        <conditions>
+                            <Or>
+                                <IsEquals key="proximity.color_count" value="1"/>
+                                <And>
+                                    <IsEquals key="proximity.color_count" value="2"/>
+                                    <IsEquals key="proximity.hybrid"/>
+                                </And>
+                            </Or>
+                        </conditions>
+                    </ImageLayer>
+                    <ImageLayer id="gold">
+                        <conditions>
+                            <Range key="proximity.color_count" min="2"/>
+                        </conditions>
+                    </ImageLayer>
+                </Selector>
+                <branches>
+                    <Branch id="land">
+                        <IsPresent key="proximity.types.land"/>
+                    </Branch>
+                    <Branch id="standard"/>
+                </branches>
+            </Fork>
+        </Selector>
+        <SquishBox id="title_bar">
+            <main id="cost">
+                <TextLayer x="2915" y="470" alignment="right" value="$parse_cost{mana_cost}">
+                    <Style font="NDPMTG" size="175"/>
+                </TextLayer>
+            </main>
+            <flex>
+                <Selector id="name">
+                    <Selector id="dfc">
+                        <TextLayer x="710" y="470" value="${name}">
+                            <Style font="Goudy Medieval Alternate" color="#FFFFFF" size="160">
+                                <shadow color="#000000" dX="5" dY="5"/>
+                            </Style>
+                        </TextLayer>
+                        <conditions>
+                            <IsPresent key="layout"/>
+                            <Or>
+                                <IsEquals key="layout" value="modal_dfc"/>
+                                <IsEquals key="layout" value="transform"/>
+                            </Or>
+                        </conditions>
+                    </Selector>
+                    <TextLayer x="440" y="475" value="${name}">
+                        <Style font="Goudy Medieval Alternate" color="#FFFFFF" size="160">
+                            <shadow color="#000000" dX="5" dY="5"/>
+                        </Style>
+                    </TextLayer>
+                </Selector>
+            </flex>
+        </SquishBox>
+        <SquishBox>
+            <main id="set_symbol">
+                <Group>
+                    <SpacingLayer x="2575" y="2470" width="250" height="160"/>
+                    <Selector x="2850" y="2553">
+                        <!-- Certain sets don't use a uniform color palette, so this is a necessary evil -->
+                        <SVG src="${rarity}/${set}" width="242" height="154" horizontal_alignment="end">
+                            <conditions>
+                                <FileExists src="${rarity}/${set}.svg"/>
+                            </conditions>
+                        </SVG>
+                        <SVG src="${set}" width="242" height="154" horizontal_alignment="end">
+                            <conditions>
+                                <FileExists src="${set}.svg"/>
+                            </conditions>
+                        </SVG>
+                        <!-- Conflux is evil. CON is a reserved file name on Windows, so this little hack is needed -->
+                        <SVG src="${rarity}/${set}_" width="242" height="154" horizontal_alignment="end">
+                            <conditions>
+                                <FileExists src="${rarity}/${set}_.svg"/>
+                            </conditions>
+                        </SVG>
+                        <SVG src="${set}_" width="242" height="154" horizontal_alignment="end">
+                            <conditions>
+                                <FileExists src="${set}_.svg"/>
+                            </conditions>
+                        </SVG>
+                        <!-- If a set doesn't have a symbol, default to the cube symbol -->
+                        <SVG src="xlcu" width="242" height="154" horizontal_alignment="end"/>
+                    </Selector>
+                    <CardModifier key="set" value="v17_back">
+                        <IsEquals key="set" value="v17"/>
+                        <IsEquals key="proximity.front_face" value="false"/>
+                    </CardModifier>
+                </Group>
+                <conditions>
+                    <IsEquals key="proximity.options.show_set_symbol"/>
+                </conditions>
+            </main>
+            <flex>
+                <TextLayer id="front" x="453" y="2608" value="${type_line}">
+                    <Style font="MPlantin" color="#FFFFFF" size="150">
+                        <shadow color="#000000" dX="3" dY="3"/>
+                    </Style>
+                </TextLayer>
+            </flex>
+        </SquishBox>
+        <Group id="oracle_text">
+            <TextLayer id="mutate" value="$oracle_text{proximity.util.mutate_text}" x="495" y="2700" width="2298" height="500">
+                <conditions>
+                    <IsPresent key="keywords.mutate"/>
+                </conditions>
+            </TextLayer>
+            <Selector>
+                <VerticalLayout x="495" y="2666" width="2298" height="1200" alignment="middle">
+                    <AttributeModifier name="y" value="3200">
+                        <IsPresent key="keywords.mutate"/>
+                    </AttributeModifier>
+                    <AttributeModifier name="height" value="640">
+                        <IsPresent key="keywords.mutate"/>
+                    </AttributeModifier>
+                    <TextLayer value="$oracle_text{oracle_text}">
+                        <conditions>
+                            <IsPresent key="oracle_text"/>
+                        </conditions>
+                    </TextLayer>
+                    <VerticalLayout>
+                        <SpacingLayer id="spacing1" width="10" height="150"/>
+                        <TextLayer value="$flavor_text{flavor_text}"/>
+                        <conditions>
+                            <IsPresent key="flavor_text"/>
+                            <IsEquals key="proximity.options.flavor_text"/>
+                        </conditions>
+                    </VerticalLayout>
+                </VerticalLayout>
+            </Selector>
+            <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="125"/>
+        </Group>
+        <TextLayer x="2740" y="4077" value="${power}/${toughness}" alignment="center">
+            <Style font="MPlantin-Bold" color="#FFFFFF" size="180">
+                <shadow color="#000000" dX="10" dY="5"/>
+            </Style>
+            <conditions>
+                <Or>
+                    <IsPresent key="proximity.types.creature"/>
+                    <IsPresent key="proximity.types.vehicle"/>
+                </Or>
+            </conditions>
+        </TextLayer>
+        <TextLayer value="Illus. ${artist}" alignment="center" x="1644" y="4030">
+            <Style font="MPlantin" color="#FFFFFF" size="103">
+                <shadow color="#000000" dX="5" dY="5"/>
+            </Style>
+        </TextLayer>
+        <TextLayer id="copyright" value="™ &amp; © 2021 Wizards of the Coast" alignment="center" x="1644" y="4120">
+            <Style font="MPlantin" color="#FFFFFF" size="68">
+                <shadow color="#000000" dX="2" dY="2"/>
+            </Style>
+            <conditions>
+                <Or>
+                    <IsPresent key="proximity.types.planeswalker"/>
+                    <IsPresent key="proximity.types.creature"/>
+                    <IsPresent key="proximity.types.vehicle"/>
+                </Or>
+            </conditions>
+        </TextLayer>
+    </layers>
+</Template>

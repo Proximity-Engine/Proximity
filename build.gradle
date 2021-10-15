@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'dev.hephaestus'
-version '0.3.2'
+version '0.4.0'
 
 repositories {
     mavenCentral()
@@ -22,6 +22,8 @@ dependencies {
     implementation(shadow('org.quiltmc:quilt-json5:1.0.0'))
     implementation(shadow('org.apache.logging.log4j:log4j-core:2.14.1'))
     implementation(shadow('org.apache.xmlgraphics:batik-all:1.14'))
+    implementation(shadow('org.graalvm.js:js:21.1.0'))
+    implementation(shadow('org.graalvm.js:js-scriptengine:21.1.0'))
 }
 
 test {

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 
-<Template name="Chilli's" author="ChilliAxe and Haven King" width="3288"
-          height="4488"
+<Template name="Chilli's" author="ChilliAxe and Haven King" width="3288" height="4488"
+          proximity_version="0.5.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Haven-King/Proximity/master/template.xsd">
+          xsi:noNamespaceSchemaLocation="../../../template.xsd">
     <options>
         <Enumeration id="border" default="black">
             <EnumerationValue value="black"/>
@@ -17,6 +17,9 @@
         <ToggleOption id="flavor_bar" default="true"/>
         <ToggleOption id="show_set_symbol" default="true"/>
     </options>
+    <imports>
+        <import src="symbols"/>
+    </imports>
     <condition_definitions>
         <ConditionDefinition name="colorless_artifact">
             <IsPresent key="proximity.types.artifact"/>
@@ -26,6 +29,17 @@
             <Range key="proximity.color_count" min="1" max="2"/>
         </ConditionDefinition>
     </condition_definitions>
+    <resources>
+        <resource type="assets" location="https://hephaestus.dev/proximity/resources/set_symbols" version="1.0.0"/>
+    </resources>
+    <scripts>
+        <init>
+            <script src="mtg.init.split"/>
+            <script src="mtg.init.types"/>
+            <script src="mtg.init.colors"/>
+            <script src="mtg.init.misc"/>
+        </init>
+    </scripts>
     <layers>
         <!-- The art layer is special in that it can also contain a width and/or height
         If both are provided, the layer will be stretched or shrunk to cover that area
@@ -109,11 +123,17 @@
                     <IsEquals key="layout" value="modal_dfc"/>
                 </conditions>
             </ImageLayer>
-            <ImageLayer id="transform">
+            <Selector id="transform">
+                <ImageLayer id="front">
+                    <conditions>
+                        <IsEquals key="proximity.front_face"/>
+                    </conditions>
+                </ImageLayer>
+                <ImageLayer id="back"/>
                 <conditions>
                     <IsEquals key="layout" value="transform"/>
                 </conditions>
-            </ImageLayer>
+            </Selector>
             <ImageLayer id="normal"/>
         </Selector>
         <Selector id="pinlines">
@@ -189,10 +209,10 @@
                     <IsEquals key="layout" value="transform"/>
                 </conditions>
             </Fork>
-            <ImageLayer id="miracle" src="${colors}">
+            <ImageLayer id="miracle" src="miracle/${colors}">
                 <conditions>
                     <IsPresent key="frame_effects.miracle"/>
-                    <IsEquals key="proximity.color_count" value="0"/>
+                    <IsEquals key="proximity.color_count" value="1"/>
                 </conditions>
             </ImageLayer>
             <Selector id="mutate">
@@ -202,7 +222,7 @@
                         <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
-                <ImageLayer id="colored">
+                <ImageLayer id="colored" src="${colors}">
                     <conditions>
                         <IsEquals key="one_or_two_colors"/>
                     </conditions>
@@ -390,7 +410,7 @@
                     </Or>
                 </conditions>
             </Fork>
-            <ImageLayer id="miracle" src="${colors}">
+            <ImageLayer id="miracle" src="miracle/${colors}">
                 <conditions>
                     <IsEquals key="proximity.color_count" value="1"/>
                     <IsPresent key="frame_effects"/>
@@ -425,7 +445,10 @@
                                 <IsEquals key="proximity.hybrid"/>
                             </And>
                             <And>
-                                <IsEquals key="proximity.color_count" value="0"/>
+                                <Or>
+                                    <IsEquals key="proximity.color_count" value="0"/>
+                                    <IsEquals key="proximity.color_count" value="2"/>
+                                </Or>
                                 <IsPresent key="proximity.types.land"/>
                             </And>
                         </Or>
@@ -436,7 +459,7 @@
         </Selector>
         <SquishBox id="title_bar">
             <main id="cost">
-                <TextLayer x="2925" y="503" alignment="right" value="$parse_cost{mana_cost}">
+                <TextLayer x="2925" y="503" alignment="right" value="${mana_cost}">
                     <Style font="NDPMTG" size="175">
                         <shadow color="#000000" dX="-4" dY="11"/>
                     </Style>
@@ -445,13 +468,13 @@
             <flex>
                 <Selector id="name">
                     <Selector id="dfc">
-                        <TextLayer x="665" y="515" value="${name}">
+                        <TextLayer x="665" y="506" value="${name}">
                             <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                             <conditions>
                                 <IsEquals key="proximity.front_face"/>
                             </conditions>
                         </TextLayer>
-                        <TextLayer x="665" y="515" value="${name}">
+                        <TextLayer x="665" y="506" value="${name}">
                             <Style font="Beleren2016-Bold" color="#FFFFFF" size="160"/>
                             <conditions>
                                 <IsEquals key="proximity.front_face" value="false"/>
@@ -465,7 +488,7 @@
                             </Or>
                         </conditions>
                     </Selector>
-                    <TextLayer x="395" y="515" value="${name}">
+                    <TextLayer x="380" y="506" value="${name}">
                         <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                     </TextLayer>
                 </Selector>
@@ -477,108 +500,46 @@
                 <IsPresent key="layout"/>
                 <IsEquals key="layout" value="transform"/>
                 <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                <IsEquals key="proximity.front_face"/>
             </conditions>
         </TextLayer>
         <SquishBox>
             <main id="set_symbol">
+                <SpacingLayer x="2893" y="2519" width="10" height="220"/>
                 <Group>
-                    <SVG x="2816" y="2628" src="bg/${set}" width="242" height="155">
-                        <outline color="#000000" weight="10"/>
-                        <conditions>
-                            <FileExists src="bg/${set}.svg"/>
-                        </conditions>
-                    </SVG>
                     <Selector>
-                        <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#FFFFFF" force_outline="true">
-                            <outline color="#FFFFFF" weight="10"/>
+                        <!-- Certain sets don't use a uniform color palette, so this is a necessary evil -->
+                        <SVG x="2816" y="2628" src="${rarity}/${set}" width="242" height="155">
                             <conditions>
-                                <Or>
-                                    <IsEquals key="rarity" value="common"/>
-                                    <IsEquals key="rarity" value="special"/>
-                                </Or>
+                                <FileExists src="${rarity}/${set}.svg"/>
                             </conditions>
                         </SVG>
-                        <SVG x="2816" y="2628" src="${set}" width="242" height="155" solid="true" fill="#000000" force_outline="true">
-                            <outline color="#000000" weight="10"/>
+                        <SVG x="2816" y="2628" src="${set}" width="242" height="155">
+                            <conditions>
+                                <FileExists src="${set}.svg"/>
+                            </conditions>
                         </SVG>
                     </Selector>
-                    <SVG x="2816" y="2628" src="rarities/${rarity}" width="800" height="800">
-                        <Mask>
-                            <SVG x="2816" y="2628" src="${set}" width="242" height="155"/>
-                        </Mask>
-                    </SVG>
-                    <Selector>
-                        <Group>
-                            <SVG x="2816" y="2628" src="fg/${rarity}/${set}" width="242" height="155">
-                                <outline color="#000000" weight="10"/>
-                            </SVG>
-                            <SVG x="2816" y="2628" src="fg/${rarity}/${set}" width="242" height="155">
-                                <outline color="#FFFFFF" weight="0">
-                                    <conditions>
-                                        <Or>
-                                            <IsEquals key="rarity" value="common"/>
-                                            <IsEquals key="rarity" value="special"/>
-                                        </Or>
-                                    </conditions>
-                                </outline>
-                                <outline color="#000000" weight="0">
-                                    <conditions>
-                                        <Not>
-                                            <Or>
-                                                <IsEquals key="rarity" value="common"/>
-                                                <IsEquals key="rarity" value="special"/>
-                                            </Or>
-                                        </Not>
-                                    </conditions>
-                                </outline>
-                            </SVG>
-                            <conditions>
-                                <FileExists src="fg/${rarity}/${set}.svg"/>
-                            </conditions>
-                        </Group>
-                        <Group>
-                            <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
-                                <outline color="#000000" weight="10"/>
-                            </SVG>
-                            <SVG x="2816" y="2628" src="fg/${set}" width="242" height="155">
-                                <outline color="#FFFFFF" weight="0">
-                                    <conditions>
-                                        <Or>
-                                            <IsEquals key="rarity" value="common"/>
-                                            <IsEquals key="rarity" value="special"/>
-                                        </Or>
-                                    </conditions>
-                                </outline>
-                                <outline color="#000000" weight="0">
-                                    <conditions>
-                                        <Not>
-                                            <Or>
-                                                <IsEquals key="rarity" value="common"/>
-                                                <IsEquals key="rarity" value="special"/>
-                                            </Or>
-                                        </Not>
-                                    </conditions>
-                                </outline>
-                            </SVG>
-                            <conditions>
-                                <FileExists src="fg/${set}.svg"/>
-                            </conditions>
-                        </Group>
-                    </Selector>
-                    <CardModifier key="set" value="xlcu">
-                    <Not>
-                        <FileExists src="${set}.svg"/>
-                    </Not>
-                </CardModifier>
+                    <CardModifier key="set" value="pz1">
+                        <Not>
+                            <FileExists src="${set}.svg"/>
+                        </Not>
+                    </CardModifier>
+                    <conditions>
+                        <IsEquals key="proximity.options.show_set_symbol"/>
+                    </conditions>
                 </Group>
-                <conditions>
-                    <IsEquals key="proximity.options.show_set_symbol"/>
-                </conditions>
             </main>
             <flex>
                 <Selector id="types">
-                    <TextLayer id="back" x="375" y="2675" value="${type_line}">
-                        <Style font="Beleren2016-Bold" color="#FFFFFF" size="150"/>
+                    <TextLayer id="back" x="381" y="2665" value="${type_line}">
+                        <AttributeModifier name="x" value="531">
+                            <IsPresent key="color_indicator"/>
+                            <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
+                        </AttributeModifier>
+                    </TextLayer>
+                    <Style font="Beleren2016-Bold" color="#000000" size="135" kerning="2"/>
+                    <Style font="Beleren2016-Bold" color="#FFFFFF" size="135" kerning="2">
                         <conditions>
                             <IsPresent key="layout"/>
                             <Or>
@@ -587,13 +548,16 @@
                             </Or>
                             <IsEquals key="proximity.front_face" value="false"/>
                         </conditions>
-                    </TextLayer>
-                    <TextLayer id="front" x="375" y="2675" value="${type_line}">
-                        <Style font="Beleren2016-Bold" color="#000000" size="150"/>
-                    </TextLayer>
+                    </Style>
                 </Selector>
             </flex>
         </SquishBox>
+        <ImageLayer src="overlays/color_indicators/${color_indicator}">
+            <conditions>
+                <IsPresent key="color_indicator"/>
+                <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
+            </conditions>
+        </ImageLayer>
         <Group id="pt">
             <Selector>
                 <ImageLayer id="vehicle">
@@ -647,21 +611,20 @@
             </conditions>
         </Group>
         <Group id="oracle_text">
-            <TextLayer id="mutate" value="$oracle_text{proximity.util.mutate_text}" x="400" y="2800" width="2488" height="500">
+            <TextLayer id="mutate" value="$mtg.parsing.oracle_text{proximity.util.mutate_text}" x="400" y="2800" width="2488" height="500">
                 <conditions>
                     <IsPresent key="keywords.mutate"/>
                 </conditions>
             </TextLayer>
-            <Selector>
-                <VerticalLayout x="400" y="2795" width="2488" height="1200" alignment="middle">
-                    <AttributeModifier name="height" value="1047">
+            <VerticalLayout x="400" y="2795" width="2488" height="1190" alignment="middle">
+                    <AttributeModifier name="height" value="1037">
                         <IsPresent key="layout"/>
                         <IsEquals key="layout" value="modal_dfc"/>
                         <Not>
                             <IsPresent key="keywords.mutate"/>
                         </Not>
                     </AttributeModifier>
-                    <AttributeModifier name="height" value="652">
+                    <AttributeModifier name="height" value="642">
                         <Not>
                             <And>
                                 <IsPresent key="layout"/>
@@ -670,7 +633,7 @@
                         </Not>
                         <IsPresent key="keywords.mutate"/>
                     </AttributeModifier>
-                    <AttributeModifier name="height" value="312">
+                    <AttributeModifier name="height" value="302">
                         <IsPresent key="layout"/>
                         <IsEquals key="layout" value="modal_dfc"/>
                         <IsPresent key="keywords.mutate"/>
@@ -678,7 +641,7 @@
                     <AttributeModifier name="y" value="3342">
                         <IsPresent key="keywords.mutate"/>
                     </AttributeModifier>
-                    <TextLayer value="$oracle_text{oracle_text}">
+                    <TextLayer value="$mtg.parsing.oracle_text{oracle_text}">
                         <conditions>
                             <IsPresent key="oracle_text"/>
                         </conditions>
@@ -697,9 +660,12 @@
                             <SpacingLayer id="spacing2" width="10" height="65"/>
                             <conditions>
                                 <IsPresent key="oracle_text"/>
+                                <Not>
+                                    <IsEquals key="oracle_text" value=""/>
+                                </Not>
                             </conditions>
                         </VerticalLayout>
-                        <TextLayer value="$flavor_text{flavor_text}"/>
+                        <TextLayer value="$mtg.parsing.flavor_text{flavor_text}"/>
                         <conditions>
                             <IsPresent key="flavor_text"/>
                             <IsEquals key="proximity.options.flavor_text"/>
@@ -727,8 +693,7 @@
                         </conditions>
                     </Wrap>
                 </VerticalLayout>
-            </Selector>
-            <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="125"/>
+            <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="135"/>
         </Group>
         <Group id="bottom_text">
             <HorizontalLayout id="set_lang_and_artist" x="335" y="4209">
@@ -739,7 +704,7 @@
                 </TextLayer>
                 <SpacingLayer height="5" width="13"/>
                 <TextLayer value="•">
-                    <Style font="Calibri" size="69"/>
+                    <Style font="Altone" size="69"/>
                 </TextLayer>
                 <SpacingLayer height="5" width="28"/>
                 <TextLayer id="lang" value="${lang}" y="2">
@@ -757,8 +722,8 @@
                 </HorizontalLayout>
             </HorizontalLayout>
             <Group id="disclaimer">
-                <TextLayer x="335" y="4134" value="2021 Custom Proxy">
-                    <Style font="Calibri" size="78"/>
+                <TextLayer x="335" y="4131" value="2021 Custom Proxy">
+                    <Style font="Altone" size="70"/>
                 </TextLayer>
                 <TextLayer value="NOT FOR SALE" x="1010" y="4136">
                     <Style font="Beleren2016-Bold" size="71" kerning="1"/>
@@ -900,7 +865,7 @@
         </Group>
         <SquishBox id="flipped">
             <main id="cost">
-                <TextLayer x="1435" y="4000" alignment="right" value="$parse_cost{proximity.flipped.mana_cost}">
+                <TextLayer x="1435" y="4000" alignment="right" value="${proximity.flipped.mana_cost}">
                     <Style font="NDPMTG" size="125"/>
                 </TextLayer>
             </main>
@@ -922,5 +887,6 @@
                 <IsEquals key="layout" value="modal_dfc"/>
             </conditions>
         </SquishBox>
+        <Noise x="0" y="4478" width="3288" height="10"/>
     </layers>
 </Template>

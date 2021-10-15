@@ -121,12 +121,12 @@ public final class XMLUtil {
         }
     }
 
-    public static Result<Element> load(TemplateSource source) {
+    public static Result<Element> load(TemplateSource source, String fileName) {
         String name = source.getTemplateName();
 
         try {
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document document = documentBuilder.parse(source.getInputStream("template.xml"));
+            Document document = documentBuilder.parse(source.getInputStream(fileName));
 
             return Result.of(document.getDocumentElement());
         } catch (IOException | ParserConfigurationException | SAXException e) {

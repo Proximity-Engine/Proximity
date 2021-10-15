@@ -2,9 +2,11 @@ package dev.hephaestus.proximity;
 
 import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.cards.layers.*;
+import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.json.JsonPrimitive;
-import dev.hephaestus.proximity.templates.TemplateLoader;
+import dev.hephaestus.proximity.scripting.Context;
+import dev.hephaestus.proximity.scripting.ScriptingUtil;
+import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerRenderer;
@@ -12,11 +14,14 @@ import dev.hephaestus.proximity.xml.RenderableCard;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.quiltmc.json5.JsonReader;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.imageio.ImageIO;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -33,15 +38,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Function;
 
 public final class Proximity {
     public static Logger LOG = LogManager.getLogger("Proximity");
 
     private final JsonObject options;
-    private final JsonObject overrides;
-    private final List<TemplateLoader> loaders;
     private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
 
     static {
@@ -54,6 +56,7 @@ public final class Proximity {
         LayerRenderer.register(new SquishBoxRenderer(), "SquishBox");
         LayerRenderer.register(new TextLayerRenderer(), "TextLayer");
         LayerRenderer.register(new SVGLayerRenderer(), "SVG");
+        LayerRenderer.register(new NoiseLayerRenderer(), "Noise");
 
         LayerRenderer.register(new LayoutElementRenderer("x", "y",
                 Rectangle2D::getWidth,
@@ -66,18 +69,14 @@ public final class Proximity {
         ), "VerticalLayout");
     }
 
-    public Proximity(JsonObject options, JsonObject overrides, TemplateLoader... loaders) {
+    public Proximity(JsonObject options) {
         this.options = options;
-        this.overrides = overrides;
-        this.loaders = new ArrayList<>(Arrays.asList(loaders));
     }
 
-    public void run() {
+    public void run(Deque<CardPrototype> prototypes) {
         long startTime = System.currentTimeMillis();
 
-        Result<?> result = getDefaultTemplateName()
-                .then(this::loadCardsFromFile)
-                .then(this::getCardInfo)
+        Result<?> result = this.getCardInfo(prototypes)
                 .then(this::renderAndSave)
                 .ifError(LOG::error);
 
@@ -86,135 +85,22 @@ public final class Proximity {
         }
     }
 
-    private Result<String> getDefaultTemplateName() {
-        if (!options.has("template")) {
-            return Result.error("Default template not provided");
-        }
-
-        if (!(options.get("template") instanceof JsonPrimitive primitive) || !primitive.isString()) {
-            return Result.error(String.format("Default template must be a string. Found: %s", options.get("template")));
-        }
-
-        return Result.of(options.getAsString("template"));
-    }
-
-    private Result<Deque<CardPrototype>> loadCardsFromFile(String defaultTemplate) {
-        Deque<CardPrototype> result = new ArrayDeque<>();
-
-        Path path = Path.of(this.options.getAsString("cards"));
-
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
-            Pattern pattern = Pattern.compile("([0-9]+)x? (.+)");
-
-            int cardNumber = 1;
-
-            for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-                Matcher matcher = pattern.matcher(line);
-
-                if (matcher.matches()) {
-                    JsonObject cardOptions = new JsonObject();
-                    JsonObject overrides = new JsonObject();
-                    String cardName = parseCardName(matcher.group(2));
-
-                    int count = matcher.groupCount() == 2 ? Integer.parseInt(matcher.group(1)) : 1;
-                    cardOptions.addProperty("count", count);
-
-                    if (line.contains("(") && line.contains(")")) {
-                        cardOptions.addProperty("set_code", line.substring(line.indexOf("(") + 1, line.indexOf(")")).toUpperCase(Locale.ROOT));
-                    }
-
-                    int i = line.indexOf("--");
-
-                    while (i >= 0) {
-                        int j;
-
-                        for (j = i; j < line.length() && !Character.isWhitespace(line.charAt(j)); ++j) {
-                            char c = line.charAt(j);
-
-                            if (c == '"') {
-                                do {
-                                    ++j;
-                                } while (j < line.length() && line.charAt(j) != '"');
-                            }
-                        }
-
-                        String[] split = line.substring(i + 2, j).split("=", 2);
-                        String key = split[0];
-                        String value = split.length == 2 ? split[1] : null;
-
-                        if (key.equals("override")) {
-                            if (value != null) {
-                                split = value.split(":", 2);
-                                String[] overrideKey = split[0].split("\\.");
-                                value = split.length == 2 ? split[1] : null;
-
-                                if (value != null && value.length() > 1 && value.startsWith("\"") && value.endsWith("\"")) {
-                                    value = value.substring(1, value.length() - 1);
-                                }
-
-                                overrides.add(overrideKey, ParsingUtil.parseStringValue(value));
-                            }
-                        } else {
-                            cardOptions.add(key, ParsingUtil.parseStringValue(value));
-                        }
-
-                        if (j < line.length()) {
-                            String sub = line.substring(j + 1);
-                            i = j + 1 + sub.indexOf("--");
-                        } else {
-                            i = -1;
-                        }
-                    }
-
-                    String template = defaultTemplate;
-
-                    if (cardOptions.has("template")) {
-                        template = cardOptions.getAsString("template");
-                    }
-
-                    TemplateSource source = null;
-
-                    for (TemplateLoader loader : this.loaders) {
-                        Result<TemplateSource> r = loader.getTemplateFiles(template);
-
-                        if (r.isError()) {
-                            return r.unwrap();
-                        } else {
-                            source = r.get();
-                            break;
-                        }
-                    }
-
-                    result.add(new CardPrototype(cardName, cardNumber, cardOptions, source, overrides));
-                    cardNumber += count;
-                } else if (!line.trim().isEmpty()) {
-                    return Result.error("Could not parse line '%s'", line);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return Result.of(result);
-    }
-
-    private String parseCardName(String line) {
-        return line.contains("(") // if the line contains a set code, ignore that
-                ? line.substring(0, line.indexOf('(') - 1)
-                : line.contains("--") // only extend to the beginning of the option flags
-                ? line.substring(0, line.indexOf("--") - 1)
-                : line;
-    }
-
-    private Result<Deque<Pair<RenderableCard, Optional<RenderableCard>>>> getCardInfo(Deque<CardPrototype> prototypes) {
+    private Result<Deque<RenderableCard>> getCardInfo(Deque<CardPrototype> prototypes) {
         LOG.info("Fetching info for {} cards...", prototypes.size());
 
         long lastRequest = 0;
 
-       Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards = new ArrayDeque<>();
+       Deque<RenderableCard> cards = new ArrayDeque<>();
 
+        RemoteFileCache cache;
 
-       int i = 1;
+        try {
+             cache = RemoteFileCache.load();
+        } catch (IOException e) {
+            return Result.error("Failed to load cache: %s" ,e.getMessage());
+        }
+
+        int i = 1;
        int prototypeCountLength = Integer.toString(prototypes.size()).length();
        long totalTime = System.currentTimeMillis();
 
@@ -235,27 +121,23 @@ public final class Proximity {
 
            getCardInfo(prototype)
                    .ifPresent(raw -> {
-                       JsonObject card = prototype.parse(raw);
-                       card.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
-                       card.copyAll(this.overrides);
+                       for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
+                           int finalJ = j + prototype.number();
+                           XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                   .then(root -> Result.of(this.runInitScripts(raw, prototype.source(), root, finalJ, prototype.options(), prototype.overrides())))
+                                   .then((List<JsonObject> list) -> {
+                                       list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                               .then(e -> this.resolveResources(e, prototype.source(), cache))
+                                               .then(e -> this.resolveImports(e, prototype.source()))
+                                               .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)))
+                                               .then(renderable -> {
+                                                   cards.add(renderable);
+                                                   return Result.of((Void) null);
+                                               })
+                                       );
 
-                       if (card.getAsBoolean(Keys.DOUBLE_SIDED)) {
-                           JsonObject back = card.getAsJsonObject(Keys.FLIPPED);
-                           back.getAsJsonObject(Keys.OPTIONS).copyAll(this.options);
-                           back.copyAll(this.overrides);
-                       }
-
-                       for (int j = 0; j < card.getAsInt(Keys.COUNT); ++j) {
-                           Result<RenderableCard> front = XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                   .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)));
-
-                           Result<Optional<RenderableCard>> back = card.getAsBoolean(Keys.DOUBLE_SIDED) ? XMLUtil.load(prototype.source()).ifError(LOG::warn)
-                                   .then(root -> Result.of(Optional.of(new RenderableCard(prototype.source(), root, card.getAsJsonObject(Keys.FLIPPED).deepCopy()))))
-                                   : Result.of(Optional.empty());
-
-                           if (front.isOk() && back.isOk()) {
-                               cards.add(new Pair<>(front.get(), back.get()));
-                           }
+                                       return Result.of((Void) null);
+                                   });
                        }
                    })
                    .ifError(LOG::warn);
@@ -269,13 +151,151 @@ public final class Proximity {
         return Result.of(cards);
     }
 
+    private Result<Element> resolveResources(Element root, TemplateSource.Compound source, RemoteFileCache cache) {
+        NodeList resourceList = root.getElementsByTagName("resources");
+
+        for (int i = 0; i < resourceList.getLength(); ++i) {
+            Node r = resourceList.item(i);
+
+            if (r instanceof Element) {
+                NodeList resources = r.getChildNodes();
+
+                for (int j = 0; j < resources.getLength(); ++j) {
+                    r = resources.item(j);
+
+                    if (r instanceof Element resource) {
+                        String location = resource.getAttribute("location") + "/" + resource.getAttribute("version");
+
+                        //noinspection SwitchStatementWithTooFewBranches May add more kinds of resources later
+                        switch (resource.getAttribute("type")) {
+                            case "assets" -> {
+                                if (cache != null) {
+                                    source.wrapped.add(new RemoteFileSource(cache, location));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return Result.of(root);
+    }
+
+    private Result<Element> resolveImports(Element root, TemplateSource source) {
+        Node firstChild = root.getFirstChild();
+        Document document = root.getOwnerDocument();
+        NodeList importsList = root.getElementsByTagName("imports");
+
+        for (int i = 0; i < importsList.getLength(); ++i) {
+            Node n = importsList.item(i);
+
+            if (n instanceof Element) {
+                NodeList imports = n.getChildNodes();
+
+                for (int j = 0; j < imports.getLength(); ++j) {
+                    n = imports.item(j);
+
+                    if (n instanceof Element element) {
+                        String src = element.getAttribute("src") + ".xml";
+
+                        XMLUtil.load(source, src)
+                                .ifError(LOG::warn)
+                                .then(imported -> {
+                                    NodeList children = imported.getChildNodes();
+
+                                    for (int k = 0; k < children.getLength(); ++k) {
+                                        Node m = children.item(k);
+
+                                        if (m instanceof Element e) {
+                                            root.insertBefore(document.adoptNode(e), firstChild);
+                                        }
+                                    }
+
+                                    return Result.of((Void) null);
+                                });
+                    }
+                }
+            }
+        }
+
+        return Result.of(root);
+    }
+
+    private List<JsonObject> runInitScripts(JsonObject raw, TemplateSource source, Element root, int number, JsonObject options, JsonObject overrides) {
+        NodeList scriptBlocks = root.getElementsByTagName("scripts");
+
+        Map<String, List<Function<Object[], Object>>> tasks = new HashMap<>();
+        List<JsonObject> cards = new ArrayList<>();
+        cards.add(raw);
+        Context context = Context.create(null, Collections.emptyMap(), Collections.emptyList(), (string, task) ->
+                tasks.computeIfAbsent(string, s -> new ArrayList<>()).add(task)
+        );
+
+        for (int i = 0; i < scriptBlocks.getLength(); ++i) {
+            Node r = scriptBlocks.item(i);
+
+            if (r instanceof Element) {
+                NodeList scriptsBlock = r.getChildNodes();
+
+                for (int j = 0; j < scriptsBlock.getLength(); ++j) {
+                    r = scriptsBlock.item(j);
+
+                    if (r instanceof Element e && e.getTagName().equals("init")) {
+                        NodeList scripts = r.getChildNodes();
+
+                        for (int k = 0; k < scripts.getLength(); ++k) {
+                            r = scripts.item(k);
+
+                            if (r instanceof Element script) {
+                                String src = script.getAttribute("src");
+
+                                List<JsonObject> nextCards = new ArrayList<>();
+
+                                for (var card : cards) {
+                                    nextCards.addAll(ScriptingUtil.applyFunction(context, source, src, this::handleScriptResult, null, card, number, options, overrides));
+                                }
+
+                                cards = nextCards;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (var task : tasks.getOrDefault("postInit", Collections.emptyList())) {
+            task.apply(new Object[0]);
+        }
+
+        return cards;
+    }
+
+    private List<JsonObject> handleScriptResult(Object object) {
+        if (object instanceof List list) {
+            return list;
+        } else if (object instanceof JsonObject json) {
+            return Collections.singletonList(json);
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
     private Result<JsonObject> getCardInfo(CardPrototype prototype) {
         StringBuilder uri = new StringBuilder("https://api.scryfall.com/cards/named?");
 
         uri.append("fuzzy=").append(URLEncoder.encode(prototype.cardName(), StandardCharsets.UTF_8));
 
         if (prototype.options().has("set_code")) {
-            uri.append("&set=").append(prototype.options().getAsString("set_code"));
+            if (prototype.options().has("collector_number")) {
+                uri = new StringBuilder("https://api.scryfall.com/cards/")
+                        .append(prototype.options().getAsString("set_code").toLowerCase(Locale.ROOT))
+                        .append("/")
+                        .append(prototype.options().getAsString("collector_number"))
+                ;
+            } else {
+                uri.append("&set=").append(prototype.options().getAsString("set_code"));
+            }
         }
 
         String string = uri.toString();
@@ -296,7 +316,23 @@ public final class Proximity {
 
                     return Result.of(cardInfo);
                 } else {
-                    return Result.error("Response %s:", response.statusCode(), response.body());
+                    StringBuilder message = new StringBuilder("Could not find card").append(prototype.cardName());
+
+                    if (prototype.options().has("set_code")) {
+                        message.append(" (")
+                                .append(prototype.options().getAsString("set_code").toUpperCase(Locale.ROOT))
+                                .append(")");
+
+                        if (prototype.options().has("collector_number")) {
+                            message.append(" #")
+                                    .append(prototype.options().getAsString("collector_number").toUpperCase(Locale.ROOT));
+                        }
+                    }
+
+                    JsonObject body = JsonObject.parseObject(JsonReader.json(response.body()));
+                    String details = "[" + response.statusCode() + "] " + (body.has("details") ? body.getAsString("details") : "");
+
+                    return Result.error("%s: %s", message.toString(), details);
                 }
             } catch (Exception e) {
                 return Result.error(e.getMessage());
@@ -304,7 +340,7 @@ public final class Proximity {
         });
     }
 
-    private Result<AtomicInteger> renderAndSave(Deque<Pair<RenderableCard, Optional<RenderableCard>>> cards) {
+    private Result<AtomicInteger> renderAndSave(Deque<RenderableCard> cards) {
         int countStrLen = Integer.toString(cards.size()).length();
         int threadCount = Integer.min(options.has("threads") ? Integer.parseInt(options.getAsString("threads")) : 10, cards.size());
 
@@ -315,18 +351,14 @@ public final class Proximity {
 
             LOG.info("Rendering {} cards on {} threads", cards.size(), threadCount);
 
-            int i = 1;
-
-            for (Pair<RenderableCard, Optional<RenderableCard>> card : cards) {
+            for (RenderableCard card : cards) {
                 if (threadCount > 1) {
-                    int finalI = i;
-                    executor.submit(() ->
-                            this.render(card, finishedCards, errors, countStrLen, finalI, cards.size()));
+                    //                    this.render(card, finishedCards, errors, countStrLen, finalI, cards.size());
+                    executor.submit(() -> this.render(card, finishedCards, errors, countStrLen, cards.size()));
                 } else {
-                    this.render(card, finishedCards, errors, countStrLen, i, cards.size());
+                    this.render(card, finishedCards, errors, countStrLen, cards.size());
                 }
 
-                i++;
             }
 
             try {
@@ -348,37 +380,26 @@ public final class Proximity {
         return Result.error("No cards to render");
     }
 
-    private void render(Pair<RenderableCard, Optional<RenderableCard>> card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int i, int cardCount) {
+    private void render(RenderableCard card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int cardCount) {
         long cardTime = System.currentTimeMillis();
 
-        RenderableCard front = card.left();
-        String name = front.getName() + (card.right().isPresent() ? " // " + card.right().get().getName() : "");
+        String name = card.getName();
 
         try {
-            BufferedImage frontImage = new BufferedImage(front.getWidth(), front.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            BufferedImage image = new BufferedImage(card.getWidth(), card.getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-            Result<Void> result = front.render(new StatefulGraphics(frontImage)).ifError(errors::add);
+            Result<Void> result = card.render(new StatefulGraphics(image)).ifError(errors::add);
 
             if (result.isOk()) {
-                Path path = Path.of("images", "fronts", i + " " + front.getName().replaceAll("[^a-zA-Z0-9.\\-, ]", "_") + ".png");
+                Path path = Path.of("images");
 
-                this.save(frontImage, path);
-
-                if (card.right().isPresent()) {
-                    RenderableCard back = card.right().get();
-                    BufferedImage backImage = new BufferedImage(back.getWidth(), back.getHeight(), BufferedImage.TYPE_INT_ARGB);
-                    result = back.render(new StatefulGraphics(backImage));
-
-                    if (result.isOk()) {
-                        path = Path.of("images", "backs", i + " " + back.getName()
-                                .replaceAll("[^a-zA-Z0-9.\\-, ']", "_") + ".png");
-
-                        this.save(backImage, path);
-                    } else {
-                        LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
-                        return;
-                    }
+                for (JsonElement element : card.getAsJsonArray("proximity", "path")) {
+                    path = path.resolve(element.getAsString());
                 }
+
+                path = path.resolveSibling(path.getFileName().toString() + ".png");
+
+                this.save(image, path);
 
                 finishedCards.incrementAndGet();
                 LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}SAVED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_GREEN, Logging.ANSI_RESET);

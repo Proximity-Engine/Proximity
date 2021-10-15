@@ -236,12 +236,12 @@ public class TextLayer extends Layer {
     }
 
     @Override
-    public Rectangle2D draw(StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale) {
+    public Rectangles draw(StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale) {
         return this.draw(graphics, wrap == null ? this.wrap : wrap, 5 * scale, draw).left();
     }
 
-    protected Pair<Rectangle2D, Integer> draw(StatefulGraphics graphics, Rectangle2D wrap, float fontSizeChange, boolean draw) {
-        Rectangle2D bounds = null;
+    protected Pair<Rectangles, Integer> draw(StatefulGraphics graphics, Rectangles wrap, float fontSizeChange, boolean draw) {
+        Rectangles bounds = new Rectangles();
         int firstRowHeight = 0;
         boolean firstRow;
 
@@ -250,28 +250,36 @@ public class TextLayer extends Layer {
         if (draw && this.wrap != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xF0F0F0), Graphics2D::setColor, Graphics2D::getColor);
-            graphics.drawRect((int) this.wrap.getX(), (int) this.wrap.getY(), (int) this.wrap.getWidth(), (int) this.wrap.getHeight());
+
+            for (Rectangle2D rectangle : this.wrap) {
+                graphics.drawRect((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());
+            }
+
             graphics.pop(2);
         }
 
         if (draw && this.bounds != null) {
-            Pair<Rectangle2D, Integer> pair = this.draw(graphics, wrap, fontSizeChange, false);
+            Pair<Rectangles, Integer> pair = this.draw(graphics, wrap, fontSizeChange, false);
             Integer drawnFirstRowHeight = pair.right();
 
             graphics.push(0, drawnFirstRowHeight);
             pair = this.draw(graphics, wrap, fontSizeChange, false);
-            Rectangle2D drawnBounds = pair.left();
+            Rectangles drawnBounds = pair.left();
             drawnFirstRowHeight = pair.right();
             graphics.pop();
 
-            if (drawnBounds != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+            if (drawnBounds != null && !drawnBounds.isEmpty() && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
-                graphics.drawRect((int) drawnBounds.getX(), (int) drawnBounds.getY(), (int) drawnBounds.getWidth(), (int) drawnBounds.getHeight());
+
+                for (Rectangle2D rectangle : drawnBounds) {
+                    graphics.drawRect((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());
+                }
+
                 graphics.pop(2);
             }
 
-            if (this.bounds != null && drawnBounds != null) {
+            if (this.bounds != null && drawnBounds != null && !drawnBounds.isEmpty()) {
                 while (this.bounds.getHeight() < drawnBounds.getHeight()) {
                     fontSizeChange -= 5;
                     graphics.push(0, drawnFirstRowHeight);
@@ -283,7 +291,11 @@ public class TextLayer extends Layer {
                     if (this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
                         graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                         graphics.push(DrawingUtil.getColor(0xFFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
-                        graphics.drawRect((int) drawnBounds.getX(), (int) drawnBounds.getY(), (int) drawnBounds.getWidth(), (int) drawnBounds.getHeight());
+
+                        for (Rectangle2D rectangle : drawnBounds) {
+                            graphics.drawRect((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());
+                        }
+
                         graphics.pop(2);
                     }
                 }
@@ -344,7 +356,7 @@ public class TextLayer extends Layer {
                         text = deque.pop();
 
                         if (text.get(0).string().startsWith(" ")) {
-                            text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                            text.set(0, new TextComponent.Literal(text.get(0).style(), text.get(0).string().substring(1)));
                         }
                     }
                 }
@@ -364,7 +376,7 @@ public class TextLayer extends Layer {
                     graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
 
                     if (text.get(0).string().startsWith(" ")) {
-                        text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                        text.set(0, new TextComponent.Literal(text.get(0).style(), text.get(0).string().substring(1)));
                     }
 
                     deque.addFirst(text);
@@ -375,19 +387,19 @@ public class TextLayer extends Layer {
 
                 if (wrap != null) {
                     if (this.bounds == null) {
-                        bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
+                        bounds.add(rectangle);
 
                         if (bounds.intersects(wrap)) {
-                            bounds = null;
+                            bounds = new Rectangles();
                             fontSizeChange -= 5;
                             continue loop;
                         }
-                    } else if (rectangle.intersects(wrap)) {
+                    } else if (wrap.intersects(rectangle)) {
                         x = minX;
                         graphics.push(0, (int) (text.get(0).style().size() + fontSizeChange));
 
                         if (text.get(0).string().startsWith(" ")) {
-                            text.set(0, new TextComponent(text.get(0).style(), text.get(0).string().substring(1)));
+                            text.set(0, new TextComponent.Literal(text.get(0).style(), text.get(0).string().substring(1)));
                         }
 
                         deque.addFirst(text);
@@ -404,7 +416,7 @@ public class TextLayer extends Layer {
                 x += rectangle.getWidth();
                 textBounds.add(rectangle);
                 lastTextComponent = text;
-                bounds = bounds == null ? rectangle : DrawingUtil.encompassing(bounds, rectangle);
+                bounds.add(rectangle);
             }
 
             break;
@@ -412,10 +424,14 @@ public class TextLayer extends Layer {
 
         graphics.pop("Text");
 
-        if (draw && bounds != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+        if (draw && !bounds.isEmpty() && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
-            graphics.drawRect((int) bounds.getX(), (int) bounds.getY(), (int) bounds.getWidth(), (int) bounds.getHeight());
+
+            for (Rectangle2D rectangle : bounds) {
+                graphics.drawRect((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());
+            }
+
             graphics.pop(2);
 
             for (Rectangle2D rectangle : textBounds) {
@@ -429,7 +445,11 @@ public class TextLayer extends Layer {
         if (draw && wrap != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
-            graphics.drawRect((int) wrap.getX(), (int) wrap.getY(), (int) wrap.getWidth(), (int) wrap.getHeight());
+
+            for (Rectangle2D rectangle : wrap) {
+                graphics.drawRect((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());
+            }
+
             graphics.pop(2);
         }
 

@@ -10,7 +10,7 @@ import java.util.*;
 
 public class ForkLayerRenderer extends ParentLayerRenderer {
     @Override
-    protected Result<Optional<Rectangle2D>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangle2D wrap, boolean draw, float scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children) {
+    protected Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children) {
         List<String> errors = new ArrayList<>();
         Map<String, List<CardPredicate>> branches = new LinkedHashMap<>();
 
@@ -57,23 +57,21 @@ public class ForkLayerRenderer extends ParentLayerRenderer {
             return Result.of(Optional.empty());
         }
 
-        Rectangle2D resultBounds = null;
+        Rectangles resultBounds = new Rectangles();
 
         element.setAttribute("id", passingBranch);
 
         for (var pair : children) {
-            Result<Optional<Rectangle2D>> result = pair.right().render(card, pair.left(), graphics, wrap, draw, scale, bounds)
+            Result<Optional<Rectangles>> result = pair.right().render(card, pair.left(), graphics, wrap, draw, scale, bounds)
                     .ifError(errors::add);
 
             if (result.isOk() && result.get().isPresent()) {
-                resultBounds = resultBounds != null
-                        ? DrawingUtil.encompassing(resultBounds, result.get().get())
-                        : result.get().get();
+                resultBounds.addAll(result.get().get());
             }
         }
 
         return !errors.isEmpty()
                 ? Result.error("Error rendering children for layer %s:\n\t%s", element.getId(), String.join("\n\t", errors))
-                : Result.of(Optional.ofNullable(resultBounds));
+                : Result.of(Optional.of(resultBounds));
     }
 }

@@ -1,9 +1,9 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
 public class ImageLayer extends Layer {
@@ -41,14 +41,14 @@ public class ImageLayer extends Layer {
     }
 
     @Override
-    public Rectangle2D draw(StatefulGraphics out, Rectangle2D wrap, boolean draw, float scale) {
+    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale) {
         if (draw) {
             out.push(this.getX(), this.getY());
             out.drawImage(this.image, null, null);
             out.pop();
         }
 
-        return new Rectangle(this.getX(), this.getY(), this.image.getWidth(), this.image.getHeight());
+        return Rectangles.singleton(new Rectangle(this.getX(), this.getY(), this.image.getWidth(), this.image.getHeight()));
     }
 
     @Override
