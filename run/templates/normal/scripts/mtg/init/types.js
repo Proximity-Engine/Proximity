@@ -1,4 +1,4 @@
-const MAIN_TYPES = new Set([
+var MAIN_TYPES = new Set([
     "enchantment",
     "artifact",
     "land",
@@ -18,7 +18,6 @@ function apply(context, card, number, options, overrides) {
     var types = card.getAsJsonArray(["proximity", "types"]);
     var mainTypes = [];
     var typeLine = card.getAsString(["type_line"]);
-    var JsonArray = Java.type("dev.hephaestus.proximity.json.JsonArray")
 
     if (typeLine.includes("\u2014")) {
         mainTypes.push(typeLine.split("\u2014")[1]);

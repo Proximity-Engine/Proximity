@@ -2,7 +2,9 @@ package dev.hephaestus.proximity.scripting;
 
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
 import dev.hephaestus.proximity.Proximity;
+import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.json.JsonPrimitive;
 import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.TextComponent;
@@ -24,13 +26,36 @@ import java.util.*;
 import java.util.function.Function;
 
 public final class ScriptingUtil {
-    private static final ThreadLocal<ScriptEngine> ENGINE = ThreadLocal.withInitial(() -> GraalJSScriptEngine.create(null, Context.newBuilder("js")
-            .allowHostAccess(
-                    HostAccess.newBuilder(HostAccess.ALL).targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build()
-            )
-    ));
+    private static final ThreadLocal<ScriptEngine> ENGINE = new ThreadLocal<>();
 
     private ScriptingUtil() {
+    }
+
+    private static ScriptEngine getEngine() {
+        if (ENGINE.get() == null) {
+            ScriptEngine engine = GraalJSScriptEngine.create(null, Context.newBuilder("js")
+                    .allowHostAccess(
+                            HostAccess.newBuilder(HostAccess.EXPLICIT).targetTypeMapping(Value.class, Object.class, Value::hasArrayElements, v -> new LinkedList<>(v.as(List.class))).build()
+                    ));
+
+            Bindings bindings = engine.createBindings();
+            bindings.put("polyglot.js.allowAllAccess", true);
+            engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+
+            try {
+                engine.eval("const Proximity = Java.type(\"dev.hephaestus.proximity.Proximity\")");
+                engine.eval("const JsonArray = Java.type(\"dev.hephaestus.proximity.json.JsonArray\")");
+                engine.eval("const JsonObject = Java.type(\"dev.hephaestus.proximity.json.JsonArray\")");
+                engine.eval("const JsonPrimitive = Java.type(\"dev.hephaestus.proximity.json.JsonArray\")");
+                engine.eval("const JsonNull = Java.type(\"dev.hephaestus.proximity.json.JsonArray\")");
+            } catch (ScriptException e) {
+                e.printStackTrace();
+            }
+
+            ENGINE.set(engine);
+        }
+
+        return ENGINE.get();
     }
 
     public static <T> T applyFunction(dev.hephaestus.proximity.scripting.Context context, TemplateSource source, String name, Function<Object, T> handler, T defaultValue, Object... args) {
@@ -39,11 +64,7 @@ public final class ScriptingUtil {
 
         if (source.exists(file)) {
             try {
-                ScriptEngine engine = ENGINE.get();
-
-                Bindings bindings = engine.createBindings();
-                bindings.put("polyglot.js.allowAllAccess", true);
-                engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+                ScriptEngine engine = getEngine();
 
                 engine.eval(new InputStreamReader(source.getInputStream(file)));
                 Function<Object[], Object> fn = (Function<Object[], Object>) engine.eval("apply");
@@ -67,14 +88,14 @@ public final class ScriptingUtil {
         return defaultValue;
     }
 
-    public static List<List<TextComponent>> applyTextFunction(dev.hephaestus.proximity.scripting.Context context, String name, String input, RenderableCard card, Map<String, Style> styles, Style base) {
+    public static List<List<TextComponent>> applyTextFunction(dev.hephaestus.proximity.scripting.Context context, String name, JsonElement input, RenderableCard card, Map<String, Style> styles, Style base) {
         JsonObject stylesJson = new JsonObject();
 
         for (var entry : styles.entrySet()) {
             stylesJson.add(entry.getKey(), entry.getValue().toJson());
         }
 
-        return applyFunction(context, card, name, ScriptingUtil::handleTextFunction, Collections.singletonList(Collections.singletonList(new TextComponent.Literal(base, input))),
+        return applyFunction(context, card, name, ScriptingUtil::handleTextFunction, Collections.singletonList(Collections.singletonList(new TextComponent.Literal(base, input instanceof JsonPrimitive primitive && primitive.isString() ? input.getAsString() : input.toString()))),
                 input, card, stylesJson, base.toJson()
         );
     }

@@ -1,5 +1,5 @@
-const MANA_COLORS = new Set(["W", "U", "B", "G", "R"]);
-const LAND_TYPES = {
+var MANA_COLORS = new Set(["W", "U", "B", "G", "R"]);
+var LAND_TYPES = {
     "Plains": "W",
     "Island": "U",
     "Swamp": "B",
@@ -96,7 +96,6 @@ function apply(context, card, number, options, overrides) {
         return 0;
     });
 
-    var JsonArray = Java.type("dev.hephaestus.proximity.json.JsonArray")
     var colorsArray = new JsonArray();
 
     for (const color of colorList) {

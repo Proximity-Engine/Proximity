@@ -19,6 +19,7 @@
     </options>
     <imports>
         <import src="symbols"/>
+        <import src="styles"/>
     </imports>
     <condition_definitions>
         <ConditionDefinition name="colorless_artifact">
@@ -62,7 +63,7 @@
                         <IsEquals key="proximity.color_count" value="0"/>
                     </conditions>
                 </ImageLayer>
-                <ImageLayer id="colored" src="${colors}">
+                <ImageLayer id="colored" src="$join{colors}">
                     <conditions>
                         <IsEquals key="proximity.color_count" value="1"/>
                     </conditions>
@@ -89,7 +90,7 @@
                         <IsPresent key="proximity.types.land"/>
                     </conditions>
                 </ImageLayer>
-                <ImageLayer id="colored" src="${colors}">
+                <ImageLayer id="colored" src="$join{colors}">
                     <conditions>
                         <Or>
                             <IsEquals key="proximity.color_count" value="1"/>
@@ -151,7 +152,7 @@
                                 <IsEquals key="proximity.color_count" value="0"/>
                             </conditions>
                         </ImageLayer>
-                        <ImageLayer id="colored" src="${colors}">
+                        <ImageLayer id="colored" src="$join{colors}">
                             <conditions>
                                 <IsEquals key="one_or_two_colors"/>
                             </conditions>
@@ -190,7 +191,7 @@
                             <IsEquals key="proximity.color_count" value="0"/>
                         </conditions>
                     </ImageLayer>
-                    <ImageLayer id="colored" src="${colors}">
+                    <ImageLayer id="colored" src="$join{colors}">
                         <conditions>
                             <IsEquals key="one_or_two_colors"/>
                         </conditions>
@@ -209,7 +210,7 @@
                     <IsEquals key="layout" value="transform"/>
                 </conditions>
             </Fork>
-            <ImageLayer id="miracle" src="miracle/${colors}">
+            <ImageLayer id="miracle" src="miracle/$join{colors}">
                 <conditions>
                     <IsPresent key="frame_effects.miracle"/>
                     <IsEquals key="proximity.color_count" value="1"/>
@@ -222,7 +223,7 @@
                         <IsPresent key="proximity.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
-                <ImageLayer id="colored" src="${colors}">
+                <ImageLayer id="colored" src="$join{colors}">
                     <conditions>
                         <IsEquals key="one_or_two_colors"/>
                     </conditions>
@@ -245,7 +246,7 @@
                             <IsEquals key="proximity.color_count" value="0"/>
                         </conditions>
                     </ImageLayer>
-                    <ImageLayer id="colored" src="${colors}">
+                    <ImageLayer id="colored" src="$join{colors}">
                         <conditions>
                             <IsEquals key="one_or_two_colors"/>
                         </conditions>
@@ -288,7 +289,7 @@
         </Fork>
         <Fork id="crowns">
             <Selector>
-                <ImageLayer id="colored" src="${colors}">
+                <ImageLayer id="colored" src="$join{colors}">
                     <conditions>
                         <IsEquals key="one_or_two_colors"/>
                     </conditions>
@@ -330,7 +331,7 @@
             </branches>
         </Fork>
         <Selector id="crowns.companion.gems">
-            <ImageLayer id="monocolored" src="${colors}">
+            <ImageLayer id="monocolored" src="$join{colors}">
                 <conditions>
                     <IsEquals key="proximity.color_count" value="1"/>
                 </conditions>
@@ -360,7 +361,7 @@
         <Selector id="plates">
             <Fork id="mdfc">
                 <Selector>
-                    <ImageLayer id="monocolored" src="${colors}">
+                    <ImageLayer id="monocolored" src="$join{colors}">
                         <conditions>
                             <IsEquals key="proximity.color_count" value="1"/>
                         </conditions>
@@ -410,7 +411,7 @@
                     </Or>
                 </conditions>
             </Fork>
-            <ImageLayer id="miracle" src="miracle/${colors}">
+            <ImageLayer id="miracle" src="miracle/$join{colors}">
                 <conditions>
                     <IsEquals key="proximity.color_count" value="1"/>
                     <IsPresent key="frame_effects"/>
@@ -418,7 +419,7 @@
                 </conditions>
             </ImageLayer>
             <Selector id="standard">
-                <ImageLayer id="monocolored" src="${colors}">
+                <ImageLayer id="monocolored" src="$join{colors}">
                     <conditions>
                         <IsEquals key="proximity.color_count" value="1"/>
                     </conditions>
@@ -565,7 +566,7 @@
                         <IsPresent key="proximity.types.vehicle"/>
                     </conditions>
                 </ImageLayer>
-                <ImageLayer id="monocolored" src="${colors}">
+                <ImageLayer id="monocolored" src="$join{colors}">
                     <conditions>
                         <IsEquals key="proximity.color_count" value="1"/>
                     </conditions>
@@ -778,7 +779,7 @@
                                 <IsEquals key="proximity.color_count" value="0"/>
                             </conditions>
                         </ImageLayer>
-                        <ImageLayer id="colored" src="${colors}">
+                        <ImageLayer id="colored" src="$join{colors}">
                             <conditions>
                                 <IsEquals key="proximity.color_count" value="1"/>
                             </conditions>
@@ -791,7 +792,7 @@
                                 <IsEquals key="proximity.flipped.proximity.color_count" value="0"/>
                             </conditions>
                         </ImageLayer>
-                        <ImageLayer id="colored" src="${proximity.flipped.colors}">
+                        <ImageLayer id="colored" src="$join{proximity.flipped.colors}">
                             <conditions>
                                 <IsEquals key="proximity.flipped.proximity.color_count" value="1"/>
                             </conditions>

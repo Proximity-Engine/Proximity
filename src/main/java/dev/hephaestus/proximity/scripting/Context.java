@@ -2,6 +2,7 @@ package dev.hephaestus.proximity.scripting;
 
 import dev.hephaestus.proximity.json.JsonArray;
 import dev.hephaestus.proximity.json.JsonObject;
+import org.graalvm.polyglot.HostAccess;
 
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ public final class Context extends JsonObject {
         this.taskHandler = taskHandler;
     }
 
+    @HostAccess.Export
     public void submit(String step, Function<Object[], Object> task) {
         this.taskHandler.accept(step, task);
     }

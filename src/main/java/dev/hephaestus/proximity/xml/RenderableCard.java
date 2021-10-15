@@ -2,8 +2,10 @@ package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
+import dev.hephaestus.proximity.json.JsonArray;
 import dev.hephaestus.proximity.json.JsonElement;
 import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.json.JsonPrimitive;
 import dev.hephaestus.proximity.scripting.Context;
 import dev.hephaestus.proximity.scripting.ScriptingUtil;
 import dev.hephaestus.proximity.templates.TemplateSource;
@@ -27,6 +29,7 @@ import java.util.regex.Pattern;
 
 public final class RenderableCard extends JsonObject implements TemplateSource {
     public static final Pattern SUBSTITUTE = Pattern.compile("\\$(?<function>[\\w.]*)\\{(?<value>[.[^}]]*)}");
+    public static final Pattern KEY = Pattern.compile("^(?<key>[a-zA-Z0-9_]+)(?<range>\\[(?<beginning>[0-9]+):(?<end>-?[0-9]+)?])?$");
 
     private final TemplateSource.Compound source;
     private final XMLElement root;
@@ -425,25 +428,24 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                 }
 
                 String function = matcher.group("function");
-                String replacement;
 
                 String[] key = matcher.group("value").split("\\.");
-                JsonElement e = RenderableCard.this.get(key);
+                JsonElement element = RenderableCard.this;
 
-                if (e == null) {
-                    replacement = "null";
-                } else if (e.isJsonArray()) {
-                    StringBuilder builder = new StringBuilder();
+                for (String k : key) {
+                    Matcher m = KEY.matcher(k);
 
-                    for (JsonElement j : e.getAsJsonArray()) {
-                        builder.append(j.getAsString());
+                    while(m.find()) {
+                        if (element instanceof JsonObject object) {
+                            element = object.get(m.group("key"));
+
+                            if (m.group("range") != null) {
+                                element = handle(element, Integer.decode(m.group("beginning")), Integer.decode(m.group("end")));
+                            }
+                        } else {
+                            throw new UnsupportedOperationException();
+                        }
                     }
-
-                    replacement = builder.toString();
-                } else if (e.isJsonPrimitive()) {
-                    replacement = e.getAsString();
-                } else {
-                    throw new UnsupportedOperationException();
                 }
 
                 previousEnd = matcher.end();
@@ -453,7 +455,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
 
                 Context context = Context.create(this.getId(), namedContexts, looseContexts, (step, task) -> {});
 
-                result.append(ScriptingUtil.applyFunction(context, RenderableCard.this, function, XMLElement::handleFunctionResult, replacement, RenderableCard.this, replacement));
+                result.append(ScriptingUtil.applyFunction(context, RenderableCard.this, function, XMLElement::handleFunctionResult, element instanceof JsonPrimitive primitive && primitive.isString() ? element.getAsString() : element.toString(), RenderableCard.this, element));
             }
 
             String tail = value.substring(previousEnd);
@@ -463,6 +465,33 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
             }
 
             return result.toString();
+        }
+
+        public static JsonElement handle(JsonElement element, int beginning, int end) {
+            if (end > 0 && beginning > end) {
+                throw new UnsupportedOperationException("Beginning index cannot be before end index");
+            } else if (end >= (element instanceof JsonArray array ? array.size() : element.getAsString().length())) {
+                throw new UnsupportedOperationException("End index out of bounds");
+            } else if (beginning < 0) {
+                throw new UnsupportedOperationException("Beginning index out of bounds");
+            }
+
+            if (element instanceof JsonArray array) {
+                if (beginning == 0 && (end == -1 || end == array.size() - 1)) {
+                    return array;
+                } else {
+                    JsonArray result = new JsonArray();
+
+                    for (int i = beginning; i < (end < 0 ? array.size() + 1 + end : end); ++i) {
+                        result.add(array.get(i));
+                    }
+
+                    return result;
+                }
+            } else {
+                String s = element.getAsString();
+                return new JsonPrimitive(s.substring(beginning, (end < 0 ? s.length() + 1 + end : end)));
+            }
         }
 
         private static String handleFunctionResult(Object object) {

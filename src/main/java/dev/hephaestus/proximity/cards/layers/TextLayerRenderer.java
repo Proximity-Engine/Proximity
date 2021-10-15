@@ -1,6 +1,8 @@
 package dev.hephaestus.proximity.cards.layers;
 
 import dev.hephaestus.proximity.json.JsonElement;
+import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.json.JsonPrimitive;
 import dev.hephaestus.proximity.scripting.Context;
 import dev.hephaestus.proximity.scripting.ScriptingUtil;
 import dev.hephaestus.proximity.templates.layers.TextLayer;
@@ -19,6 +21,9 @@ import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.regex.Matcher;
+
+import static dev.hephaestus.proximity.xml.RenderableCard.KEY;
+import static dev.hephaestus.proximity.xml.RenderableCard.XMLElement.handle;
 
 public class TextLayerRenderer extends LayerRenderer {
     @Override
@@ -87,25 +92,24 @@ public class TextLayerRenderer extends LayerRenderer {
             }
 
             String function = matcher.group("function");
-            String replacement;
 
             String[] key = matcher.group("value").split("\\.");
-            JsonElement e = card.get(key);
+            JsonElement e = card;
 
-            if (e == null) {
-                replacement = "null";
-            } else if (e.isJsonArray()) {
-                StringBuilder builder = new StringBuilder();
+            for (String k : key) {
+                Matcher m = KEY.matcher(k);
 
-                for (JsonElement j : e.getAsJsonArray()) {
-                    builder.append(j.getAsString());
+                while(m.find()) {
+                    if (e instanceof JsonObject object) {
+                        e = object.get(m.group("key"));
+
+                        if (m.group("range") != null) {
+                            e = handle(e, Integer.decode(m.group("beginning")), Integer.decode(m.group("end")));
+                        }
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
                 }
-
-                replacement = builder.toString();
-            } else if (e.isJsonPrimitive()) {
-                replacement = e.getAsString();
-            } else {
-                throw new UnsupportedOperationException();
             }
 
             previousEnd = matcher.end();
@@ -116,9 +120,9 @@ public class TextLayerRenderer extends LayerRenderer {
             Context context = Context.create(element.getId(), namedContexts, looseContexts, (step, task) -> {});
 
             if (function == null) {
-                result.add(Collections.singletonList(new TextComponent.Literal(baseStyle, replacement)));
+                result.add(Collections.singletonList(new TextComponent.Literal(baseStyle, e instanceof JsonPrimitive primitive && primitive.isString() ? e.getAsString() : e.toString())));
             } else {
-                result.addAll(ScriptingUtil.applyTextFunction(context, function, replacement, card, card.getStyles(), baseStyle));
+                result.addAll(ScriptingUtil.applyTextFunction(context, function, e, card, card.getStyles(), baseStyle));
             }
         }
 

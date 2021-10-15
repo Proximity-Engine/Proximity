@@ -6,7 +6,7 @@ function getOrNull(object, key, func) {
 /**
  * Text functions allow templates to transform text in novel ways
  *
- * @param input the original string passed to the function
+ * @param input a JsonElement representing a value
  * @param card an (immutable) JSON object representing card data
  * @param styles a map of style names to styles
  * @param base_style the style applied to or inherited by the element
@@ -148,7 +148,7 @@ function apply(context, input, card, styles, base_style) {
     }
 
     const parser = new TextParser(
-        card, input, styles, base_style, true
+        card, input.getAsString(), styles, base_style, true
     );
 
     return parser.parse();

@@ -36,6 +36,7 @@ public abstract class LayerRenderer {
 
             if (r.isOk() && !r.get()) {
                 render = false;
+                break;
             }
         }
 

@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.json;
 
 
+import org.graalvm.polyglot.HostAccess;
 import org.quiltmc.json5.JsonWriter;
 
 import java.io.IOException;
@@ -11,32 +12,39 @@ import java.math.BigInteger;
 public final class JsonPrimitive extends JsonElement {
     private final Object value;
 
+    @HostAccess.Export
     public JsonPrimitive(boolean bool) {
         value = bool;
     }
 
+    @HostAccess.Export
     public JsonPrimitive(Number number) {
         value = number;
     }
 
+    @HostAccess.Export
     public JsonPrimitive(String string) {
         value = string;
     }
 
     @Override
+    @HostAccess.Export
     public JsonPrimitive deepCopy() {
         return this;
     }
 
+    @HostAccess.Export
     public Object getValue() {
         return this.value;
     }
 
+    @HostAccess.Export
     public boolean isBoolean() {
         return value instanceof Boolean;
     }
 
     @Override
+    @HostAccess.Export
     public boolean getAsBoolean() {
         if (isBoolean()) {
             return (Boolean) value;
@@ -45,20 +53,24 @@ public final class JsonPrimitive extends JsonElement {
         return Boolean.parseBoolean(getAsString());
     }
 
+    @HostAccess.Export
     public boolean isNumber() {
         return value instanceof Number;
     }
 
     @Override
+    @HostAccess.Export
     public Number getAsNumber() {
         return (Number) value;
     }
 
+    @HostAccess.Export
     public boolean isString() {
         return value instanceof String;
     }
 
     @Override
+    @HostAccess.Export
     public String getAsString() {
         if (isNumber()) {
             return getAsNumber().toString();
@@ -70,32 +82,25 @@ public final class JsonPrimitive extends JsonElement {
     }
 
     @Override
+    @HostAccess.Export
     public double getAsDouble() {
         return isNumber() ? getAsNumber().doubleValue() : Double.parseDouble(getAsString());
     }
 
     @Override
-    public BigDecimal getAsBigDecimal() {
-        return value instanceof BigDecimal ? (BigDecimal) value : new BigDecimal(value.toString());
-    }
-
-    @Override
-    public BigInteger getAsBigInteger() {
-        return value instanceof BigInteger ?
-                (BigInteger) value : new BigInteger(value.toString());
-    }
-
-    @Override
+    @HostAccess.Export
     public float getAsFloat() {
         return isNumber() ? getAsNumber().floatValue() : Float.parseFloat(getAsString());
     }
 
     @Override
+    @HostAccess.Export
     public long getAsLong() {
         return isNumber() ? getAsNumber().longValue() : Long.parseLong(getAsString());
     }
 
     @Override
+    @HostAccess.Export
     public short getAsShort() {
         return isNumber() ? getAsNumber().shortValue() : Short.parseShort(getAsString());
     }
@@ -112,11 +117,13 @@ public final class JsonPrimitive extends JsonElement {
     }
 
     @Override
+    @HostAccess.Export
     public int getAsInt() {
         return isNumber() ? getAsNumber().intValue() : Integer.parseInt(getAsString());
     }
 
     @Override
+    @HostAccess.Export
     public byte getAsByte() {
         return isNumber() ? getAsNumber().byteValue() : Byte.parseByte(getAsString());
     }

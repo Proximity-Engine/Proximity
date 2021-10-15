@@ -1,4 +1,3 @@
-const JsonArray = Java.type("dev.hephaestus.proximity.json.JsonArray")
 
 function parseFace(card, face) {
     var result = card.deepCopy();
@@ -11,7 +10,6 @@ function parseFace(card, face) {
 }
 
 function parseTwoSidedCard(context, card, number, options, overrides) {
-    var JsonArray = Java.type("dev.hephaestus.proximity.json.JsonArray")
     var colorsArray = new JsonArray();
 
     var faces = card.getAsJsonArray("card_faces");

@@ -11,8 +11,10 @@ import dev.hephaestus.proximity.templates.TemplateSource;
 import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.xml.RenderableCard;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.graalvm.polyglot.HostAccess;
 import org.quiltmc.json5.JsonReader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -421,5 +423,10 @@ public final class Proximity {
 
         ImageIO.write(image, "png", stream);
         stream.close();
+    }
+
+    @HostAccess.Export
+    public static void log(String level, String message, Object... args) {
+        LOG.printf(Level.getLevel(level.toUpperCase(Locale.ROOT)), message, args);
     }
 }
