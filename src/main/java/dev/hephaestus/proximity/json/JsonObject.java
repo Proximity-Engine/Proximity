@@ -6,10 +6,7 @@ import org.quiltmc.json5.JsonToken;
 import org.quiltmc.json5.JsonWriter;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -279,5 +276,10 @@ public class JsonObject extends JsonElement {
     @HostAccess.Export
     public float getAsFloat(String... keys) {
         return get((o, k) -> o.get(k).getAsFloat(), keys);
+    }
+
+    @HostAccess.Export
+    public List<String> getKeys() {
+        return new ArrayList<>(this.members.keySet());
     }
 }

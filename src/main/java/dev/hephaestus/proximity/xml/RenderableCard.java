@@ -104,7 +104,7 @@ public final class RenderableCard extends JsonObject implements TemplateSource {
                 LayerRenderer renderable = LayerRenderer.get(layer.getTagName());
 
                 if (renderable != null) {
-                    renderable.render(this, layer, graphics, null, true, 0, null)
+                    renderable.render(this, layer, graphics, null, true, new Box<>(0F), null)
                             .ifError(errors::add);
                 }
             });

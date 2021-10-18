@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.util.Box;
 import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
@@ -45,7 +46,7 @@ public abstract class Layer {
         return this.y;
     }
 
-    public abstract Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale);
+    public abstract Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, Box<Float> scale);
 
     @Override
     public String toString() {

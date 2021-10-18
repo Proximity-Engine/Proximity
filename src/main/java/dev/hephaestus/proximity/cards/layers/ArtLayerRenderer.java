@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.cards.layers;
 
 import dev.hephaestus.proximity.templates.layers.ImageLayer;
+import dev.hephaestus.proximity.util.Box;
 import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.StatefulGraphics;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 public class ArtLayerRenderer extends LayerRenderer {
     @Override
-    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
         if (!element.hasAttribute("width") && !element.hasAttribute("height")) {
             return Result.error("Image layer must have either 'width' or 'height' attribute");
         }

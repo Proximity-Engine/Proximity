@@ -260,8 +260,18 @@
     <xs:sequence>
       <xs:element type="conditionsType" name="conditions"/>
       <xs:element type="StyleType" name="Style"/>
-      <xs:element type="wrapType" name="Wrap"/>
-      <xs:element type="wrapType" name="Bounds"/>
+      <xs:element name="Wrap">
+        <xs:complexType>
+          <xs:complexContent>
+            <xs:extension base="LayerPropertyType">
+              <xs:sequence>
+                <xs:element name="rect" type="RectangleType" minOccurs="1" maxOccurs="unbounded"/>
+              </xs:sequence>
+            </xs:extension>
+          </xs:complexContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:element type="RectangleType" name="Bounds"/>
       <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="GroupType" name="Mask" minOccurs="0" maxOccurs="1"/>
       <xs:element type="GroupType" name="Erase" minOccurs="0" maxOccurs="1"/>
@@ -365,7 +375,7 @@
     <xs:complexContent>
       <xs:extension base="LayerType">
         <xs:sequence>
-          <xs:element type="wrapType" name="wrap" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="RectangleType" name="wrap" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="text_alignment_type" name="alignment" use="optional" default="left"/>
         <xs:attribute type="xs:string" name="value" use="required"/>
@@ -431,13 +441,13 @@
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
-  <xs:complexType name="wrapType">
+  <xs:complexType name="RectangleType">
     <xs:complexContent>
       <xs:extension base="LayerPropertyType">
-        <xs:attribute type="xs:int" name="x" use="optional"/>
-        <xs:attribute type="xs:int" name="y" use="optional"/>
-        <xs:attribute type="xs:int" name="width" use="optional"/>
-        <xs:attribute type="xs:int" name="height" use="optional"/>
+        <xs:attribute type="xs:int" name="x" use="required"/>
+        <xs:attribute type="xs:int" name="y" use="required"/>
+        <xs:attribute type="xs:int" name="width" use="required"/>
+        <xs:attribute type="xs:int" name="height" use="required"/>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>

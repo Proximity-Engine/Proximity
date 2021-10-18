@@ -46,6 +46,10 @@ public class StatefulGraphics extends Graphics2D {
         this.frames.addFirst(new Marker(frame));
     }
 
+    public void push(double theta) {
+        this.push(theta, Graphics2D::rotate, g -> 2 * Math.PI);
+    }
+
     public void pop(int frameCount) {
         for (int i = 0; i < frameCount; ++i) {
             Frame frame = this.frames.poll();

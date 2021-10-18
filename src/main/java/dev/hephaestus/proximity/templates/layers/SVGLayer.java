@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.util.Box;
 import dev.hephaestus.proximity.util.ContentAlignment;
 import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
@@ -28,7 +29,7 @@ public class SVGLayer extends Layer {
     }
 
     @Override
-    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale) {
+    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, Box<Float> scale) {
         int x = this.getX();
         int y = this.getY();
 

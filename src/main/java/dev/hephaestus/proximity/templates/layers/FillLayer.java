@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers;
 
+import dev.hephaestus.proximity.util.Box;
 import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.StatefulGraphics;
 
@@ -18,7 +19,7 @@ public class FillLayer extends Layer {
     }
 
     @Override
-    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, float scale) {
+    public Rectangles draw(StatefulGraphics out, Rectangles wrap, boolean draw, Box<Float> scale) {
         Rectangle2D rectangle = new Rectangle2D.Double(this.getX(), this.getY(), this.width, this.height);
 
         if ((this.color & 0xFF000000) != 0) {

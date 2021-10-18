@@ -1,10 +1,7 @@
 package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.text.Style;
-import dev.hephaestus.proximity.util.Outline;
-import dev.hephaestus.proximity.util.Result;
-import dev.hephaestus.proximity.util.Shadow;
-import dev.hephaestus.proximity.util.XMLUtil;
+import dev.hephaestus.proximity.util.*;
 
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
@@ -48,15 +45,21 @@ public abstract class LayerProperty<T> {
         }
     }, "Style");
 
-    public static final LayerProperty<Rectangle> WRAP = register(new LayerProperty<>() {
+    public static final LayerProperty<Rectangles> WRAP = register(new LayerProperty<>() {
         @Override
-        public Result<Rectangle> parse(RenderableCard.XMLElement element) {
-            return Result.of(new Rectangle(
-                    Integer.parseInt(element.getAttribute("x")),
-                    Integer.parseInt(element.getAttribute("y")),
-                    Integer.parseInt(element.getAttribute("width")),
-                    Integer.parseInt(element.getAttribute("height"))
-            ));
+        public Result<Rectangles> parse(RenderableCard.XMLElement element) {
+            Rectangles wrap = new Rectangles();
+
+            element.iterate("rect", (r, i) -> {
+                wrap.add(new Rectangle(
+                        Integer.parseInt(r.getAttribute("x")),
+                        Integer.parseInt(r.getAttribute("y")),
+                        Integer.parseInt(r.getAttribute("width")),
+                        Integer.parseInt(r.getAttribute("height"))
+                ));
+            });
+
+            return Result.of(wrap);
         }
     }, "Wrap", "wrap");
 

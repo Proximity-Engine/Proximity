@@ -18,9 +18,9 @@ public abstract class LayerRenderer {
         return false;
     }
 
-    public abstract Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds);
+    public abstract Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds);
 
-    public final Result<Optional<Rectangles>> render(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public final Result<Optional<Rectangles>> render(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
         List<String> errors = new ArrayList<>();
         List<CardPredicate> predicates = new ArrayList<>();
         boolean render = true;

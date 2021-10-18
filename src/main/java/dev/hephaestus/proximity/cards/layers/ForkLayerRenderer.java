@@ -10,7 +10,7 @@ import java.util.*;
 
 public class ForkLayerRenderer extends ParentLayerRenderer {
     @Override
-    protected Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children) {
+    protected Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children) {
         List<String> errors = new ArrayList<>();
         Map<String, List<CardPredicate>> branches = new LinkedHashMap<>();
 

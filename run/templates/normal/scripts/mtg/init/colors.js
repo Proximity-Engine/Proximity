@@ -11,7 +11,7 @@ function processLand(card, colors) {
     var layout = card.get(["layout"]).getAsString();
 
     if (layout !== "transform" && layout != "modal_dfc") {
-        for (const element of card.getAsJsonArray(["produced_mana"])) {
+        for (var element of JSON.parse(card.getAsJsonArray(["produced_mana"]).toString())) {
             if (element in MANA_COLORS) {
                 colors.add(element);
             }
@@ -34,15 +34,15 @@ function processLand(card, colors) {
         }
 
         for (const color of MANA_COLORS) {
-            if (oracle.includes("Add ")) {
-                var string = oracle.substring(oracle.indexOf("Add "));
-                string = string.includes("\n") ? string.substring(0, string.indexOf("\n")) : string;
+            oracle.split("\n").forEach((line, i) => {
+                if (line.includes("Add ")) {
+                    var string = line.substring(line.indexOf("Add "));
 
-
-                if (string.includes("{" + color + "}")) {
-                    colors.add(color);
+                    if (string.includes("{" + color + "}")) {
+                        colors.add(color);
+                    }
                 }
-            }
+            });
         }
     }
 }

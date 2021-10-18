@@ -1,11 +1,8 @@
 package dev.hephaestus.proximity.cards.layers;
 
-import dev.hephaestus.proximity.util.Rectangles;
+import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.xml.RenderableCard;
-import dev.hephaestus.proximity.util.Pair;
-import dev.hephaestus.proximity.util.Result;
-import dev.hephaestus.proximity.util.StatefulGraphics;
 
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
@@ -13,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public abstract class ParentLayerRenderer extends LayerRenderer {
-    protected abstract Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children);
+    protected abstract Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children);
 
     @Override
-    public final Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public final Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
         int x = (element.hasAttribute("x") ? Integer.decode(element.getAttribute("x")) : 0);
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
 

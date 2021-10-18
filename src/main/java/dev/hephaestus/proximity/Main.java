@@ -137,7 +137,14 @@ public class Main {
                         }
                     }
 
-                    TemplateSource.Compound compound = new TemplateSource.Compound(new FileSystemTemplateSource(Path.of("template_overrides")), source);
+                    Path overridesFolder = Path.of("template_overrides");
+                    TemplateSource.Compound compound;
+
+                    if (Files.exists(overridesFolder)) {
+                        compound = new TemplateSource.Compound(template, new FileSystemTemplateSource(overridesFolder), source);
+                    } else {
+                        compound = new TemplateSource.Compound(template, source);
+                    }
 
                     result.add(new CardPrototype(cardName, cardNumber, cardOptions, compound, cardOverrides));
                     cardNumber += cardOptions.getAsInt("count");

@@ -10,6 +10,7 @@ import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
 import dev.hephaestus.proximity.text.TextAlignment;
 import dev.hephaestus.proximity.text.TextComponent;
+import dev.hephaestus.proximity.util.Box;
 import dev.hephaestus.proximity.util.Rectangles;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.StatefulGraphics;
@@ -27,7 +28,7 @@ import static dev.hephaestus.proximity.xml.RenderableCard.XMLElement.handle;
 
 public class TextLayerRenderer extends LayerRenderer {
     @Override
-    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
         if (element.hasAttribute("width") ^ element.hasAttribute("height")) {
             return Result.error("Text layer must have both 'width' and 'height' attributes or neither");
         }
@@ -39,7 +40,7 @@ public class TextLayerRenderer extends LayerRenderer {
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
         Integer width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
         Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
-        wrap = Rectangles.singleton(element.getProperty(LayerProperty.WRAP));
+        wrap = element.getProperty(LayerProperty.WRAP);
         Style style = element.getProperty(LayerProperty.STYLE, Style.EMPTY).merge(
                 card.getStyle(element.getAttribute("style"))
         );

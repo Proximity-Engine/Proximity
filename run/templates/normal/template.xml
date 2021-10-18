@@ -460,11 +460,14 @@
         </Selector>
         <SquishBox id="title_bar">
             <main id="cost">
-                <TextLayer x="2925" y="503" alignment="right" value="${mana_cost}">
-                    <Style font="NDPMTG" size="175">
-                        <shadow color="#000000" dX="-4" dY="11"/>
-                    </Style>
-                </TextLayer>
+                <HorizontalLayout x="2925" y="503" alignment="end">
+                    <SpacingLayer width="50" height="15"/>
+                    <TextLayer value="${mana_cost}">
+                        <Style font="NDPMTG" size="175">
+                            <shadow color="#000000" dX="-4" dY="11"/>
+                        </Style>
+                    </TextLayer>
+                </HorizontalLayout>
             </main>
             <flex>
                 <Selector id="name">
@@ -506,16 +509,16 @@
         </TextLayer>
         <SquishBox>
             <main id="set_symbol">
-                <SpacingLayer x="2893" y="2519" width="10" height="220"/>
+                <SpacingLayer x="2900" y="2519" width="10" height="220"/>
                 <Group>
                     <Selector>
                         <!-- Certain sets don't use a uniform color palette, so this is a necessary evil -->
-                        <SVG x="2816" y="2628" src="${rarity}/${set}" width="242" height="155">
+                        <SVG x="2922" y="2628" src="${rarity}/${set}" width="350" height="155" horizontal_alignment="end">
                             <conditions>
                                 <FileExists src="${rarity}/${set}.svg"/>
                             </conditions>
                         </SVG>
-                        <SVG x="2816" y="2628" src="${set}" width="242" height="155">
+                        <SVG x="2922" y="2628" src="${set}" width="350" height="155" horizontal_alignment="end">
                             <conditions>
                                 <FileExists src="${set}.svg"/>
                             </conditions>
@@ -536,7 +539,7 @@
                     <TextLayer id="back" x="381" y="2665" value="${type_line}">
                         <AttributeModifier name="x" value="531">
                             <IsPresent key="color_indicator"/>
-                            <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
+                            <FileExists src="../../overlays/color_indicators/$join{color_indicator}.png"/>
                         </AttributeModifier>
                     </TextLayer>
                     <Style font="Beleren2016-Bold" color="#000000" size="135" kerning="2"/>
@@ -553,10 +556,10 @@
                 </Selector>
             </flex>
         </SquishBox>
-        <ImageLayer src="overlays/color_indicators/${color_indicator}">
+        <ImageLayer src="overlays/color_indicators/$join{color_indicator}">
             <conditions>
                 <IsPresent key="color_indicator"/>
-                <FileExists src="../../overlays/color_indicators/${color_indicator}.png"/>
+                <FileExists src="../../overlays/color_indicators/$join{color_indicator}.png"/>
             </conditions>
         </ImageLayer>
         <Group id="pt">
@@ -618,88 +621,92 @@
                 </conditions>
             </TextLayer>
             <VerticalLayout x="400" y="2795" width="2488" height="1190" alignment="middle">
-                    <AttributeModifier name="height" value="1037">
-                        <IsPresent key="layout"/>
-                        <IsEquals key="layout" value="modal_dfc"/>
-                        <Not>
-                            <IsPresent key="keywords.mutate"/>
-                        </Not>
-                    </AttributeModifier>
-                    <AttributeModifier name="height" value="642">
-                        <Not>
-                            <And>
-                                <IsPresent key="layout"/>
-                                <IsEquals key="layout" value="modal_dfc"/>
-                            </And>
-                        </Not>
+                <AttributeModifier name="height" value="1037">
+                    <IsPresent key="layout"/>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                    <Not>
                         <IsPresent key="keywords.mutate"/>
-                    </AttributeModifier>
-                    <AttributeModifier name="height" value="302">
-                        <IsPresent key="layout"/>
-                        <IsEquals key="layout" value="modal_dfc"/>
-                        <IsPresent key="keywords.mutate"/>
-                    </AttributeModifier>
-                    <AttributeModifier name="y" value="3342">
-                        <IsPresent key="keywords.mutate"/>
-                    </AttributeModifier>
-                    <TextLayer value="$mtg.parsing.oracle_text{oracle_text}">
+                    </Not>
+                </AttributeModifier>
+                <AttributeModifier name="height" value="642">
+                    <Not>
+                        <And>
+                            <IsPresent key="layout"/>
+                            <IsEquals key="layout" value="modal_dfc"/>
+                        </And>
+                    </Not>
+                    <IsPresent key="keywords.mutate"/>
+                </AttributeModifier>
+                <AttributeModifier name="height" value="302">
+                    <IsPresent key="layout"/>
+                    <IsEquals key="layout" value="modal_dfc"/>
+                    <IsPresent key="keywords.mutate"/>
+                </AttributeModifier>
+                <AttributeModifier name="y" value="3342">
+                    <IsPresent key="keywords.mutate"/>
+                </AttributeModifier>
+                <TextLayer value="$mtg.parsing.oracle_text{oracle_text}">
+                    <conditions>
+                        <IsPresent key="oracle_text"/>
+                    </conditions>
+                </TextLayer>
+                <VerticalLayout id="flavor">
+                    <VerticalLayout>
+                        <SpacingLayer id="spacing1" width="10" height="75"/>
+                        <Selector>
+                            <ImageLayer id="bar" x="36" src="../../overlays/flavor_bar">
+                                <conditions>
+                                    <IsEquals key="proximity.options.flavor_bar"/>
+                                </conditions>
+                            </ImageLayer>
+                            <SpacingLayer width="10" height="14"/>
+                        </Selector>
+                        <SpacingLayer id="spacing2" width="10" height="65"/>
                         <conditions>
                             <IsPresent key="oracle_text"/>
-                        </conditions>
-                    </TextLayer>
-                    <VerticalLayout id="flavor">
-                        <VerticalLayout>
-                            <SpacingLayer id="spacing1" width="10" height="75"/>
-                            <Selector>
-                                <ImageLayer id="bar" x="36" src="../../overlays/flavor_bar">
-                                    <conditions>
-                                        <IsEquals key="proximity.options.flavor_bar"/>
-                                    </conditions>
-                                </ImageLayer>
-                                <SpacingLayer width="10" height="14"/>
-                            </Selector>
-                            <SpacingLayer id="spacing2" width="10" height="65"/>
-                            <conditions>
-                                <IsPresent key="oracle_text"/>
-                                <Not>
-                                    <IsEquals key="oracle_text" value=""/>
-                                </Not>
-                            </conditions>
-                        </VerticalLayout>
-                        <TextLayer value="$mtg.parsing.flavor_text{flavor_text}"/>
-                        <conditions>
-                            <IsPresent key="flavor_text"/>
-                            <IsEquals key="proximity.options.flavor_text"/>
+                            <Not>
+                                <IsEquals key="oracle_text" value=""/>
+                            </Not>
                         </conditions>
                     </VerticalLayout>
-                    <Wrap x="2672" y="3669" width="336" height="168">
-                        <conditions>
-                            <IsEquals key="layout" value="transform"/>
-                            <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                        </conditions>
-                    </Wrap>
-                    <Wrap x="2472" y="3669" width="535" height="515">
-                        <conditions>
-                            <IsEquals key="layout" value="transform"/>
-                            <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                            <IsEquals key="proximity.types.creature"/>
-                        </conditions>
-                    </Wrap>
-                    <Wrap x="2472" y="3869" width="535" height="315">
-                        <conditions>
-                            <Or>
-                                <IsPresent key="proximity.types.creature"/>
-                                <IsPresent key="proximity.types.vehicle"/>
-                            </Or>
-                        </conditions>
-                    </Wrap>
+                    <TextLayer value="$mtg.parsing.flavor_text{flavor_text}"/>
+                    <conditions>
+                        <IsPresent key="flavor_text"/>
+                        <IsEquals key="proximity.options.flavor_text"/>
+                    </conditions>
                 </VerticalLayout>
+            </VerticalLayout>
+            <Wrap>
+                <rect x="2472" y="3869" width="535" height="315"/>
+                <conditions>
+                    <Or>
+                        <IsPresent key="proximity.types.creature"/>
+                        <IsPresent key="proximity.types.vehicle"/>
+                    </Or>
+                </conditions>
+            </Wrap>
+            <Wrap>
+                <rect x="2672" y="3669" width="336" height="168"/>
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                </conditions>
+            </Wrap>
+            <Wrap>
+                <rect x="2472" y="3869" width="535" height="315"/>
+                <rect x="2672" y="3669" width="336" height="168"/>
+                <conditions>
+                    <IsEquals key="layout" value="transform"/>
+                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                    <IsEquals key="proximity.types.creature"/>
+                </conditions>
+            </Wrap>
             <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="135"/>
         </Group>
         <Group id="bottom_text">
             <HorizontalLayout id="set_lang_and_artist" x="335" y="4209">
                 <TextLayer y="2" value="${set}">
-                    <Style font="Relay-Medium" size="68" capitalization="all_caps" kerning="10">
+                    <Style font="Gotham-Medium-Regular" size="68" capitalization="all_caps" kerning="10">
                         <outline color="#000000" weight="0"/>
                     </Style>
                 </TextLayer>
@@ -709,7 +716,7 @@
                 </TextLayer>
                 <SpacingLayer height="5" width="28"/>
                 <TextLayer id="lang" value="${lang}" y="2">
-                    <Style font="Relay-Medium" size="68" capitalization="all_caps" kerning="12"/>
+                    <Style font="Gotham-Medium-Regular" size="68" capitalization="all_caps" kerning="12"/>
                 </TextLayer>
                 <SpacingLayer height="5" width="27"/>
                 <HorizontalLayout>
@@ -813,13 +820,19 @@
             <Group id="transform">
                 <ImageLayer id="sun">
                     <conditions>
-                        <IsPresent key="frame_effects.sunmoondfc"/>
+                        <Or>
+                            <IsPresent key="frame_effects.sunmoondfc"/>
+                            <IsEquals key="set" value="mid"/>
+                        </Or>
                         <IsEquals key="proximity.front_face"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="moon">
                     <conditions>
-                        <IsPresent key="frame_effects.sunmoondfc"/>
+                        <Or>
+                            <IsPresent key="frame_effects.sunmoondfc"/>
+                            <IsEquals key="set" value="mid"/>
+                        </Or>
                         <IsEquals key="proximity.front_face" value="false"/>
                     </conditions>
                 </ImageLayer>

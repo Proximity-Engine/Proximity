@@ -125,21 +125,26 @@ public final class Proximity {
                    .ifPresent(raw -> {
                        for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
                            int finalJ = j + prototype.number();
-                           XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                   .then(root -> Result.of(this.runInitScripts(raw, prototype.source(), root, finalJ, prototype.options(), prototype.overrides())))
-                                   .then((List<JsonObject> list) -> {
-                                       list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                               .then(e -> this.resolveResources(e, prototype.source(), cache))
-                                               .then(e -> this.resolveImports(e, prototype.source()))
-                                               .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)))
-                                               .then(renderable -> {
-                                                   cards.add(renderable);
-                                                   return Result.of((Void) null);
-                                               })
-                                       );
 
-                                       return Result.of((Void) null);
-                                   });
+                           if (prototype.source().exists("template.xml")) {
+                               XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                       .then(root -> Result.of(this.runInitScripts(raw, prototype.source(), root, finalJ, prototype.options(), prototype.overrides())))
+                                       .then((List<JsonObject> list) -> {
+                                           list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                                   .then(e -> this.resolveResources(e, prototype.source(), cache))
+                                                   .then(e -> this.resolveImports(e, prototype.source()))
+                                                   .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)))
+                                                   .then(renderable -> {
+                                                       cards.add(renderable);
+                                                       return Result.of((Void) null);
+                                                   })
+                                           );
+
+                                           return Result.of((Void) null);
+                                       });
+                           } else {
+                               LOG.warn("template.xml not found for template {}", prototype.source().getTemplateName());
+                           }
                        }
                    })
                    .ifError(LOG::warn);

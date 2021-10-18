@@ -1,9 +1,9 @@
-
 function parseFace(card, face) {
     var result = card.deepCopy();
+    var keys = Java.from(face.getKeys());
 
-    for (const [key, value] of face.entrySet()) {
-        result.add(key, value.deepCopy());
+    for (var key of keys) {
+        result.add(key, face.get(key).deepCopy());
     }
 
     return result;
@@ -13,8 +13,9 @@ function parseTwoSidedCard(context, card, number, options, overrides) {
     var colorsArray = new JsonArray();
 
     var faces = card.getAsJsonArray("card_faces");
-    var front = parseFace(card, faces[0]);
-    var back = parseFace(card, faces[1]);
+
+    var front = parseFace(card, faces.get(0));
+    var back = parseFace(card, faces.get(1));
 
     var backPath = new JsonArray();
     backPath.add("backs");
