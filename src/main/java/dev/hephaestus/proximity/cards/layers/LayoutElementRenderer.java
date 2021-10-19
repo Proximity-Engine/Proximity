@@ -72,15 +72,10 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
             }
 
             renderBounds = render(card, graphics, wrap, false, scale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
+            boolean fitsWithinBounds = !renderBounds.isEmpty() && scales && (!renderBounds.isEmpty() && outerBounds != null && !renderBounds.fitsWithin(outerBounds) || !renderBounds.isEmpty() && wrap != null && !wrap.isEmpty() && renderBounds.intersects(wrap));
 
-            boolean bl1 = renderBounds.isInfinite();
-            boolean bl2 = !renderBounds.isEmpty();
-            boolean bl4 = bl2 && scales && (outerBounds != null && !renderBounds.fitsWithin(outerBounds));
-            boolean bl5 = bl2 && scales && !(bl4) && wrap != null && !wrap.isEmpty() && renderBounds.intersects(wrap);
-            boolean bl6 = bl2 && scales && (bl4 || bl5);
-
-            if (bl1 || bl6) {
-                scale.set(scale.get() - 0.5F);
+            if (renderBounds.isInfinite() || fitsWithinBounds) {
+                scale.set(scale.get() - 1F);
                 renderBounds = new Rectangles();
             } else {
                 renderBounds = render(card, graphics, wrap, draw, scale, children, inLine, element.getInteger(this.offLine), outerBounds, errors);
@@ -92,11 +87,11 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
         }
 
         if (renderBounds.isEmpty()) {
-            Rectangles rectangles = render(card, graphics, wrap, draw, new Box<>(originalScale), children, inLine, element.getInteger(this.offLine), outerBounds, errors);
-            return Result.of(rectangles.isEmpty() ? Optional.empty() : Optional.of(rectangles));
-        } else {
-            return Result.of(Optional.of(renderBounds));
+            scale.set(originalScale);
+            return Result.of(Optional.of(Rectangles.infinity()));
         }
+
+        return Result.of(Optional.of(renderBounds));
     }
 
     private Rectangles render(RenderableCard card, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, List<Pair<RenderableCard.XMLElement, LayerRenderer>> children, int inLine, int offLine, Rectangle2D outerBounds, List<String> errors) {

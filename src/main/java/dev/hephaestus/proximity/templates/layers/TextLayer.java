@@ -254,7 +254,7 @@ public class TextLayer extends Layer {
 
     @Override
     public Rectangles draw(StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale) {
-        if (this.maxFontSize - scale.get() <= 0) {
+        if (this.maxFontSize + scale.get() <= 0) {
             return new Rectangles();
         }
 
