@@ -1,6 +1,6 @@
 package dev.hephaestus.proximity.util;
 
-import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.api.json.JsonObject;
 import org.quiltmc.json5.JsonReader;
 
 import java.io.IOException;

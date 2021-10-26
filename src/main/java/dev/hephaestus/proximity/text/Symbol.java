@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.text;
 
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
-import dev.hephaestus.proximity.xml.RenderableCard;
+import dev.hephaestus.proximity.xml.RenderableData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public final class Symbol {
         this.predicate = new CardPredicate.And(predicates);
     }
 
-    public boolean anyMatches(RenderableCard card, String text) {
+    public boolean anyMatches(RenderableData card, String text) {
         return this.predicate.test(card).orElse(false) && text.contains(this.representation);
     }
 

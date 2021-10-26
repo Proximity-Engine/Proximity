@@ -21,51 +21,42 @@
         <import src="symbols"/>
         <import src="styles"/>
     </imports>
+    <plugins>
+        <import repository="https://hephaestus.dev/release" group="dev.hephaestus" artifact="proximity-mtg" version=">=1.0.0"/>
+    </plugins>
     <condition_definitions>
         <ConditionDefinition name="colorless_artifact">
             <IsPresent key="proximity.types.artifact"/>
-            <IsEquals key="proximity.color_count" value="0"/>
+            <IsEquals key="proximity.mtg.color_count" value="0"/>
         </ConditionDefinition>
         <ConditionDefinition name="one_or_two_colors">
-            <Range key="proximity.color_count" min="1" max="2"/>
+            <Range key="proximity.mtg.color_count" min="1" max="2"/>
         </ConditionDefinition>
     </condition_definitions>
     <resources>
         <resource type="assets" location="https://hephaestus.dev/proximity/resources/set_symbols" version="1.0.0"/>
     </resources>
-    <scripts>
-        <init>
-            <script src="mtg.init.split"/>
-            <script src="mtg.init.types"/>
-            <script src="mtg.init.colors"/>
-            <script src="mtg.init.misc"/>
-        </init>
-    </scripts>
     <layers>
-        <!-- The art layer is special in that it can also contain a width and/or height
-        If both are provided, the layer will be stretched or shrunk to cover that area
-        If only one is provided, the layer will be stretched or shrunk to fit that dimension
-        while keeping the image proportional with its original dimensions -->
-        <ArtLayer x="352" y="605" width="2584" height="1882">
+        <ImageLayer id="art" x="352" y="605" width="2584" height="1882" url="${image_uris.art_crop}">
             <conditions>
                 <IsEquals key="proximity.options.use_official_art"/>
             </conditions>
-        </ArtLayer>
+        </ImageLayer>
         <Selector id="backgrounds">
             <Selector id="nyx">
                 <ImageLayer id="artifact">
                     <conditions>
-                        <IsPresent key="proximity.types.artifact"/>
+                        <IsPresent key="proximity.mtg.types.artifact"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="0"/>
+                        <IsEquals key="proximity.mtg.color_count" value="0"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colored" src="$join{colors}">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="1"/>
+                        <IsEquals key="proximity.mtg.color_count" value="1"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="gold"/>
@@ -76,34 +67,34 @@
             <Selector id="standard">
                 <ImageLayer id="vehicle">
                     <conditions>
-                        <IsPresent key="proximity.types.vehicle"/>
+                        <IsPresent key="proximity.mtg.types.vehicle"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="artifact">
                     <conditions>
-                        <IsPresent key="proximity.types.artifact"/>
-                        <IsPresent key="proximity.types.land" value="false"/>
+                        <IsPresent key="proximity.mtg.types.artifact"/>
+                        <IsPresent key="proximity.mtg.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="land">
                     <conditions>
-                        <IsPresent key="proximity.types.land"/>
+                        <IsPresent key="proximity.mtg.types.land"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colored" src="$join{colors}">
                     <conditions>
                         <Or>
-                            <IsEquals key="proximity.color_count" value="1"/>
+                            <IsEquals key="proximity.mtg.color_count" value="1"/>
                             <And>
-                                <IsEquals key="proximity.color_count" value="2"/>
-                                <IsEquals key="proximity.hybrid"/>
+                                <IsEquals key="proximity.mtg.color_count" value="2"/>
+                                <IsEquals key="proximity.mtg.hybrid"/>
                             </And>
                         </Or>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="gold">
                     <conditions>
-                        <Range key="proximity.color_count" min="2"/>
+                        <Range key="proximity.mtg.color_count" min="2"/>
                     </conditions>
                 </ImageLayer>
             </Selector>
@@ -116,7 +107,7 @@
         <Selector id="shadows">
             <ImageLayer id="legendary">
                 <conditions>
-                    <IsPresent key="proximity.types.legendary"/>
+                    <IsPresent key="proximity.mtg.types.legendary"/>
                 </conditions>
             </ImageLayer>
             <ImageLayer id="mdfc">
@@ -127,7 +118,7 @@
             <Selector id="transform">
                 <ImageLayer id="front">
                     <conditions>
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="back"/>
@@ -144,12 +135,12 @@
                         <ImageLayer id="artifact">
                             <conditions>
                                 <IsEquals key="colorless_artifact"/>
-                                <IsPresent key="proximity.types.land" value="false"/>
+                                <IsPresent key="proximity.mtg.types.land" value="false"/>
                             </conditions>
                         </ImageLayer>
                         <ImageLayer id="colorless">
                             <conditions>
-                                <IsEquals key="proximity.color_count" value="0"/>
+                                <IsEquals key="proximity.mtg.color_count" value="0"/>
                             </conditions>
                         </ImageLayer>
                         <ImageLayer id="colored" src="$join{colors}">
@@ -161,17 +152,17 @@
                     </Selector>
                     <branches>
                         <Branch id="land">
-                            <IsPresent key="proximity.types.land"/>
+                            <IsPresent key="proximity.mtg.types.land"/>
                         </Branch>
                         <Branch id="standard"/>
                     </branches>
                 </Fork>
                 <branches>
                     <Branch id="front">
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </Branch>
                     <Branch id="back">
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </Branch>
                 </branches>
                 <conditions>
@@ -183,12 +174,12 @@
                     <ImageLayer id="artifact">
                         <conditions>
                             <IsEquals key="colorless_artifact"/>
-                            <IsPresent key="proximity.types.land" value="false"/>
+                            <IsPresent key="proximity.mtg.types.land" value="false"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colorless">
                         <conditions>
-                            <IsEquals key="proximity.color_count" value="0"/>
+                            <IsEquals key="proximity.mtg.color_count" value="0"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colored" src="$join{colors}">
@@ -200,10 +191,10 @@
                 </Selector>
                 <branches>
                     <Branch id="front">
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </Branch>
                     <Branch id="back">
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </Branch>
                 </branches>
                 <conditions>
@@ -213,14 +204,14 @@
             <ImageLayer id="miracle" src="miracle/$join{colors}">
                 <conditions>
                     <IsPresent key="frame_effects.miracle"/>
-                    <IsEquals key="proximity.color_count" value="1"/>
+                    <IsEquals key="proximity.mtg.color_count" value="1"/>
                 </conditions>
             </ImageLayer>
             <Selector id="mutate">
                 <ImageLayer id="colorless">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
-                        <IsPresent key="proximity.types.land" value="false"/>
+                        <IsPresent key="proximity.mtg.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colored" src="$join{colors}">
@@ -238,12 +229,12 @@
                     <ImageLayer id="artifact">
                         <conditions>
                             <IsEquals key="colorless_artifact"/>
-                            <IsPresent key="proximity.types.land" value="false"/>
+                            <IsPresent key="proximity.mtg.types.land" value="false"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colorless">
                         <conditions>
-                            <IsEquals key="proximity.color_count" value="0"/>
+                            <IsEquals key="proximity.mtg.color_count" value="0"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colored" src="$join{colors}">
@@ -255,7 +246,7 @@
                 </Selector>
                 <branches>
                     <Branch id="land">
-                        <IsPresent key="proximity.types.land"/>
+                        <IsPresent key="proximity.mtg.types.land"/>
                     </Branch>
                     <Branch id="standard"/>
                 </branches>
@@ -266,7 +257,7 @@
                 <ImageLayer src="${proximity.options.border}"/>
                 <branches>
                     <Branch id="legendary">
-                        <IsPresent key="proximity.types.legendary"/>
+                        <IsPresent key="proximity.mtg.types.legendary"/>
                     </Branch>
                     <Branch id="standard"/>
                 </branches>
@@ -277,7 +268,7 @@
                 </Branch>
                 <Branch id="transform">
                     <IsEquals key="layout" value="transform"/>
-                    <IsEquals key="proximity.front_face"/>
+                    <IsEquals key="proximity.mtg.front_face"/>
                 </Branch>
                 <Branch id="standard"/>
             </branches>
@@ -297,26 +288,26 @@
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
-                        <IsPresent key="proximity.types.land" value="false"/>
+                        <IsPresent key="proximity.mtg.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
                     <conditions>
                         <Or>
-                            <IsEquals key="proximity.color_count" value="0"/>
+                            <IsEquals key="proximity.mtg.color_count" value="0"/>
                             <And>
-                                <IsEquals key="proximity.color_count" value="2"/>
-                                <IsEquals key="proximity.hybrid"/>
+                                <IsEquals key="proximity.mtg.color_count" value="2"/>
+                                <IsEquals key="proximity.mtg.hybrid"/>
                             </And>
                         </Or>
                         <Not>
-                            <IsPresent key="proximity.types.land"/>
+                            <IsPresent key="proximity.mtg.types.land"/>
                         </Not>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="land">
                     <conditions>
-                        <IsPresent key="proximity.types.land"/>
+                        <IsPresent key="proximity.mtg.types.land"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="gold"/>
@@ -326,29 +317,29 @@
                     <IsPresent key="frame_effects.companion"/>
                 </Branch>
                 <Branch id="legendary">
-                    <IsPresent key="proximity.types.legendary"/>
+                    <IsPresent key="proximity.mtg.types.legendary"/>
                 </Branch>
             </branches>
         </Fork>
         <Selector id="crowns.companion.gems">
             <ImageLayer id="monocolored" src="$join{colors}">
                 <conditions>
-                    <IsEquals key="proximity.color_count" value="1"/>
+                    <IsEquals key="proximity.mtg.color_count" value="1"/>
                 </conditions>
             </ImageLayer>
             <ImageLayer id="artifact">
                 <conditions>
                     <IsEquals key="colorless_artifact"/>
-                    <IsPresent key="proximity.types.land" value="false"/>
+                    <IsPresent key="proximity.mtg.types.land" value="false"/>
                 </conditions>
             </ImageLayer>
             <ImageLayer id="colorless">
                 <conditions>
                     <Or>
-                        <IsEquals key="proximity.color_count" value="0"/>
+                        <IsEquals key="proximity.mtg.color_count" value="0"/>
                         <And>
-                            <IsEquals key="proximity.color_count" value="2"/>
-                            <IsEquals key="proximity.hybrid"/>
+                            <IsEquals key="proximity.mtg.color_count" value="2"/>
+                            <IsEquals key="proximity.mtg.hybrid"/>
                         </And>
                     </Or>
                 </conditions>
@@ -363,20 +354,20 @@
                 <Selector>
                     <ImageLayer id="monocolored" src="$join{colors}">
                         <conditions>
-                            <IsEquals key="proximity.color_count" value="1"/>
+                            <IsEquals key="proximity.mtg.color_count" value="1"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="artifact">
                         <conditions>
                             <IsEquals key="colorless_artifact"/>
-                            <IsPresent key="proximity.types.land" value="false"/>
+                            <IsPresent key="proximity.mtg.types.land" value="false"/>
                         </conditions>
                     </ImageLayer>
                     <ImageLayer id="colorless">
                         <conditions>
-                            <IsEquals key="proximity.color_count" value="0"/>
+                            <IsEquals key="proximity.mtg.color_count" value="0"/>
                             <Not>
-                                <IsPresent key="proximity.types.land"/>
+                                <IsPresent key="proximity.mtg.types.land"/>
                             </Not>
                         </conditions>
                     </ImageLayer>
@@ -384,12 +375,12 @@
                         <conditions>
                             <Or>
                                 <And>
-                                    <IsEquals key="proximity.color_count" value="2"/>
-                                    <IsEquals key="proximity.hybrid"/>
+                                    <IsEquals key="proximity.mtg.color_count" value="2"/>
+                                    <IsEquals key="proximity.mtg.hybrid"/>
                                 </And>
                                 <And>
-                                    <IsEquals key="proximity.color_count" value="0"/>
-                                    <IsPresent key="proximity.types.land"/>
+                                    <IsEquals key="proximity.mtg.color_count" value="0"/>
+                                    <IsPresent key="proximity.mtg.types.land"/>
                                 </And>
                             </Or>
                         </conditions>
@@ -398,10 +389,10 @@
                 </Selector>
                 <branches>
                     <Branch id="front">
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </Branch>
                     <Branch id="back">
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </Branch>
                 </branches>
                 <conditions>
@@ -413,7 +404,7 @@
             </Fork>
             <ImageLayer id="miracle" src="miracle/$join{colors}">
                 <conditions>
-                    <IsEquals key="proximity.color_count" value="1"/>
+                    <IsEquals key="proximity.mtg.color_count" value="1"/>
                     <IsPresent key="frame_effects"/>
                     <IsPresent key="frame_effects.miracle"/>
                 </conditions>
@@ -421,20 +412,20 @@
             <Selector id="standard">
                 <ImageLayer id="monocolored" src="$join{colors}">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="1"/>
+                        <IsEquals key="proximity.mtg.color_count" value="1"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
-                        <IsPresent key="proximity.types.land" value="false"/>
+                        <IsPresent key="proximity.mtg.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="0"/>
+                        <IsEquals key="proximity.mtg.color_count" value="0"/>
                         <Not>
-                            <IsPresent key="proximity.types.land"/>
+                            <IsPresent key="proximity.mtg.types.land"/>
                         </Not>
                     </conditions>
                 </ImageLayer>
@@ -442,15 +433,15 @@
                     <conditions>
                         <Or>
                             <And>
-                                <IsEquals key="proximity.color_count" value="2"/>
-                                <IsEquals key="proximity.hybrid"/>
+                                <IsEquals key="proximity.mtg.color_count" value="2"/>
+                                <IsEquals key="proximity.mtg.hybrid"/>
                             </And>
                             <And>
                                 <Or>
-                                    <IsEquals key="proximity.color_count" value="0"/>
-                                    <IsEquals key="proximity.color_count" value="2"/>
+                                    <IsEquals key="proximity.mtg.color_count" value="0"/>
+                                    <IsEquals key="proximity.mtg.color_count" value="2"/>
                                 </Or>
-                                <IsPresent key="proximity.types.land"/>
+                                <IsPresent key="proximity.mtg.types.land"/>
                             </And>
                         </Or>
                     </conditions>
@@ -475,13 +466,13 @@
                         <TextLayer x="665" y="506" value="${name}">
                             <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                             <conditions>
-                                <IsEquals key="proximity.front_face"/>
+                                <IsEquals key="proximity.mtg.front_face"/>
                             </conditions>
                         </TextLayer>
                         <TextLayer x="665" y="506" value="${name}">
                             <Style font="Beleren2016-Bold" color="#FFFFFF" size="160"/>
                             <conditions>
-                                <IsEquals key="proximity.front_face" value="false"/>
+                                <IsEquals key="proximity.mtg.front_face" value="false"/>
                             </conditions>
                         </TextLayer>
                         <conditions>
@@ -503,8 +494,8 @@
             <conditions>
                 <IsPresent key="layout"/>
                 <IsEquals key="layout" value="transform"/>
-                <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                <IsEquals key="proximity.front_face"/>
+                <IsPresent key="proximity.mtg.flipped.proximity.types.creature"/>
+                <IsEquals key="proximity.mtg.front_face"/>
             </conditions>
         </TextLayer>
         <SquishBox>
@@ -530,7 +521,7 @@
                         </Not>
                     </CardModifier>
                     <conditions>
-                        <IsEquals key="proximity.options.show_set_symbol"/>
+                        <IsEquals key="proximity.mtg.options.show_set_symbol"/>
                     </conditions>
                 </Group>
             </main>
@@ -550,7 +541,7 @@
                                 <IsEquals key="layout" value="modal_dfc"/>
                                 <IsEquals key="layout" value="transform"/>
                             </Or>
-                            <IsEquals key="proximity.front_face" value="false"/>
+                            <IsEquals key="proximity.mtg.front_face" value="false"/>
                         </conditions>
                     </Style>
                 </Selector>
@@ -566,18 +557,18 @@
             <Selector>
                 <ImageLayer id="vehicle">
                     <conditions>
-                        <IsPresent key="proximity.types.vehicle"/>
+                        <IsPresent key="proximity.mtg.types.vehicle"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="monocolored" src="$join{colors}">
                     <conditions>
-                        <IsEquals key="proximity.color_count" value="1"/>
+                        <IsEquals key="proximity.mtg.color_count" value="1"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="artifact">
                     <conditions>
                         <IsEquals key="colorless_artifact"/>
-                        <IsPresent key="proximity.types.land" value="false"/>
+                        <IsPresent key="proximity.mtg.types.land" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="colorless">
@@ -585,8 +576,8 @@
                         <Or>
                             <IsEquals key="proximity.color_count" value="0"/>
                             <And>
-                                <IsEquals key="proximity.color_count" value="2"/>
-                                <IsEquals key="proximity.hybrid"/>
+                                <IsEquals key="proximity.mtg.color_count" value="2"/>
+                                <IsEquals key="proximity.mtg.hybrid"/>
                             </And>
                         </Or>
                     </conditions>
@@ -597,25 +588,25 @@
                 <TextLayer id="vehicle" x="2740" y="4062" alignment="center" value="${power}/${toughness}">
                     <Style font="Beleren2016-Bold" color="#FFFFFF" size="160"/>
                     <conditions>
-                        <IsPresent key="proximity.types.vehicle"/>
+                        <IsPresent key="proximity.mtg.types.vehicle"/>
                     </conditions>
                 </TextLayer>
                 <TextLayer id="creature" x="2740" y="4062" alignment="center" value="${power}/${toughness}">
                     <Style font="Beleren2016-Bold" color="#000000" size="160"/>
                     <conditions>
-                        <IsPresent key="proximity.types.creature"/>
+                        <IsPresent key="proximity.mtg.types.creature"/>
                     </conditions>
                 </TextLayer>
             </Selector>
             <conditions>
                 <Or>
-                    <IsPresent key="proximity.types.creature"/>
-                    <IsPresent key="proximity.types.vehicle"/>
+                    <IsPresent key="proximity.mtg.types.creature"/>
+                    <IsPresent key="proximity.mtg.types.vehicle"/>
                 </Or>
             </conditions>
         </Group>
         <Group id="oracle_text">
-            <TextLayer id="mutate" value="$mtg.parsing.oracle_text{proximity.util.mutate_text}" x="400" y="2800" width="2488" height="500">
+            <TextLayer id="mutate" value="$oracle_text{proximity.util.mutate_text}" x="400" y="2800" width="2488" height="500">
                 <conditions>
                     <IsPresent key="keywords.mutate"/>
                 </conditions>
@@ -645,7 +636,7 @@
                 <AttributeModifier name="y" value="3342">
                     <IsPresent key="keywords.mutate"/>
                 </AttributeModifier>
-                <TextLayer value="$mtg.parsing.oracle_text{oracle_text}">
+                <TextLayer value="$oracle_text{oracle_text}">
                     <conditions>
                         <IsPresent key="oracle_text"/>
                     </conditions>
@@ -669,7 +660,7 @@
                             </Not>
                         </conditions>
                     </VerticalLayout>
-                    <TextLayer value="$mtg.parsing.flavor_text{flavor_text}"/>
+                    <TextLayer value="$flavor_text{flavor_text}"/>
                     <conditions>
                         <IsPresent key="flavor_text"/>
                         <IsEquals key="proximity.options.flavor_text"/>
@@ -680,8 +671,8 @@
                 <rect x="2472" y="3869" width="535" height="315"/>
                 <conditions>
                     <Or>
-                        <IsPresent key="proximity.types.creature"/>
-                        <IsPresent key="proximity.types.vehicle"/>
+                        <IsPresent key="proximity.mtg.types.creature"/>
+                        <IsPresent key="proximity.mtg.types.vehicle"/>
                     </Or>
                 </conditions>
             </Wrap>
@@ -689,7 +680,7 @@
                 <rect x="2672" y="3669" width="336" height="168"/>
                 <conditions>
                     <IsEquals key="layout" value="transform"/>
-                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
+                    <IsPresent key="proximity.mtg.flipped.proximity.mtg.types.creature"/>
                 </conditions>
             </Wrap>
             <Wrap>
@@ -697,8 +688,8 @@
                 <rect x="2672" y="3669" width="336" height="168"/>
                 <conditions>
                     <IsEquals key="layout" value="transform"/>
-                    <IsPresent key="proximity.flipped.proximity.types.creature"/>
-                    <IsEquals key="proximity.types.creature"/>
+                    <IsPresent key="proximity.mtg.flipped.proximity.mtg.types.creature"/>
+                    <IsEquals key="proximity.mtg.types.creature"/>
                 </conditions>
             </Wrap>
             <Style font="MPlantin" italicFont="MPlantin-Italic" color="#000000" size="135"/>
@@ -742,9 +733,9 @@
                     <Style font="MPlantin" size="68"/>
                     <conditions>
                         <Or>
-                            <IsPresent key="proximity.types.planeswalker"/>
-                            <IsPresent key="proximity.types.creature"/>
-                            <IsPresent key="proximity.types.vehicle"/>
+                            <IsPresent key="proximity.mtg.types.planeswalker"/>
+                            <IsPresent key="proximity.mtg.types.creature"/>
+                            <IsPresent key="proximity.mtg.types.vehicle"/>
                         </Or>
                     </conditions>
                 </TextLayer>
@@ -752,13 +743,13 @@
                     <Style font="MPlantin" size="68"/>
                 </TextLayer>
                 <conditions>
-                    <IsEquals key="proximity.options.copyright"/>
+                    <IsEquals key="proximity.mtg.options.copyright"/>
                 </conditions>
             </Selector>
             <Style color="#FFFFFF">
                 <outline color="#000000" weight="10"/>
                 <conditions>
-                    <IsEquals key="proximity.options.bottom_text_outline"/>
+                    <IsEquals key="proximity.mtg.options.bottom_text_outline"/>
                 </conditions>
             </Style>
             <Style color="#FFFFFF"/>
@@ -770,7 +761,7 @@
                     <Style font="Beleren2016-Bold" size="170" color="#FFFFFF"/>
                 </TextLayer>
                 <conditions>
-                    <IsPresent key="proximity.types.planeswalker"/>
+                    <IsPresent key="proximity.mtg.types.planeswalker"/>
                 </conditions>
             </Group>
             <Group id="mdfc">
@@ -783,12 +774,12 @@
                         </ImageLayer>
                         <ImageLayer id="colorless">
                             <conditions>
-                                <IsEquals key="proximity.color_count" value="0"/>
+                                <IsEquals key="proximity.mtg.color_count" value="0"/>
                             </conditions>
                         </ImageLayer>
                         <ImageLayer id="colored" src="$join{colors}">
                             <conditions>
-                                <IsEquals key="proximity.color_count" value="1"/>
+                                <IsEquals key="proximity.mtg.color_count" value="1"/>
                             </conditions>
                         </ImageLayer>
                         <ImageLayer id="gold"/>
@@ -796,19 +787,19 @@
                     <Selector id="bottom">
                         <ImageLayer id="colorless">
                             <conditions>
-                                <IsEquals key="proximity.flipped.proximity.color_count" value="0"/>
+                                <IsEquals key="proximity.mtg.flipped.proximity.mtg.color_count" value="0"/>
                             </conditions>
                         </ImageLayer>
-                        <ImageLayer id="colored" src="$join{proximity.flipped.colors}">
+                        <ImageLayer id="colored" src="$join{proximity.mtg.flipped.colors}">
                             <conditions>
-                                <IsEquals key="proximity.flipped.proximity.color_count" value="1"/>
+                                <IsEquals key="proximity.mtg.flipped.proximity.mtg.color_count" value="1"/>
                             </conditions>
                         </ImageLayer>
                         <ImageLayer id="gold"/>
                     </Selector>
                     <branches>
                         <Branch id="front">
-                            <IsEquals key="proximity.front_face"/>
+                            <IsEquals key="proximity.mtg.front_face"/>
                         </Branch>
                         <Branch id="back"/>
                     </branches>
@@ -824,7 +815,7 @@
                             <IsPresent key="frame_effects.sunmoondfc"/>
                             <IsEquals key="set" value="mid"/>
                         </Or>
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="moon">
@@ -833,43 +824,43 @@
                             <IsPresent key="frame_effects.sunmoondfc"/>
                             <IsEquals key="set" value="mid"/>
                         </Or>
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="pwo">
                     <conditions>
                         <IsPresent key="frame_effects.originpwdfc"/>
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="pw">
                     <conditions>
                         <IsPresent key="frame_effects.originpwdfc"/>
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="compass">
                     <conditions>
                         <IsPresent key="frame_effects.compasslanddfc"/>
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="land">
                     <conditions>
                         <IsPresent key="frame_effects.compasslanddfc"/>
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="eldrazi moon">
                     <conditions>
                         <IsPresent key="frame_effects.mooneldrazidfc"/>
-                        <IsEquals key="proximity.front_face"/>
+                        <IsEquals key="proximity.mtg.front_face"/>
                     </conditions>
                 </ImageLayer>
                 <ImageLayer id="eldrazi">
                     <conditions>
                         <IsPresent key="frame_effects.mooneldrazidfc"/>
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </conditions>
                 </ImageLayer>
                 <conditions>
@@ -879,21 +870,21 @@
         </Group>
         <SquishBox id="flipped">
             <main id="cost">
-                <TextLayer x="1435" y="4000" alignment="right" value="${proximity.flipped.mana_cost}">
+                <TextLayer x="1435" y="4000" alignment="right" value="${proximity.mtg.flipped.mana_cost}">
                     <Style font="NDPMTG" size="125"/>
                 </TextLayer>
             </main>
             <flex id="types">
-                <TextLayer x="345" y="4000" value="${proximity.flipped.proximity.main_types}">
+                <TextLayer x="345" y="4000" value="${proximity.mtg.flipped.proximity.mtg.main_types}">
                     <Style font="Beleren2016-Bold" color="#FFFFFF" size="100"/>
                     <conditions>
                         <IsEquals key="proximity.front_face"/>
                     </conditions>
                 </TextLayer>
-                <TextLayer x="345" y="4000" value="${proximity.flipped.proximity.main_types}">
+                <TextLayer x="345" y="4000" value="${proximity.mtg.flipped.proximity.mtg.main_types}">
                     <Style font="Beleren2016-Bold" color="#000000" size="100"/>
                     <conditions>
-                        <IsEquals key="proximity.front_face" value="false"/>
+                        <IsEquals key="proximity.mtg.front_face" value="false"/>
                     </conditions>
                 </TextLayer>
             </flex>

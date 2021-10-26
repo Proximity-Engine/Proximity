@@ -1,20 +1,27 @@
 package dev.hephaestus.proximity;
 
+import dev.hephaestus.proximity.api.DataSet;
+import dev.hephaestus.proximity.api.Values;
+import dev.hephaestus.proximity.api.tasks.DataFinalization;
+import dev.hephaestus.proximity.api.tasks.DataPreparation;
 import dev.hephaestus.proximity.cards.CardPrototype;
-import dev.hephaestus.proximity.cards.layers.*;
-import dev.hephaestus.proximity.json.JsonElement;
-import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.scripting.Context;
-import dev.hephaestus.proximity.scripting.ScriptingUtil;
+import dev.hephaestus.proximity.api.json.JsonElement;
+import dev.hephaestus.proximity.api.json.JsonObject;
+import dev.hephaestus.proximity.plugins.TaskHandler;
+import dev.hephaestus.proximity.plugins.util.Artifact;
+import dev.hephaestus.proximity.util.ScriptingUtil;
+import dev.hephaestus.proximity.templates.LayerRegistry;
 import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
-import dev.hephaestus.proximity.util.*;
+import dev.hephaestus.proximity.util.Logging;
+import dev.hephaestus.proximity.util.RemoteFileCache;
+import dev.hephaestus.proximity.util.Result;
+import dev.hephaestus.proximity.util.StatefulGraphics;
 import dev.hephaestus.proximity.xml.LayerRenderer;
-import dev.hephaestus.proximity.xml.RenderableCard;
-import org.apache.logging.log4j.Level;
+import dev.hephaestus.proximity.xml.RenderableData;
+import dev.hephaestus.proximity.xml.XMLUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.graalvm.polyglot.HostAccess;
 import org.quiltmc.json5.JsonReader;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -22,7 +29,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.imageio.ImageIO;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,33 +52,25 @@ public final class Proximity {
     public static Logger LOG = LogManager.getLogger("Proximity");
 
     private final JsonObject options;
+    private final TaskHandler taskHandler;
+    private final LayerRegistry layers;
+    private final RemoteFileCache cache;
     private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
 
-    static {
-        LayerRenderer.register(new ArtLayerRenderer(), "ArtLayer");
-        LayerRenderer.register(new FillLayerRenderer(), "Fill", "SpacingLayer", "Spacer");
-        LayerRenderer.register(new ForkLayerRenderer(), "Fork");
-        LayerRenderer.register(new LayerGroupRenderer(), "Group", "main");
-        LayerRenderer.register(new ImageLayerRenderer(), "ImageLayer");
-        LayerRenderer.register(new LayerSelectorRenderer(), "Selector", "flex");
-        LayerRenderer.register(new SquishBoxRenderer(), "SquishBox");
-        LayerRenderer.register(new TextLayerRenderer(), "TextLayer");
-        LayerRenderer.register(new SVGLayerRenderer(), "SVG");
-        LayerRenderer.register(new NoiseLayerRenderer(), "Noise");
+    public Proximity(JsonObject options, TaskHandler taskHandler, LayerRegistry layers) {
+        this.options = options;
+        this.taskHandler = taskHandler;
+        this.layers = layers;
 
-        LayerRenderer.register(new LayoutElementRenderer("x", "y",
-                Rectangle2D::getWidth,
-                Rectangle2D::getHeight
-        ), "HorizontalLayout");
-
-        LayerRenderer.register(new LayoutElementRenderer("y", "x",
-                Rectangle2D::getHeight,
-                Rectangle2D::getWidth
-        ), "VerticalLayout");
+        try {
+            this.cache = RemoteFileCache.load();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Proximity(JsonObject options) {
-        this.options = options;
+    public RemoteFileCache getRemoteFileCache() {
+        return this.cache;
     }
 
     public void run(Deque<CardPrototype> prototypes) {
@@ -87,22 +85,14 @@ public final class Proximity {
         }
     }
 
-    private Result<Deque<RenderableCard>> getCardInfo(Deque<CardPrototype> prototypes) {
+    private Result<Deque<RenderableData>> getCardInfo(Deque<CardPrototype> prototypes) {
         LOG.info("Fetching info for {} cards...", prototypes.size());
 
         long lastRequest = 0;
 
-       Deque<RenderableCard> cards = new ArrayDeque<>();
+       Deque<RenderableData> cards = new ArrayDeque<>();
 
-        RemoteFileCache cache;
-
-        try {
-             cache = RemoteFileCache.load();
-        } catch (IOException e) {
-            return Result.error("Failed to load cache: %s" ,e.getMessage());
-        }
-
-        int i = 1;
+       int i = 1;
        int prototypeCountLength = Integer.toString(prototypes.size()).length();
        long totalTime = System.currentTimeMillis();
 
@@ -123,17 +113,20 @@ public final class Proximity {
 
            getCardInfo(prototype)
                    .ifPresent(raw -> {
+                       raw.getAsJsonObject("proximity", "options").copyAll(options);
+
                        for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
                            int finalJ = j + prototype.number();
+                           Values.ITEM_NUMBER.set(raw, finalJ);
 
                            if (prototype.source().exists("template.xml")) {
                                XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                       .then(root -> Result.of(this.runInitScripts(raw, prototype.source(), root, finalJ, prototype.options(), prototype.overrides())))
+                                       .then(root -> this.loadAndRunPluginsAndScripts(raw, prototype.source(), root, prototype.overrides()))
                                        .then((List<JsonObject> list) -> {
                                            list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                                   .then(e -> this.resolveResources(e, prototype.source(), cache))
+                                                   .then(e -> this.resolveResources(e, prototype.source()))
                                                    .then(e -> this.resolveImports(e, prototype.source()))
-                                                   .then(root -> Result.of(new RenderableCard(prototype.source(), root, card)))
+                                                   .then(root -> Result.of(new RenderableData(this, prototype.source(), root, card)))
                                                    .then(renderable -> {
                                                        cards.add(renderable);
                                                        return Result.of((Void) null);
@@ -158,7 +151,7 @@ public final class Proximity {
         return Result.of(cards);
     }
 
-    private Result<Element> resolveResources(Element root, TemplateSource.Compound source, RemoteFileCache cache) {
+    private Result<Element> resolveResources(Element root, TemplateSource.Compound source) {
         NodeList resourceList = root.getElementsByTagName("resources");
 
         for (int i = 0; i < resourceList.getLength(); ++i) {
@@ -229,63 +222,77 @@ public final class Proximity {
         return Result.of(root);
     }
 
-    private List<JsonObject> runInitScripts(JsonObject raw, TemplateSource source, Element root, int number, JsonObject options, JsonObject overrides) {
-        NodeList scriptBlocks = root.getElementsByTagName("scripts");
+    private Result<List<JsonObject>> loadAndRunPluginsAndScripts(JsonObject raw, TemplateSource source, Element root, JsonObject overrides) {
+        NodeList pluginBlocks = root.getElementsByTagName("plugins");
 
-        Map<String, List<Function<Object[], Object>>> tasks = new HashMap<>();
-        List<JsonObject> cards = new ArrayList<>();
-        cards.add(raw);
-        Context context = Context.create(null, Collections.emptyMap(), Collections.emptyList(), (string, task) ->
-                tasks.computeIfAbsent(string, s -> new ArrayList<>()).add(task)
-        );
+        for (int i = 0; i < pluginBlocks.getLength(); ++i) {
+            Node n = pluginBlocks.item(i);
 
-        for (int i = 0; i < scriptBlocks.getLength(); ++i) {
-            Node r = scriptBlocks.item(i);
+            if (n instanceof Element e) {
+                NodeList imports = e.getElementsByTagName("import");
 
-            if (r instanceof Element) {
-                NodeList scriptsBlock = r.getChildNodes();
+                for (int j = 0; j < imports.getLength(); ++j) {
+                    n = imports.item(j);
 
-                for (int j = 0; j < scriptsBlock.getLength(); ++j) {
-                    r = scriptsBlock.item(j);
+                    if (n instanceof Element importElement) {
+                        String repository = importElement.getAttribute("repository");
+                        String group = importElement.getAttribute("group");
+                        String artifact = importElement.getAttribute("artifact");
+                        String versionRange = importElement.getAttribute("version");
 
-                    if (r instanceof Element e && e.getTagName().equals("init")) {
-                        NodeList scripts = r.getChildNodes();
+                        Result<Void> result = this.taskHandler.loadPlugin(Artifact.create(
+                                repository, group, artifact, versionRange
+                        ));
 
-                        for (int k = 0; k < scripts.getLength(); ++k) {
-                            r = scripts.item(k);
+                        if (result.isError()) return result.unwrap();
+                    }
+                }
+            }
+        }
 
-                            if (r instanceof Element script) {
-                                String src = script.getAttribute("src");
+        NodeList tasksTags = root.getElementsByTagName("Tasks");
 
-                                List<JsonObject> nextCards = new ArrayList<>();
+        for (int i = 0; i < tasksTags.getLength(); ++i) {
+            Node n = tasksTags.item(i);
 
-                                for (var card : cards) {
-                                    nextCards.addAll(ScriptingUtil.applyFunction(context, source, src, this::handleScriptResult, null, card, number, options, overrides));
-                                }
+            if (n instanceof Element tasks) {
+                NodeList taskTags = tasks.getChildNodes();
 
-                                cards = nextCards;
-                            }
+                for (int j = 0; j < taskTags.getLength(); ++j) {
+                    n = taskTags.item(j);
+
+                    if (n instanceof Element task && this.taskHandler.contains(task.getTagName())) {
+                        Function<Object[], Object> function = ScriptingUtil.getFunction(source, task.getAttribute("location"));
+                        String taskName = task.getTagName();
+
+                        if (task.hasAttribute("name")) {
+                            this.taskHandler.put(taskName, task.getAttribute("name"), function);
+                        } else {
+                            this.taskHandler.put(taskName, function);
                         }
                     }
                 }
             }
         }
 
-        for (var task : tasks.getOrDefault("postInit", Collections.emptyList())) {
-            task.apply(new Object[0]);
+        List<JsonObject> list = new ArrayList<>();
+
+        list.add(raw);
+
+        DataSet data = new DataSet(list);
+        List<DataPreparation> preparations = this.taskHandler.getTasks(DataPreparation.DEFINITION);
+
+        for (var task : preparations) {
+            task.apply(this.taskHandler, data, overrides);
         }
 
-        return cards;
-    }
+        List<DataFinalization> finalizations = this.taskHandler.getTasks(DataFinalization.DEFINITION);
 
-    private List<JsonObject> handleScriptResult(Object object) {
-        if (object instanceof List list) {
-            return list;
-        } else if (object instanceof JsonObject json) {
-            return Collections.singletonList(json);
-        } else {
-            throw new UnsupportedOperationException();
+        for (var task : finalizations) {
+            task.apply();
         }
+
+        return Result.of(list);
     }
 
     private Result<JsonObject> getCardInfo(CardPrototype prototype) {
@@ -347,7 +354,7 @@ public final class Proximity {
         });
     }
 
-    private Result<AtomicInteger> renderAndSave(Deque<RenderableCard> cards) {
+    private Result<AtomicInteger> renderAndSave(Deque<RenderableData> cards) {
         int countStrLen = Integer.toString(cards.size()).length();
         int threadCount = Integer.min(options.has("threads") ? Integer.parseInt(options.getAsString("threads")) : 10, cards.size());
 
@@ -358,7 +365,7 @@ public final class Proximity {
 
             LOG.info("Rendering {} cards on {} threads", cards.size(), threadCount);
 
-            for (RenderableCard card : cards) {
+            for (RenderableData card : cards) {
                 if (threadCount > 1) {
                     //                    this.render(card, finishedCards, errors, countStrLen, finalI, cards.size());
                     executor.submit(() -> this.render(card, finishedCards, errors, countStrLen, cards.size()));
@@ -387,7 +394,7 @@ public final class Proximity {
         return Result.error("No cards to render");
     }
 
-    private void render(RenderableCard card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int cardCount) {
+    private void render(RenderableData card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int cardCount) {
         long cardTime = System.currentTimeMillis();
 
         String name = card.getName();
@@ -430,8 +437,11 @@ public final class Proximity {
         stream.close();
     }
 
-    @HostAccess.Export
-    public static void log(String level, String message, Object... args) {
-        LOG.printf(Level.getLevel(level.toUpperCase(Locale.ROOT)), message, args);
+    public Map<String, LayerRenderer> createLayerRenderers(RenderableData data) {
+        return this.layers.create(data);
+    }
+
+    public TaskHandler getTaskHandler() {
+        return this.taskHandler;
     }
 }

@@ -2,6 +2,8 @@ package dev.hephaestus.proximity.util;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Function;
+
 public final class Either<L, R> {
     private final L left;
     private final R right;
@@ -25,11 +27,11 @@ public final class Either<L, R> {
         return this.isLeft;
     }
 
-    public static <L> Either<L, ?> left(L left) {
+    public static <L, R> Either<L, R> left(L left) {
         return new Either<>(left, null, true);
     }
 
-    public static <R> Either<?, R> right(R right) {
+    public static <L ,R> Either<L, R> right(R right) {
         return new Either<>(null, right, false);
     }
 
@@ -39,5 +41,17 @@ public final class Either<L, R> {
         }
 
         throw new RuntimeException();
+    }
+
+    public <L2, R2> Either<L2, R2> branch(Function<L, L2> left, Function<R, R2> right) {
+        return new Either<>(
+                this.isLeft ? left.apply(this.left) : null,
+                this.isLeft ? null : right.apply(this.right),
+                this.isLeft
+        );
+    }
+
+    public <T> T join(Function<L, T> left, Function<R, T> right) {
+        return this.isLeft ? left.apply(this.left) : right.apply(this.right);
     }
 }

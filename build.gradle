@@ -6,13 +6,21 @@ plugins {
 }
 
 group 'dev.hephaestus'
-version '0.4.0'
+version '0.5.0'
+
+java {
+    withSourcesJar()
+}
 
 repositories {
     mavenCentral()
     maven {
         name = 'Quilt'
         url = 'https://maven.quiltmc.org/repository/release'
+    }
+    maven {
+        name = 'Hephaestus.dev'
+        url = 'https://hephaestus.dev/release'
     }
 }
 
@@ -24,6 +32,8 @@ dependencies {
     implementation(shadow('org.apache.xmlgraphics:batik-all:1.14'))
     implementation(shadow('org.graalvm.js:js:21.1.0'))
     implementation(shadow('org.graalvm.js:js-scriptengine:21.1.0'))
+    implementation(shadow('com.github.yuchi:npm-semver:1.0.0'))
+    implementation('dev.hephaestus:proximity-mtg:1.0.4')
 }
 
 test {
@@ -36,5 +46,16 @@ jar {
                 'Main-Class': 'dev.hephaestus.proximity.Main',
                 'Multi-Release': 'true'
         )
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
     }
 }
