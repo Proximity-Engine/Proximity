@@ -16,6 +16,7 @@
         <ToggleOption id="flavor_text" default="true"/>
         <ToggleOption id="flavor_bar" default="true"/>
         <ToggleOption id="show_set_symbol" default="true"/>
+        <StringOption id="set_symbol"/>
     </options>
     <imports>
         <import src="symbols"/>
@@ -504,21 +505,26 @@
                 <Group>
                     <Selector>
                         <!-- Certain sets don't use a uniform color palette, so this is a necessary evil -->
-                        <SVG x="2922" y="2628" src="${rarity}/${set}" width="350" height="155" horizontal_alignment="end">
+                        <SVG x="2922" y="2628" src="${rarity}/${proximity.options.set_symbol}" width="350" height="155" horizontal_alignment="end">
                             <conditions>
-                                <FileExists src="${rarity}/${set}.svg"/>
+                                <FileExists src="${rarity}/${proximity.options.set_symbol}.svg"/>
                             </conditions>
                         </SVG>
-                        <SVG x="2922" y="2628" src="${set}" width="350" height="155" horizontal_alignment="end">
+                        <SVG x="2922" y="2628" src="${proximity.options.set_symbol}" width="350" height="155" horizontal_alignment="end">
                             <conditions>
-                                <FileExists src="${set}.svg"/>
+                                <FileExists src="${proximity.options.set_symbol}.svg"/>
                             </conditions>
                         </SVG>
                     </Selector>
-                    <CardModifier key="set" value="pz1">
-                        <Not>
-                            <FileExists src="${set}.svg"/>
-                        </Not>
+                    <CardModifier key="proximity.options.set_symbol" value="pz1">
+                        <Or>
+                            <Not>
+                                <IsPresent key="proximity.options.set_symbol"/>
+                            </Not>
+                            <Not>
+                                <FileExists src="${proximity.options.set_symbol}.svg"/>
+                            </Not>
+                        </Or>
                     </CardModifier>
                     <conditions>
                         <IsEquals key="proximity.mtg.options.show_set_symbol"/>

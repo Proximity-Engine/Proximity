@@ -2,6 +2,7 @@ package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.tasks.AttributeModifier;
+import dev.hephaestus.proximity.api.tasks.TemplateModification;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.api.json.JsonArray;
 import dev.hephaestus.proximity.api.json.JsonElement;
@@ -106,6 +107,14 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                 .then(this::parseSymbols);
 
         if (init.isError()) return init;
+
+        this.root.apply("layers", layers -> {
+            List<TemplateModification> modifications = this.taskHandler.getTasks(TemplateModification.DEFINITION);
+
+            for (TemplateModification modification : modifications) {
+                modification.apply(this, layers);
+            }
+        });
 
         return this.root.apply("layers", (Function<XMLElement, Result<Void>>) layers -> {
             List<String> errors = new ArrayList<>(0);

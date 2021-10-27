@@ -37,9 +37,9 @@ public final class ScriptingUtil {
             try {
                 engine.eval("const Proximity = Java.type(\"dev.hephaestus.proximity.Proximity\")");
                 engine.eval("const JsonArray = Java.type(\"dev.hephaestus.proximity.api.json.JsonArray\")");
-                engine.eval("const JsonObject = Java.type(\"dev.hephaestus.proximity.api.json.JsonArray\")");
-                engine.eval("const JsonPrimitive = Java.type(\"dev.hephaestus.proximity.api.json.JsonArray\")");
-                engine.eval("const JsonNull = Java.type(\"dev.hephaestus.proximity.api.json.JsonArray\")");
+                engine.eval("const JsonObject = Java.type(\"dev.hephaestus.proximity.api.json.JsonObject\")");
+                engine.eval("const JsonPrimitive = Java.type(\"dev.hephaestus.proximity.api.json.JsonPrimitive\")");
+                engine.eval("const JsonNull = Java.type(\"dev.hephaestus.proximity.api.json.JsonNull\")");
             } catch (ScriptException e) {
                 e.printStackTrace();
             }

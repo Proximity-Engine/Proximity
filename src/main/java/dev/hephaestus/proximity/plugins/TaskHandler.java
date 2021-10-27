@@ -1,10 +1,9 @@
 package dev.hephaestus.proximity.plugins;
 
 import dev.hephaestus.proximity.api.TaskScheduler;
-import dev.hephaestus.proximity.api.tasks.AttributeModifier;
-import dev.hephaestus.proximity.api.tasks.DataFinalization;
-import dev.hephaestus.proximity.api.tasks.DataPreparation;
-import dev.hephaestus.proximity.api.tasks.TextFunction;
+import dev.hephaestus.proximity.api.json.JsonElement;
+import dev.hephaestus.proximity.api.json.JsonPrimitive;
+import dev.hephaestus.proximity.api.tasks.*;
 import dev.hephaestus.proximity.plugins.util.Artifact;
 import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Document;
@@ -179,8 +178,23 @@ public final class TaskHandler implements TaskScheduler {
 
         handler.register(DataPreparation.DEFINITION);
         handler.register(DataFinalization.DEFINITION);
+        handler.register(TemplateModification.DEFINITION);
         handler.register(TextFunction.DEFINITION);
         handler.register(AttributeModifier.DEFINITION);
+
+        handler.put(AttributeModifier.DEFINITION, "join", (input, data) -> {
+            if (input.isJsonArray()) {
+                StringBuilder builder = new StringBuilder();
+
+                for (JsonElement element : input.getAsJsonArray()) {
+                    builder.append(element instanceof JsonPrimitive primitive && primitive.isString() ? primitive.getAsString() : element.toString());
+                }
+
+                return builder.toString();
+            } else {
+                return input.toString();
+            }
+        });
 
         return handler;
     }

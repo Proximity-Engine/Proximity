@@ -184,7 +184,7 @@ public class Main {
     }
 
     private static Pair<JsonObject, JsonObject> parseArgs(String[] argArray) {
-        JsonObject options = new JsonObject("Options");
+        JsonObject options = new JsonObject();
         JsonObject overrides = new JsonObject();
 
         for (String arg : argArray) {
