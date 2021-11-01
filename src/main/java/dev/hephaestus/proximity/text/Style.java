@@ -1,16 +1,16 @@
 package dev.hephaestus.proximity.text;
 
 
-import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.util.Outline;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.Shadow;
-import dev.hephaestus.proximity.util.XMLUtil;
-import dev.hephaestus.proximity.xml.RenderableCard;
+import dev.hephaestus.proximity.xml.XMLUtil;
+import dev.hephaestus.proximity.xml.RenderableData;
 
 import java.util.Locale;
 
-import static dev.hephaestus.proximity.util.XMLUtil.apply;
+import static dev.hephaestus.proximity.xml.XMLUtil.apply;
 
 public record Style(String fontName, String italicFontName, Integer size, Float kerning, Shadow shadow,
                     Outline outline, Capitalization capitalization, Integer color
@@ -87,7 +87,7 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
         return result;
     }
 
-    public static Result<Style> parse(RenderableCard.XMLElement style) {
+    public static Result<Style> parse(RenderableData.XMLElement style) {
         Style.Builder builder = new Style.Builder();
 
         builder.font(style.getAttribute("font"));

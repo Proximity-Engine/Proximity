@@ -2,13 +2,12 @@ package dev.hephaestus.proximity;
 
 
 import dev.hephaestus.proximity.cards.CardPrototype;
-import dev.hephaestus.proximity.json.JsonElement;
-import dev.hephaestus.proximity.json.JsonObject;
-import dev.hephaestus.proximity.json.JsonPrimitive;
-import dev.hephaestus.proximity.templates.FileSystemTemplateLoader;
-import dev.hephaestus.proximity.templates.FileSystemTemplateSource;
-import dev.hephaestus.proximity.templates.TemplateLoader;
-import dev.hephaestus.proximity.templates.TemplateSource;
+import dev.hephaestus.proximity.api.json.JsonElement;
+import dev.hephaestus.proximity.api.json.JsonObject;
+import dev.hephaestus.proximity.api.json.JsonPrimitive;
+import dev.hephaestus.proximity.plugins.TaskHandler;
+import dev.hephaestus.proximity.plugins.PluginPolicy;
+import dev.hephaestus.proximity.templates.*;
 import dev.hephaestus.proximity.util.Pair;
 import dev.hephaestus.proximity.util.ParsingUtil;
 import dev.hephaestus.proximity.util.Result;
@@ -19,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Policy;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.regex.Matcher;
@@ -28,12 +28,16 @@ public class Main {
     public static Pattern LINE = Pattern.compile("^(?:(?<count>\\d[xX]?) )?(?<name>.+?)(?: \\((?<set>.+)\\)(?: (?<collector>[a-zA-Z0-9]+?))?)?(?: (?<options>--.+))*?$");
 
     public static void main(String[] argArray) {
+        Policy.setPolicy(new PluginPolicy());
+        System.setSecurityManager(new SecurityManager());
+
         Pair<JsonObject, JsonObject> args = parseArgs(argArray);
 
         JsonObject options = args.left();
         JsonObject overrides = args.right();
 
-        if (args.left().has("debug") && args.left().get("debug").getAsBoolean()) {
+        if (args.left().has("debug"
+        ) && args.left().get("debug").getAsBoolean()) {
             Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
         }
 
@@ -41,7 +45,7 @@ public class Main {
                 loadCardsFromFile(options, overrides, defaultTemplateName, new FileSystemTemplateLoader(Path.of("templates")))
         );
 
-        Proximity proximity = new Proximity(options);
+        Proximity proximity = new Proximity(options, TaskHandler.createDefault(), LayerRegistry.createDefault());
 
         prototypes.ifPresent(proximity::run)
                 .ifError(e -> Proximity.LOG.error(e));
@@ -137,7 +141,14 @@ public class Main {
                         }
                     }
 
-                    TemplateSource.Compound compound = new TemplateSource.Compound(new FileSystemTemplateSource(Path.of("template_overrides")), source);
+                    Path overridesFolder = Path.of("template_overrides");
+                    TemplateSource.Compound compound;
+
+                    if (Files.exists(overridesFolder)) {
+                        compound = new TemplateSource.Compound(template, new FileSystemTemplateSource(overridesFolder), source);
+                    } else {
+                        compound = new TemplateSource.Compound(template, source);
+                    }
 
                     result.add(new CardPrototype(cardName, cardNumber, cardOptions, compound, cardOverrides));
                     cardNumber += cardOptions.getAsInt("count");

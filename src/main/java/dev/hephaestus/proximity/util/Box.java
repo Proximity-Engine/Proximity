@@ -7,8 +7,9 @@ public class Box<T> {
         this.value = value;
     }
 
-    public void set(T value) {
+    public Box<T> set(T value) {
         this.value = value;
+        return this;
     }
 
     public T get() {

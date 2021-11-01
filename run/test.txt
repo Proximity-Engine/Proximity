@@ -1,4 +1,5 @@
-1x Dockside Extortionist
-1x Irregular Cohort
-1x Rhystic Study
-1x Sengir Autocrat
+1x Indatha Triome
+1x Indatha Triome --override=set:HKC
+1x Llanowar Elves (DOM)
+1x Counterspell (MH2) 267
+1x Counterspell (MH2) 308

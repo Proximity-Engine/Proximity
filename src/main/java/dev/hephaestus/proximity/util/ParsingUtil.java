@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.util;
 
-import dev.hephaestus.proximity.json.JsonElement;
-import dev.hephaestus.proximity.json.JsonNull;
+import dev.hephaestus.proximity.api.json.JsonElement;
+import dev.hephaestus.proximity.api.json.JsonNull;
 import org.jetbrains.annotations.Nullable;
 import org.quiltmc.json5.JsonReader;
 

@@ -1,24 +1,21 @@
 package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.text.Style;
-import dev.hephaestus.proximity.util.Outline;
-import dev.hephaestus.proximity.util.Result;
-import dev.hephaestus.proximity.util.Shadow;
-import dev.hephaestus.proximity.util.XMLUtil;
+import dev.hephaestus.proximity.util.*;
 
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 
-import static dev.hephaestus.proximity.util.XMLUtil.apply;
+import static dev.hephaestus.proximity.xml.XMLUtil.apply;
 
 public abstract class LayerProperty<T> {
     private static final Map<String, LayerProperty<?>> PROPERTIES = new HashMap<>();
 
     public static final LayerProperty<Style> STYLE = register(new LayerProperty<>() {
         @Override
-        public Result<Style> parse(RenderableCard.XMLElement element) {
+        public Result<Style> parse(RenderableData.XMLElement element) {
             Style.Builder builder = new Style.Builder();
 
             builder.font(element.getAttribute("font"));
@@ -48,21 +45,27 @@ public abstract class LayerProperty<T> {
         }
     }, "Style");
 
-    public static final LayerProperty<Rectangle> WRAP = register(new LayerProperty<>() {
+    public static final LayerProperty<Rectangles> WRAP = register(new LayerProperty<>() {
         @Override
-        public Result<Rectangle> parse(RenderableCard.XMLElement element) {
-            return Result.of(new Rectangle(
-                    Integer.parseInt(element.getAttribute("x")),
-                    Integer.parseInt(element.getAttribute("y")),
-                    Integer.parseInt(element.getAttribute("width")),
-                    Integer.parseInt(element.getAttribute("height"))
-            ));
+        public Result<Rectangles> parse(RenderableData.XMLElement element) {
+            Rectangles wrap = new Rectangles();
+
+            element.iterate("rect", (r, i) -> {
+                wrap.add(new Rectangle(
+                        Integer.parseInt(r.getAttribute("x")),
+                        Integer.parseInt(r.getAttribute("y")),
+                        Integer.parseInt(r.getAttribute("width")),
+                        Integer.parseInt(r.getAttribute("height"))
+                ));
+            });
+
+            return Result.of(wrap);
         }
     }, "Wrap", "wrap");
 
     public static final LayerProperty<Rectangle2D> BOUNDS = register(new LayerProperty<>() {
         @Override
-        public Result<Rectangle2D> parse(RenderableCard.XMLElement element) {
+        public Result<Rectangle2D> parse(RenderableData.XMLElement element) {
             return Result.of(new Rectangle2D.Double(
                     Integer.parseInt(element.getAttribute("x")),
                     Integer.parseInt(element.getAttribute("y")),
@@ -74,7 +77,7 @@ public abstract class LayerProperty<T> {
 
     public static final LayerProperty<Outline> OUTLINE = register(new LayerProperty<>() {
         @Override
-        public Result<Outline> parse(RenderableCard.XMLElement element) {
+        public Result<Outline> parse(RenderableData.XMLElement element) {
             return Result.of(new Outline(
                     Integer.decode(element.getAttribute("color")),
                     Float.parseFloat(element.getAttribute("weight"))
@@ -90,7 +93,7 @@ public abstract class LayerProperty<T> {
         return property;
     }
 
-    public abstract Result<T> parse(RenderableCard.XMLElement element);
+    public abstract Result<T> parse(RenderableData.XMLElement element);
 
     @SuppressWarnings("unchecked")
     public static <T > LayerProperty<T> get(String tagName) {

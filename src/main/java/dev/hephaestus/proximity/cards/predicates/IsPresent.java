@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.cards.predicates;
 
-import dev.hephaestus.proximity.json.JsonElement;
-import dev.hephaestus.proximity.json.JsonObject;
+import dev.hephaestus.proximity.api.json.JsonElement;
+import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.util.Result;
 
 import java.util.Arrays;

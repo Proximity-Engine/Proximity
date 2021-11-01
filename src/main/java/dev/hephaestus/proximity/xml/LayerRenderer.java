@@ -1,6 +1,6 @@
 package dev.hephaestus.proximity.xml;
 
-import dev.hephaestus.proximity.cards.layers.LayerGroupRenderer;
+import dev.hephaestus.proximity.templates.layers.renderers.LayerGroupRenderer;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.util.*;
 
@@ -9,18 +9,19 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 
 public abstract class LayerRenderer {
-    private static final Map<String, LayerRenderer> LAYERS = new HashMap<>();
+    protected final RenderableData data;
 
-    protected LayerRenderer() {
+    protected LayerRenderer(RenderableData data) {
+        this.data = data;
     }
 
-    public boolean scales(RenderableCard card, RenderableCard.XMLElement element) {
+    public boolean scales(RenderableData card, RenderableData.XMLElement element) {
         return false;
     }
 
-    public abstract Result<Optional<Rectangles>> renderLayer(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds);
+    public abstract Result<Optional<Rectangles>> renderLayer(RenderableData card, RenderableData.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds);
 
-    public final Result<Optional<Rectangles>> render(RenderableCard card, RenderableCard.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, float scale, Rectangle2D bounds) {
+    public final Result<Optional<Rectangles>> render(RenderableData card, RenderableData.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
         List<String> errors = new ArrayList<>();
         List<CardPredicate> predicates = new ArrayList<>();
         boolean render = true;
@@ -36,6 +37,7 @@ public abstract class LayerRenderer {
 
             if (r.isOk() && !r.get()) {
                 render = false;
+                break;
             }
         }
 
@@ -47,12 +49,12 @@ public abstract class LayerRenderer {
             return Result.of(Optional.empty());
         }
 
-        Optional<Pair<RenderableCard.XMLElement, LayerRenderer>> mask = element.apply("Mask", e -> {
-            return new Pair<>(e, new LayerGroupRenderer());
+        Optional<Pair<RenderableData.XMLElement, LayerRenderer>> mask = element.apply("Mask", e -> {
+            return new Pair<>(e, new LayerGroupRenderer(this.data));
         });
 
-        Optional<Pair<RenderableCard.XMLElement, LayerRenderer>> erase = element.apply("Erase", e -> {
-            return new Pair<>(e, new LayerGroupRenderer());
+        Optional<Pair<RenderableData.XMLElement, LayerRenderer>> erase = element.apply("Erase", e -> {
+            return new Pair<>(e, new LayerGroupRenderer(this.data));
         });
 
         if (mask.isPresent() || erase.isPresent()) {
@@ -94,13 +96,7 @@ public abstract class LayerRenderer {
         }
     }
 
-    public static void register(LayerRenderer layer, String... tagNames) {
-        for (String tagName : tagNames) {
-            LAYERS.put(tagName, layer);
-        }
-    }
-
-    public static LayerRenderer get(String tagName) {
-        return LAYERS.get(tagName);
+    public interface Factory<T extends LayerRenderer> {
+        T create(RenderableData card);
     }
 }

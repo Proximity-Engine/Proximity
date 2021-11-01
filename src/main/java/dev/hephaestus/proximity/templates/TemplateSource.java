@@ -18,9 +18,11 @@ public interface TemplateSource {
     String getTemplateName();
 
     final class Compound implements TemplateSource {
+        private final String name;
         public final List<TemplateSource> wrapped;
 
-        public Compound(TemplateSource... sources) {
+        public Compound(String name, TemplateSource... sources) {
+            this.name = name;
             this.wrapped = new ArrayList<>(Arrays.asList(sources));
         }
 
@@ -59,7 +61,7 @@ public interface TemplateSource {
 
         @Override
         public String getTemplateName() {
-            return "Compound";
+            return this.name;
         }
     }
 }
