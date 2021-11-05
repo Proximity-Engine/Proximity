@@ -5,6 +5,7 @@ import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.json.JsonPrimitive;
+import dev.hephaestus.proximity.plugins.PluginHandler;
 import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.plugins.PluginPolicy;
 import dev.hephaestus.proximity.templates.*;
@@ -45,7 +46,7 @@ public class Main {
                 loadCardsFromFile(options, overrides, defaultTemplateName, new FileSystemTemplateLoader(Path.of("templates")))
         );
 
-        Proximity proximity = new Proximity(options, TaskHandler.createDefault(), LayerRegistry.createDefault());
+        Proximity proximity = new Proximity(options, TaskHandler.createDefault(), new PluginHandler(), LayerRegistry.createDefault());
 
         prototypes.ifPresent(proximity::run)
                 .ifError(e -> Proximity.LOG.error(e));
@@ -54,7 +55,8 @@ public class Main {
     private static Result<Deque<CardPrototype>> loadCardsFromFile(JsonObject options, JsonObject overrides, String defaultTemplate, TemplateLoader... templateLoaders) {
         Deque<CardPrototype> result = new ArrayDeque<>();
 
-        Path path = Path.of(options.getAsString("cards"));
+        String listName = options.getAsString("cards");
+        Path path = Path.of(listName);
 
         try (BufferedReader reader = Files.newBufferedReader(path)) {
             int cardNumber = 1;
@@ -150,7 +152,7 @@ public class Main {
                         compound = new TemplateSource.Compound(template, source);
                     }
 
-                    result.add(new CardPrototype(cardName, cardNumber, cardOptions, compound, cardOverrides));
+                    result.add(new CardPrototype(listName, cardName, cardNumber, cardOptions, compound, cardOverrides));
                     cardNumber += cardOptions.getAsInt("count");
                 } else if (!line.trim().isEmpty()) {
                     return Result.error("Could not parse line '%s'", line);

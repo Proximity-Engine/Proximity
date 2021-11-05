@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.xml;
 
+import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.templates.layers.renderers.LayerGroupRenderer;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
 import dev.hephaestus.proximity.util.*;
@@ -47,6 +48,10 @@ public abstract class LayerRenderer {
 
         if (!render) {
             return Result.of(Optional.empty());
+        }
+
+        if (draw && !element.getId().isEmpty()) {
+            Proximity.LOG.debug("Rendering {}", element.getId());
         }
 
         Optional<Pair<RenderableData.XMLElement, LayerRenderer>> mask = element.apply("Mask", e -> {

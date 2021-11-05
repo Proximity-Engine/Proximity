@@ -7,6 +7,8 @@ import dev.hephaestus.proximity.api.tasks.DataPreparation;
 import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonObject;
+import dev.hephaestus.proximity.plugins.Plugin;
+import dev.hephaestus.proximity.plugins.PluginHandler;
 import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.plugins.util.Artifact;
 import dev.hephaestus.proximity.util.ScriptingUtil;
@@ -53,13 +55,15 @@ public final class Proximity {
 
     private final JsonObject options;
     private final TaskHandler taskHandler;
+    private final PluginHandler pluginHandler;
     private final LayerRegistry layers;
     private final RemoteFileCache cache;
     private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
 
-    public Proximity(JsonObject options, TaskHandler taskHandler, LayerRegistry layers) {
+    public Proximity(JsonObject options, TaskHandler taskHandler, PluginHandler pluginHandler, LayerRegistry layers) {
         this.options = options;
         this.taskHandler = taskHandler;
+        this.pluginHandler = pluginHandler;
         this.layers = layers;
 
         try {
@@ -113,7 +117,11 @@ public final class Proximity {
 
            getCardInfo(prototype)
                    .ifPresent(raw -> {
-                       raw.getAsJsonObject("proximity", "options").copyAll(options);
+                       raw.getAsJsonObject("proximity", "options")
+                               .copyAll(this.options)
+                               .copyAll(prototype.options());
+
+                       Values.LIST_NAME.set(raw, prototype.listName());
 
                        for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
                            int finalJ = j + prototype.number();
@@ -240,11 +248,14 @@ public final class Proximity {
                         String artifact = importElement.getAttribute("artifact");
                         String versionRange = importElement.getAttribute("version");
 
-                        Result<Void> result = this.taskHandler.loadPlugin(Artifact.create(
+                        Result<Plugin> result = this.pluginHandler.loadPlugin(Artifact.create(
                                 repository, group, artifact, versionRange
-                        ));
+                        ), this.taskHandler);
 
                         if (result.isError()) return result.unwrap();
+                        else {
+                            result.get().initialize(raw);
+                        }
                     }
                 }
             }

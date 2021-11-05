@@ -465,13 +465,6 @@ public class TextLayerRenderer extends LayerRenderer {
                 x += componentBounds.getWidth() + kerning;
             }
 
-            if (bounds != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
-                Proximity.LOG.info(text);
-                Proximity.LOG.info(String.format(
-                        "%s  %10s  %5f %5f %5f %5f", draw ? "DRAW" : "NOPE", "", bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight()
-                ));
-            }
-
             return new Pair<>(bounds, height);
         }
 
