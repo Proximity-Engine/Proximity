@@ -108,7 +108,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
 
         if (init.isError()) return init;
 
-        this.root.apply("layers", layers -> {
+        this.root.apply("Layers", layers -> {
             List<TemplateModification> modifications = this.taskHandler.getTasks(TemplateModification.DEFINITION);
 
             for (TemplateModification modification : modifications) {
@@ -116,7 +116,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
             }
         });
 
-        return this.root.apply("layers", (Function<XMLElement, Result<Void>>) layers -> {
+        return this.root.apply("Layers", (Function<XMLElement, Result<Void>>) layers -> {
             List<String> errors = new ArrayList<>(0);
 
             layers.iterate((layer, i) -> {
@@ -136,12 +136,12 @@ public final class RenderableData extends JsonObject implements TemplateSource {
     private Result<Void> parseSymbols() {
         List<String> errors = new ArrayList<>(0);
 
-        this.root.iterate("symbols", (symbols, i) -> symbols.iterate((symbol, j) -> {
+        this.root.iterate("Symbols", (symbols, i) -> symbols.iterate((symbol, j) -> {
             String representation = symbol.getAttribute("representation");
             List<CardPredicate> predicates = new ArrayList<>(0);
             List<TextComponent> glyphs = new ArrayList<>(3);
 
-            XMLUtil.iterate(symbol, "conditions", (predicate, k) ->
+            XMLUtil.iterate(symbol, "Conditions", (predicate, k) ->
                     XMLUtil.parsePredicate(predicate, e -> null, this::exists)
                             .ifError(errors::add)
                             .ifPresent(predicates::add));
@@ -167,7 +167,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
         List<String> errors = new ArrayList<>();
         JsonObject options = this.getAsJsonObject(Keys.OPTIONS);
 
-        XMLUtil.iterate(this.root, "options", (optionList, i) ->
+        XMLUtil.iterate(this.root, "Options", (optionList, i) ->
                 XMLUtil.iterate(optionList, (option, j) -> {
                     String id = option.getAttribute("id");
 
@@ -187,12 +187,12 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                             }
                         }
                         case "ToggleOption" -> {
-                            if (!options.has(id)) {
+                            if (!options.has(id) && option.hasAttribute("default")) {
                                 options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
                             }
                         }
                         case "StringOption" -> {
-                            if (!options.has(id)) {
+                            if (!options.has(id) && option.hasAttribute("default")) {
                                 options.addProperty(id, option.getAttribute("default"));
                             }
                         }
@@ -210,7 +210,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
     private Result<Void> parseStyles() {
         List<String> errors = new ArrayList<>();
 
-        this.root.iterate("styles", (styles, i) ->
+        this.root.iterate("Styles", (styles, i) ->
                 styles.iterate((style, j) -> {
                     switch (style.getTagName()) {
                         case "Style" -> {
@@ -231,7 +231,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                         case "linearGradient", "radialGradient" -> {
                             List<CardPredicate> predicates = new ArrayList<>();
 
-                            style.apply("conditions", (XMLElement conditions) -> conditions.iterate((predicate, k) ->
+                            style.apply("Conditions", (XMLElement conditions) -> conditions.iterate((predicate, k) ->
                                     XMLUtil.parsePredicate(predicate, RenderableData.this::getPredicate, RenderableData.this::exists)
                                             .ifError(errors::add)
                                             .ifPresent(predicates::add)));
@@ -250,7 +250,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
 
                             Element element = style.wrapped;
 
-                            Optional<Element> conditions = style.apply("conditions", e -> e.wrapped);
+                            Optional<Element> conditions = style.apply("Conditions", e -> e.wrapped);
 
                             conditions.ifPresent(element::removeChild);
 
@@ -270,8 +270,8 @@ public final class RenderableData extends JsonObject implements TemplateSource {
     private Result<Void> parsePredicates() {
         List<String> errors = new ArrayList<>();
 
-        XMLUtil.iterate(this.root, "condition_definitions", (element, i) ->
-                XMLUtil.iterate(element, "ConditionDefinition", (definition, j) -> {
+        XMLUtil.iterate(this.root, "ConditionDefinitions", (element, i) ->
+                XMLUtil.iterate(element, "Definition", (definition, j) -> {
                     String name = definition.getAttribute("name");
                     List<CardPredicate> definedPredicates = new ArrayList<>();
 
@@ -394,7 +394,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                     List<String> errors = new ArrayList<>();
                     List<CardPredicate> predicates = new ArrayList<>();
 
-                    element.apply("conditions", (XMLElement conditions) -> conditions.iterate((predicate, j) ->
+                    element.apply("Conditions", (XMLElement conditions) -> conditions.iterate((predicate, j) ->
                             XMLUtil.parsePredicate(predicate, RenderableData.this::getPredicate, RenderableData.this::exists)
                                     .ifError(errors::add)
                                     .ifPresent(predicates::add)));
@@ -420,6 +420,24 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                     }
                 }
             });
+        }
+
+        public XMLElement getNextSibling() {
+            Node n = this.wrapped;
+
+            while (n != null) {
+                n = n.getNextSibling();
+
+                if (n instanceof Element element) {
+                    return new XMLElement(this.parent, element);
+                }
+            }
+
+            return null;
+        }
+
+        public boolean hasNextSibling() {
+            return this.getNextSibling() != null;
         }
 
         public String getParentId() {

@@ -12,8 +12,8 @@ import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.util.Optional;
 
-public class FillLayerRenderer extends LayerRenderer {
-    public FillLayerRenderer(RenderableData data) {
+public class RectangleLayerRenderer extends LayerRenderer {
+    public RectangleLayerRenderer(RenderableData data) {
         super(data);
     }
 

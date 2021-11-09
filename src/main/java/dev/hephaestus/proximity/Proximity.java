@@ -160,7 +160,7 @@ public final class Proximity {
     }
 
     private Result<Element> resolveResources(Element root, TemplateSource.Compound source) {
-        NodeList resourceList = root.getElementsByTagName("resources");
+        NodeList resourceList = root.getElementsByTagName("Resources");
 
         for (int i = 0; i < resourceList.getLength(); ++i) {
             Node r = resourceList.item(i);
@@ -193,7 +193,7 @@ public final class Proximity {
     private Result<Element> resolveImports(Element root, TemplateSource source) {
         Node firstChild = root.getFirstChild();
         Document document = root.getOwnerDocument();
-        NodeList importsList = root.getElementsByTagName("imports");
+        NodeList importsList = root.getElementsByTagName("Imports");
 
         for (int i = 0; i < importsList.getLength(); ++i) {
             Node n = importsList.item(i);
@@ -231,13 +231,13 @@ public final class Proximity {
     }
 
     private Result<List<JsonObject>> loadAndRunPluginsAndScripts(JsonObject raw, TemplateSource source, Element root, JsonObject overrides) {
-        NodeList pluginBlocks = root.getElementsByTagName("plugins");
+        NodeList pluginBlocks = root.getElementsByTagName("Plugins");
 
         for (int i = 0; i < pluginBlocks.getLength(); ++i) {
             Node n = pluginBlocks.item(i);
 
             if (n instanceof Element e) {
-                NodeList imports = e.getElementsByTagName("import");
+                NodeList imports = e.getElementsByTagName("Import");
 
                 for (int j = 0; j < imports.getLength(); ++j) {
                     n = imports.item(j);
@@ -341,7 +341,7 @@ public final class Proximity {
 
                     return Result.of(cardInfo);
                 } else {
-                    StringBuilder message = new StringBuilder("Could not find card").append(prototype.cardName());
+                    StringBuilder message = new StringBuilder("Could not find card ").append(prototype.cardName());
 
                     if (prototype.options().has("set_code")) {
                         message.append(" (")

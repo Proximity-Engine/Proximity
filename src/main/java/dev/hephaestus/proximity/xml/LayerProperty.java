@@ -28,12 +28,12 @@ public abstract class LayerProperty<T> {
 
             XMLUtil.iterate(element, (child, i) -> {
                 switch (child.getTagName()) {
-                    case "shadow" -> builder.shadow(new Shadow(
+                    case "Shadow" -> builder.shadow(new Shadow(
                             Integer.decode(child.getAttribute("color")),
                             Integer.decode(child.getAttribute("dX")),
                             Integer.decode(child.getAttribute("dY"))
                     ));
-                    case "outline" -> builder.outline(new Outline(
+                    case "Outline" -> builder.outline(new Outline(
                             Integer.decode(child.getAttribute("color")),
                             Float.parseFloat(child.getAttribute("weight"))
                     ));
@@ -50,7 +50,7 @@ public abstract class LayerProperty<T> {
         public Result<Rectangles> parse(RenderableData.XMLElement element) {
             Rectangles wrap = new Rectangles();
 
-            element.iterate("rect", (r, i) -> {
+            element.iterate("Rectangle", (r, i) -> {
                 wrap.add(new Rectangle(
                         Integer.parseInt(r.getAttribute("x")),
                         Integer.parseInt(r.getAttribute("y")),
@@ -61,7 +61,7 @@ public abstract class LayerProperty<T> {
 
             return Result.of(wrap);
         }
-    }, "Wrap", "wrap");
+    }, "Wrap");
 
     public static final LayerProperty<Rectangle2D> BOUNDS = register(new LayerProperty<>() {
         @Override
@@ -83,7 +83,7 @@ public abstract class LayerProperty<T> {
                     Float.parseFloat(element.getAttribute("weight"))
             ));
         }
-    }, "Outline", "outline");
+    }, "Outline");
 
     public static <T> LayerProperty<T> register(LayerProperty<T> property, String... tagNames) {
         for (String tagName : tagNames) {

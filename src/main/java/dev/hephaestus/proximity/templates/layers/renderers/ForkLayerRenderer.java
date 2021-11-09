@@ -19,7 +19,7 @@ public class ForkLayerRenderer extends ParentLayerRenderer {
         List<String> errors = new ArrayList<>();
         Map<String, List<CardPredicate>> branches = new LinkedHashMap<>();
 
-        element.apply("branches", branchesElement -> {
+        element.apply("Branches", branchesElement -> {
             branchesElement.iterate((branch, i) -> {
                 List<CardPredicate> predicates = new ArrayList<>();
 

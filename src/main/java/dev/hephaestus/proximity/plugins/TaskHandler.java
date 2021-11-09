@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.api.TaskScheduler;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonPrimitive;
 import dev.hephaestus.proximity.api.tasks.*;
+import dev.hephaestus.proximity.effects.*;
 
 import java.util.*;
 import java.util.function.Function;
@@ -96,6 +97,13 @@ public final class TaskHandler implements TaskScheduler {
         handler.register(TemplateModification.DEFINITION);
         handler.register(TextFunction.DEFINITION);
         handler.register(AttributeModifier.DEFINITION);
+        handler.register(Effect.DEFINITION);
+
+        handler.put(Effect.DEFINITION, "blur", Blur::apply);
+        handler.put(Effect.DEFINITION, "hsb", HSB::apply);
+        handler.put(Effect.DEFINITION, "hue", Hue::apply);
+        handler.put(Effect.DEFINITION, "brightness", Brightness::apply);
+        handler.put(Effect.DEFINITION, "saturation", Saturation::apply);
 
         handler.put(AttributeModifier.DEFINITION, "join", (input, data) -> {
             if (input.isJsonArray()) {

@@ -1,10 +1,9 @@
 package dev.hephaestus.proximity.templates.layers.renderers;
 
-import dev.hephaestus.proximity.Proximity;
-import dev.hephaestus.proximity.api.tasks.TextFunction;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.json.JsonPrimitive;
+import dev.hephaestus.proximity.api.tasks.TextFunction;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.Symbol;
 import dev.hephaestus.proximity.text.TextAlignment;
@@ -490,7 +489,7 @@ public class TextLayerRenderer extends LayerRenderer {
                     return measurement;
                 }
 
-                if (measurement.lastLineWidth < this.bounds.getWidth() / 5 && measurement.lastLineBroken && measurement.firstRowHeight * 10 > this.bounds.getWidth() / 5) {
+                if (measurement.lastLineWidth < this.bounds.getWidth() / 5 && measurement.lastLineBroken && measurement.firstRowHeight * 5 > this.bounds.getWidth() / 5) {
                     return new Result(Rectangles.infinity(), measurement.firstRowHeight, measurement.lastLineWidth, false);
                 }
 
@@ -536,7 +535,7 @@ public class TextLayerRenderer extends LayerRenderer {
                     if (text.isEmpty()) continue;
 
                     if (text.get(0).string().startsWith("\n")) {
-                        if (this.bounds != null && lastLineWidth < this.bounds.getWidth() / 5 && lastLineBroken && firstRowHeight * 10 > this.bounds.getWidth() / 5) {
+                        if (this.bounds != null && lastLineWidth < this.bounds.getWidth() / 5 && lastLineBroken && firstRowHeight * 5 > this.bounds.getWidth() / 5) {
                             graphics.pop("Text");
                             return new Result(Rectangles.infinity(), firstRowHeight, lastLineWidth, false);
                         }

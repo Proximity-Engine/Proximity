@@ -14,8 +14,8 @@
     <xs:complexContent>
       <xs:extension base="xs:string">
         <xs:sequence>
-          <xs:element type="glyph_type" name="glyphs" minOccurs="1" maxOccurs="unbounded"/>
-          <xs:element type="conditionsType" name="conditions" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="glyph_type" name="Glyphs" minOccurs="1" maxOccurs="unbounded"/>
+          <xs:element type="conditionsType" name="Conditions" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="representation" use="required"/>
       </xs:extension>
@@ -46,7 +46,7 @@
     <xs:complexContent>
       <xs:extension base="xs:string">
         <xs:sequence>
-          <xs:element type="resource" name="resource" minOccurs="0" maxOccurs="unbounded"/>
+          <xs:element type="resource" name="Resource" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -100,7 +100,7 @@
       <xs:extension base="xs:element">
         <xs:sequence>
           <xs:element name="stop" minOccurs="1" maxOccurs="unbounded" type="stopType"/>
-          <xs:element name="conditions" type="conditionsType"/>
+          <xs:element name="Conditions" type="conditionsType"/>
         </xs:sequence>
         <xs:attribute name="id" type="id_type" use="required"/>
         <xs:attribute name="x1" type="xs:float" use="required"/>
@@ -150,7 +150,7 @@
   </xs:complexType>
   <xs:complexType name="LayerPropertyType">
     <xs:sequence>
-      <xs:element type="conditionsType" name="conditions"/>
+      <xs:element type="conditionsType" name="Conditions"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="AttributeModifierType">
@@ -173,8 +173,8 @@
     <xs:complexContent>
       <xs:extension base="LayerPropertyType">
         <xs:sequence>
-          <xs:element type="TextShadowType" name="shadow" minOccurs="0" maxOccurs="1"/>
-          <xs:element type="OutlineType" name="outline" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="TextShadowType" name="Shadow" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="OutlineType" name="Outline" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="optional"/>
         <xs:attribute type="xs:string" name="font" use="optional"/>
@@ -211,7 +211,7 @@
   </xs:complexType>
   <xs:complexType name="condition_definitionsType">
     <xs:sequence>
-      <xs:element type="ConditionDefinitionType" name="ConditionDefinition" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="ConditionDefinitionType" name="Definition" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="IsEqualsType">
@@ -248,14 +248,21 @@
   </xs:simpleType>
   <xs:complexType name="LayerType">
     <xs:sequence>
-      <xs:element type="conditionsType" name="conditions"/>
+      <xs:element type="conditionsType" name="Conditions"/>
       <xs:element type="StyleType" name="Style"/>
+      <xs:element name="Effects">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Effect" type="EffectLayerType" minOccurs="1" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="Wrap">
         <xs:complexType>
           <xs:complexContent>
             <xs:extension base="LayerPropertyType">
               <xs:sequence>
-                <xs:element name="rect" type="RectangleType" minOccurs="1" maxOccurs="unbounded"/>
+                <xs:element name="Rectangle" type="RectangleType" minOccurs="1" maxOccurs="unbounded"/>
               </xs:sequence>
             </xs:extension>
           </xs:complexContent>
@@ -289,7 +296,7 @@
     <xs:complexContent>
       <xs:extension base="LayerType">
         <xs:sequence>
-          <xs:element type="conditionsType" name="conditions" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="conditionsType" name="Conditions" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="src"/>
         <xs:attribute type="xs:anyURI" name="url"/>
@@ -307,22 +314,31 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="EffectLayerType">
+    <xs:complexContent>
+      <xs:extension base="LayerType">
+        <xs:attribute name="name" type="id_type"/>
+        <xs:anyAttribute/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="GroupType">
     <xs:complexContent>
       <xs:extension base="LayerType">
         <xs:sequence>
-          <xs:element type="ImageLayerType" name="ImageLayer"/>
+          <xs:element type="ImageLayerType" name="Image"/>
           <xs:element type="GroupType" name="Selector"/>
           <xs:element type="ForkType" name="Fork"/>
-          <xs:element type="TextLayerType" name="TextLayer"/>
+          <xs:element type="TextLayerType" name="Text"/>
           <xs:element type="GroupType" name="Group"/>
-          <xs:element type="SpacingLayerType" name="SpacingLayer"/>
-          <xs:element type="FillLayerType" name="Fill"/>
+          <xs:element type="SpacingLayerType" name="Spacer"/>
+          <xs:element type="FillLayerType" name="Rectangle"/>
           <xs:element type="LayoutType" name="HorizontalLayout"/>
           <xs:element type="LayoutType" name="VerticalLayout"/>
           <xs:element type="SVGLayerType" name="SVG"/>
           <xs:element type="SpacingLayerType" name="Noise"/>
           <xs:element type="SquishBoxType" name="SquishBox"/>
+          <xs:element type="EffectLayerType" name="Effect"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -343,7 +359,7 @@
     <xs:complexContent>
       <xs:extension base="GroupType">
         <xs:sequence>
-          <xs:element type="branchesType" name="branches" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="branchesType" name="Branches" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -352,7 +368,7 @@
     <xs:complexContent>
       <xs:extension base="LayerType">
         <xs:sequence>
-          <xs:element type="RectangleType" name="wrap" minOccurs="0" maxOccurs="1"/>
+          <xs:element type="RectangleType" name="Wrap" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="text_alignment_type" name="alignment" use="optional" default="left"/>
         <xs:attribute type="xs:string" name="value" use="required"/>
@@ -371,8 +387,8 @@
     <xs:complexContent>
       <xs:extension base="LayerType">
         <xs:sequence>
-          <xs:element type="GroupType" name="main"/>
-          <xs:element type="GroupType" name="flex"/>
+          <xs:element type="GroupType" name="Main"/>
+          <xs:element type="GroupType" name="Flex"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
@@ -454,11 +470,11 @@
   </xs:complexType>
   <xs:complexType name="ContentType">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
-      <xs:element type="optionsType" name="options" minOccurs="0" maxOccurs="1"/>
-      <xs:element name="imports" minOccurs="0" maxOccurs="1">
+      <xs:element type="optionsType" name="Options" minOccurs="0" maxOccurs="1"/>
+      <xs:element name="Imports" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="import" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Import" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:attribute name="src" type="xs:string" use="required"/>
               </xs:complexType>
@@ -466,10 +482,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="plugins" minOccurs="0" maxOccurs="1">
+      <xs:element name="Plugins" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="import" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Import" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:attribute name="repository" type="xs:anyURI" use="required"/>
                 <xs:attribute name="group" type="xs:string" use="required"/>
@@ -480,10 +496,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element type="stylesType" name="styles" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="condition_definitionsType" name="condition_definitions" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="ResourcesType" name="resources" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="SymbolsType" name="symbols" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="stylesType" name="Styles" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="condition_definitionsType" name="ConditionDefinitions" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="ResourcesType" name="Resources" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="SymbolsType" name="Symbols" minOccurs="0" maxOccurs="1"/>
       <xs:element name="Tasks">
         <xs:complexType>
           <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -500,7 +516,7 @@
     <xs:complexContent>
       <xs:extension base="ContentType">
         <xs:sequence>
-          <xs:element type="layersType" name="layers" minOccurs="0"/>
+          <xs:element type="layersType" name="Layers" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name"/>
         <xs:attribute type="xs:string" name="author"/>
