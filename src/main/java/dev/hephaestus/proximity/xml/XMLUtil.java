@@ -126,11 +126,10 @@ public final class XMLUtil {
         String name = source.getTemplateName();
 
         try {
-            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document document = documentBuilder.parse(source.getInputStream(fileName));
+            Document document = PositionalXMLReader.readXML(source.getInputStream(fileName));
 
             return Result.of(document.getDocumentElement());
-        } catch (IOException | ParserConfigurationException | SAXException e) {
+        } catch (IOException | SAXException e) {
             return Result.error("Exception loading template '%s': %s", name, e.getMessage());
         }
     }

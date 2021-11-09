@@ -48,6 +48,10 @@ public class ImageLayerRenderer extends LayerRenderer {
 
             BufferedImage image = scale(this.getImage(element), width, height);
 
+            if (image == null) {
+                throw new RuntimeException("Image '" + cacheKey + "' could not be found.");
+            }
+
             graphics.push(x, y);
             graphics.drawImage(image, null, null);
             graphics.pop();

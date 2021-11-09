@@ -434,6 +434,10 @@ public final class Proximity {
         } catch (Throwable throwable) {
             LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
             LOG.error(throwable.getMessage());
+
+            for (StackTraceElement element : throwable.getStackTrace()) {
+                LOG.debug(element);
+            }
         }
     }
 

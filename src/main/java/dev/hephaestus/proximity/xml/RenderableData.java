@@ -505,6 +505,10 @@ public final class RenderableData extends JsonObject implements TemplateSource {
 
                 AttributeModifier attributeModifier = RenderableData.this.taskHandler.getTask(AttributeModifier.DEFINITION, function);
 
+                if (element == null) {
+                    throw new RuntimeException(String.format("Element '%s' not found. Used by element '%s', line number '%s'", matcher.group("value"), this.getId(), this.wrapped.getUserData("lineNumber")));
+                }
+
                 if (attributeModifier != null) {
                     result.append(attributeModifier.apply(element, RenderableData.this));
                 } else {

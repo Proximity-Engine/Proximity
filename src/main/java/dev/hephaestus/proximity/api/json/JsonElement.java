@@ -1,6 +1,5 @@
 package dev.hephaestus.proximity.api.json;
 
-import org.graalvm.polyglot.HostAccess;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonWriter;
 
@@ -30,27 +29,22 @@ public abstract class JsonElement {
 
     public abstract JsonElement deepCopy();
 
-    @HostAccess.Export
     public boolean isJsonArray() {
         return this instanceof JsonArray;
     }
 
-    @HostAccess.Export
     public boolean isJsonObject() {
         return this instanceof JsonObject;
     }
 
-    @HostAccess.Export
     public boolean isJsonPrimitive() {
         return this instanceof JsonPrimitive;
     }
 
-    @HostAccess.Export
     public boolean isJsonNull() {
         return this instanceof JsonNull;
     }
 
-    @HostAccess.Export
     public JsonObject getAsJsonObject() {
         if (isJsonObject()) {
             return (JsonObject) this;
@@ -58,7 +52,6 @@ public abstract class JsonElement {
         throw new IllegalStateException("Not a JSON Object: " + this);
     }
 
-    @HostAccess.Export
     public JsonArray getAsJsonArray() {
         if (isJsonArray()) {
             return (JsonArray) this;
@@ -66,7 +59,6 @@ public abstract class JsonElement {
         throw new IllegalStateException("Not a JSON Array: " + this);
     }
 
-    @HostAccess.Export
     public JsonPrimitive getAsJsonPrimitive() {
         if (isJsonPrimitive()) {
             return (JsonPrimitive) this;
@@ -110,7 +102,6 @@ public abstract class JsonElement {
         throw new UnsupportedOperationException(getClass().getSimpleName());
     }
 
-    @HostAccess.Export
     public String toString() {
         StringWriter stringWriter = new StringWriter();
         JsonWriter writer = JsonWriter.json(stringWriter);

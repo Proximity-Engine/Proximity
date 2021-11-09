@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.plugins;
 
+import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.plugins.util.Artifact;
 import dev.hephaestus.proximity.util.Box;
@@ -22,6 +23,8 @@ public class PluginHandler {
     private final Map<Artifact, Plugin> loadedPlugins = new HashMap<>();
 
     private Result<Plugin> loadPlugin(URL pluginUrl, TaskHandler taskHandler) {
+        Proximity.LOG.debug("Loading plugin from '{}'", pluginUrl);
+
         ClassLoader pluginClassLoader = new PluginClassLoader(pluginUrl);
         InputStream plugin = pluginClassLoader.getResourceAsStream("plugin.proximity.xml");
 
@@ -42,6 +45,8 @@ public class PluginHandler {
             result = this.parseOptions(root.getElementsByTagName("Options"), builder);
 
             if (result.isError()) return result.unwrap();
+
+            Proximity.LOG.debug("Successfully loaded plugin");
 
             return Result.of(builder.build());
         } catch (SAXException | ParserConfigurationException | IOException e) {
