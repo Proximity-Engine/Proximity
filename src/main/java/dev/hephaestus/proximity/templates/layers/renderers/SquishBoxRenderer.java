@@ -17,7 +17,7 @@ public class SquishBoxRenderer extends LayerRenderer {
 
     @Override
     public Result<Optional<Rectangles>> renderLayer(RenderableData card, RenderableData.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
-        Optional<Result<Optional<Rectangles>>> main = element.apply("main", (RenderableData.XMLElement e) -> {
+        Optional<Result<Optional<Rectangles>>> main = element.apply("Main", (RenderableData.XMLElement e) -> {
             LayerRenderer renderer = this.data.getLayerRenderer(e.getTagName());
 
             if (renderer == null) {
@@ -36,7 +36,7 @@ public class SquishBoxRenderer extends LayerRenderer {
         Optional<Result<Optional<Rectangles>>> flex;
 
         do {
-            flex = element.apply("flex", (RenderableData.XMLElement e) -> {
+            flex = element.apply("Flex", (RenderableData.XMLElement e) -> {
                 LayerRenderer renderer = this.data.getLayerRenderer(e.getTagName());
 
                 if (renderer == null) {
@@ -49,7 +49,7 @@ public class SquishBoxRenderer extends LayerRenderer {
             scale.set(scale.get() - 0.5F);
         } while (flex.isPresent() && flex.get().isOk() && flex.get().get().isPresent() && flexWrap != null && flex.get().get().get().intersects(flexWrap));
 
-        flex = element.apply("flex", (RenderableData.XMLElement e) -> {
+        flex = element.apply("Flex", (RenderableData.XMLElement e) -> {
             LayerRenderer renderer = this.data.getLayerRenderer(e.getTagName());
 
             if (renderer == null) {

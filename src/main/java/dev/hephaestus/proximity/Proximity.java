@@ -7,6 +7,8 @@ import dev.hephaestus.proximity.api.tasks.DataPreparation;
 import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonObject;
+import dev.hephaestus.proximity.plugins.Plugin;
+import dev.hephaestus.proximity.plugins.PluginHandler;
 import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.plugins.util.Artifact;
 import dev.hephaestus.proximity.util.ScriptingUtil;
@@ -28,7 +30,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.imageio.ImageIO;
+import javax.imageio.*;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,13 +58,15 @@ public final class Proximity {
 
     private final JsonObject options;
     private final TaskHandler taskHandler;
+    private final PluginHandler pluginHandler;
     private final LayerRegistry layers;
     private final RemoteFileCache cache;
     private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
 
-    public Proximity(JsonObject options, TaskHandler taskHandler, LayerRegistry layers) {
+    public Proximity(JsonObject options, TaskHandler taskHandler, PluginHandler pluginHandler, LayerRegistry layers) {
         this.options = options;
         this.taskHandler = taskHandler;
+        this.pluginHandler = pluginHandler;
         this.layers = layers;
 
         try {
@@ -113,7 +120,11 @@ public final class Proximity {
 
            getCardInfo(prototype)
                    .ifPresent(raw -> {
-                       raw.getAsJsonObject("proximity", "options").copyAll(options);
+                       raw.getAsJsonObject("proximity", "options")
+                               .copyAll(this.options)
+                               .copyAll(prototype.options());
+
+                       Values.LIST_NAME.set(raw, prototype.listName());
 
                        for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
                            int finalJ = j + prototype.number();
@@ -152,7 +163,7 @@ public final class Proximity {
     }
 
     private Result<Element> resolveResources(Element root, TemplateSource.Compound source) {
-        NodeList resourceList = root.getElementsByTagName("resources");
+        NodeList resourceList = root.getElementsByTagName("Resources");
 
         for (int i = 0; i < resourceList.getLength(); ++i) {
             Node r = resourceList.item(i);
@@ -185,7 +196,7 @@ public final class Proximity {
     private Result<Element> resolveImports(Element root, TemplateSource source) {
         Node firstChild = root.getFirstChild();
         Document document = root.getOwnerDocument();
-        NodeList importsList = root.getElementsByTagName("imports");
+        NodeList importsList = root.getElementsByTagName("Imports");
 
         for (int i = 0; i < importsList.getLength(); ++i) {
             Node n = importsList.item(i);
@@ -223,13 +234,13 @@ public final class Proximity {
     }
 
     private Result<List<JsonObject>> loadAndRunPluginsAndScripts(JsonObject raw, TemplateSource source, Element root, JsonObject overrides) {
-        NodeList pluginBlocks = root.getElementsByTagName("plugins");
+        NodeList pluginBlocks = root.getElementsByTagName("Plugins");
 
         for (int i = 0; i < pluginBlocks.getLength(); ++i) {
             Node n = pluginBlocks.item(i);
 
             if (n instanceof Element e) {
-                NodeList imports = e.getElementsByTagName("import");
+                NodeList imports = e.getElementsByTagName("Import");
 
                 for (int j = 0; j < imports.getLength(); ++j) {
                     n = imports.item(j);
@@ -240,11 +251,14 @@ public final class Proximity {
                         String artifact = importElement.getAttribute("artifact");
                         String versionRange = importElement.getAttribute("version");
 
-                        Result<Void> result = this.taskHandler.loadPlugin(Artifact.create(
+                        Result<Plugin> result = this.pluginHandler.loadPlugin(Artifact.create(
                                 repository, group, artifact, versionRange
-                        ));
+                        ), this.taskHandler);
 
                         if (result.isError()) return result.unwrap();
+                        else {
+                            result.get().initialize(raw);
+                        }
                     }
                 }
             }
@@ -330,7 +344,7 @@ public final class Proximity {
 
                     return Result.of(cardInfo);
                 } else {
-                    StringBuilder message = new StringBuilder("Could not find card").append(prototype.cardName());
+                    StringBuilder message = new StringBuilder("Could not find card ").append(prototype.cardName());
 
                     if (prototype.options().has("set_code")) {
                         message.append(" (")
@@ -423,6 +437,10 @@ public final class Proximity {
         } catch (Throwable throwable) {
             LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
             LOG.error(throwable.getMessage());
+
+            for (StackTraceElement element : throwable.getStackTrace()) {
+                LOG.debug(element);
+            }
         }
     }
 
@@ -431,9 +449,34 @@ public final class Proximity {
             Files.createDirectories(path.getParent());
         }
 
-        OutputStream stream = Files.newOutputStream(path);
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("png").next();
 
-        ImageIO.write(image, "png", stream);
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_INT_ARGB);
+        IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, param);
+
+        IIOMetadataNode discriminate = new IIOMetadataNode("tEXtEntry");
+        Random random = new Random();
+        byte[] bytes = new byte[128];
+
+        discriminate.setAttribute("keyword", "ProximityDiscriminate");
+        random.nextBytes(bytes);
+        discriminate.setAttribute("value", new String(bytes));
+
+        IIOMetadataNode text = new IIOMetadataNode("tEXt");
+        text.appendChild(discriminate);
+
+        IIOMetadataNode root = new IIOMetadataNode("javax_imageio_png_1.0");
+        root.appendChild(text);
+
+        metadata.mergeTree("javax_imageio_png_1.0", root);
+
+        OutputStream stream = Files.newOutputStream(path);
+        ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(stream);
+
+        writer.setOutput(imageOutputStream);
+        writer.write(metadata, new IIOImage(image, null, metadata), param);
+        imageOutputStream.close();
         stream.close();
     }
 

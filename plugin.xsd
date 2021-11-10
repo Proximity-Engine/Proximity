@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="Plugin" type="PluginType"/>
+    <xs:simpleType name="version">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="task_location">
+        <xs:restriction base="xs:token">
+            <xs:pattern value="([a-zA-Z_$][a-zA-Z\d_$]*\.)*[a-zA-Z_$][a-zA-Z\d_$]*(::[a-zA-Z_$][a-zA-Z\d_$]*)?"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="Task">
+        <xs:attribute name="location" type="task_location" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="NamedTask">
+        <xs:complexContent>
+            <xs:extension base="Task">
+                <xs:attribute name="name" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:simpleType name="id_type">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-zA-Z_\-]+(\.[a-zA-Z_\-]+)*"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="EnumerationValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="value" use="optional"/>
+                <xs:attribute type="id_type" name="id" use="optional"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="EnumerationType">
+        <xs:sequence>
+            <xs:element type="EnumerationValueType" name="EnumerationValue" maxOccurs="unbounded" minOccurs="2"/>
+        </xs:sequence>
+        <xs:attribute type="id_type" name="id" use="required"/>
+        <xs:attribute type="xs:string" name="default" use="required"/>
+    </xs:complexType>
+    <xs:complexType name="ToggleOptionType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="id_type" name="id" use="required"/>
+                <xs:attribute type="xs:boolean" name="default" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="StringOptionType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="id_type" name="id" use="required"/>
+                <xs:attribute type="xs:string" name="default"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="OptionsType">
+        <xs:sequence>
+            <xs:element type="EnumerationType" name="Enumeration" minOccurs="0"  maxOccurs="unbounded"/>
+            <xs:element type="ToggleOptionType" name="ToggleOption" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element type="StringOptionType" name="StringOption" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="PluginType">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element type="OptionsType" name="Options" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="Tasks">
+                <xs:complexType>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:element name="DataPreparation" type="Task"/>
+                        <xs:element name="DataFinalization" type="Task"/>
+                        <xs:element name="TemplateModification" type="Task"/>
+                        <xs:element name="AttributeModifier" type="NamedTask"/>
+                        <xs:element name="TextFunction" type="NamedTask"/>
+                    </xs:choice>
+                </xs:complexType>
+            </xs:element>
+        </xs:choice>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="version" type="version" use="required"/>
+    </xs:complexType>
+</xs:schema>

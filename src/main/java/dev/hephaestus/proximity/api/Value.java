@@ -5,8 +5,9 @@ import dev.hephaestus.proximity.api.json.JsonObject;
 import org.apache.logging.log4j.util.TriConsumer;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
-public final class Value<T> {
+public class Value<T> {
     private final String[] key;
     private final BiFunction<JsonObject, String[], T> getter;
     private final TriConsumer<JsonObject, String[], T> setter;
@@ -23,6 +24,10 @@ public final class Value<T> {
 
     public void set(JsonObject object, T value) {
         this.setter.accept(object, this.key, value);
+    }
+
+    public boolean exists(JsonObject object) {
+        return object.has(this.key);
     }
 
     private static String[] join(String first, String... more) {
@@ -52,5 +57,12 @@ public final class Value<T> {
 
     public static Value<JsonArray> createArray(String key0, String... keys) {
         return new Value<>(join(key0, keys), JsonObject::getAsJsonArray, JsonObject::add);
+    }
+
+    public static <E extends Enum<E>> Value<E> createEnum(Function<String, E> enumValueGetter, String key0, String... keys) {
+        return new Value<>(join(key0, keys), (object, key) ->
+                enumValueGetter.apply(object.getAsString(key)),
+                (object, key, value) -> object.add(key, value.name())
+        );
     }
 }

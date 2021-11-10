@@ -11,6 +11,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
@@ -47,6 +48,10 @@ public class ImageLayerRenderer extends LayerRenderer {
 
             BufferedImage image = scale(this.getImage(element), width, height);
 
+            if (image == null) {
+                throw new RuntimeException("Image '" + cacheKey + "' could not be found.");
+            }
+
             graphics.push(x, y);
             graphics.drawImage(image, null, null);
             graphics.pop();
@@ -74,7 +79,11 @@ public class ImageLayerRenderer extends LayerRenderer {
     private BufferedImage getImage(RenderableData.XMLElement element) {
         if (element.hasAttribute("url")) {
             try {
-                return ImageIO.read(this.data.getProximity().getRemoteFileCache().open(URI.create(element.getAttribute("url"))));
+                InputStream input = this.data.getProximity().getRemoteFileCache().open(URI.create(element.getAttribute("url")));
+
+                synchronized (ImageLayerRenderer.class) {
+                    return ImageIO.read(input);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

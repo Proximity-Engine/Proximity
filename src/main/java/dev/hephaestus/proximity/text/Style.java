@@ -100,12 +100,12 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
 
         XMLUtil.iterate(style, (child, i) -> {
             switch (child.getTagName()) {
-                case "shadow" -> builder.shadow(new Shadow(
+                case "Shadow" -> builder.shadow(new Shadow(
                         Integer.decode(child.getAttribute("color")),
                         Integer.decode(child.getAttribute("dX")),
                         Integer.decode(child.getAttribute("dY"))
                 ));
-                case "outline" -> builder.outline(new Outline(
+                case "Outline" -> builder.outline(new Outline(
                         Integer.decode(child.getAttribute("color")),
                         Float.parseFloat(child.getAttribute("weight"))
                 ));

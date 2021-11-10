@@ -1,8 +1,9 @@
 .gradle
-build
-images
-templates
-art
+/run/
+/build/
+/images/
+/templates/
+/art/
 
 *.swp
 *.txt

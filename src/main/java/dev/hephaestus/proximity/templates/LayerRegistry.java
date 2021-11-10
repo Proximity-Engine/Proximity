@@ -32,15 +32,16 @@ public final class LayerRegistry {
 
     public static LayerRegistry createDefault() {
         return new Builder()
-                .factory(FillLayerRenderer::new, "Fill", "SpacingLayer", "Spacer")
+                .factory(RectangleLayerRenderer::new, "Rectangle", "Spacer")
                 .factory(ForkLayerRenderer::new, "Fork")
-                .factory(LayerGroupRenderer::new, "Group", "main")
-                .factory(ImageLayerRenderer::new, "ImageLayer")
-                .factory(LayerSelectorRenderer::new, "Selector", "flex")
+                .factory(LayerGroupRenderer::new, "Group", "Main")
+                .factory(ImageLayerRenderer::new, "Image")
+                .factory(LayerSelectorRenderer::new, "Selector", "Flex")
                 .factory(SquishBoxRenderer::new, "SquishBox")
-                .factory(TextLayerRenderer::new, "TextLayer")
+                .factory(TextLayerRenderer::new, "Text")
                 .factory(SVGLayerRenderer::new, "SVG")
                 .factory(NoiseLayerRenderer::new, "Noise")
+                .factory(EffectLayerRenderer::new, "Effect")
                 .factory(data -> new LayoutElementRenderer(data, "x", "y",
                         Rectangle2D::getWidth,
                         Rectangle2D::getHeight
