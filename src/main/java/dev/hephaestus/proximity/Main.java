@@ -26,7 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Main {
-    public static Pattern LINE = Pattern.compile("^(?:(?<count>\\d[xX]?) )?(?<name>.+?)(?: \\((?<set>.+)\\)(?: (?<collector>[a-zA-Z0-9]+?))?)?(?: (?<options>--.+))*?$");
+    public static Pattern LINE = Pattern.compile("^(?:(?<count>\\d+[xX]?) )?(?<name>.+?)(?: \\((?<set>.+)\\)(?: (?<collector>[a-zA-Z0-9]+?))?)?(?: (?<options>--.+))*?$");
 
     public static void main(String[] argArray) {
         Policy.setPolicy(new PluginPolicy());

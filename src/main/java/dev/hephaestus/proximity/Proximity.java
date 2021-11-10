@@ -30,7 +30,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.imageio.ImageIO;
+import javax.imageio.*;
+import javax.imageio.metadata.IIOMetadata;
+import javax.imageio.metadata.IIOMetadataNode;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -446,9 +449,34 @@ public final class Proximity {
             Files.createDirectories(path.getParent());
         }
 
-        OutputStream stream = Files.newOutputStream(path);
+        ImageWriter writer = ImageIO.getImageWritersByFormatName("png").next();
 
-        ImageIO.write(image, "png", stream);
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        ImageTypeSpecifier typeSpecifier = ImageTypeSpecifier.createFromBufferedImageType(BufferedImage.TYPE_INT_ARGB);
+        IIOMetadata metadata = writer.getDefaultImageMetadata(typeSpecifier, param);
+
+        IIOMetadataNode discriminate = new IIOMetadataNode("tEXtEntry");
+        Random random = new Random();
+        byte[] bytes = new byte[128];
+
+        discriminate.setAttribute("keyword", "ProximityDiscriminate");
+        random.nextBytes(bytes);
+        discriminate.setAttribute("value", new String(bytes));
+
+        IIOMetadataNode text = new IIOMetadataNode("tEXt");
+        text.appendChild(discriminate);
+
+        IIOMetadataNode root = new IIOMetadataNode("javax_imageio_png_1.0");
+        root.appendChild(text);
+
+        metadata.mergeTree("javax_imageio_png_1.0", root);
+
+        OutputStream stream = Files.newOutputStream(path);
+        ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(stream);
+
+        writer.setOutput(imageOutputStream);
+        writer.write(metadata, new IIOImage(image, null, metadata), param);
+        imageOutputStream.close();
         stream.close();
     }
 
