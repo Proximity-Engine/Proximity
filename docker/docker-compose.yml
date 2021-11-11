@@ -9,7 +9,8 @@ services:
       GROUP_ID: ${GROUP_ID:-0}
     image: proximity:latest
     volumes:
-      - ../cards.txt:/app/cardslist       # Volume 1 - Mounts the default 'cards.txt' as cardslist
-      - ../run/templates:/app/templates   # Volume 2 - Mounts templates from run/templates (i.e. normal and classic)
-      - ../images:/app/images             # Volume 3 - Mounts the output folder
+      - ../cards.txt:/app/cardslist   # Volume 1 - Mounts the default 'cards.txt' as cardslist
+      - ../templates:/app/templates   # Volume 2 - Mounts templates from run/templates (i.e. normal and classic)
+      - ../images:/app/images         # Volume 3 - Mounts the output folder
+      - ../art:/app/art               # Volume 4 - Mounts local art folder
     command: --cards=cardslist --template=normal --use_official_art=true
