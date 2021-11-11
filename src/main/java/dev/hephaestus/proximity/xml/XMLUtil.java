@@ -10,11 +10,11 @@ import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -126,11 +126,35 @@ public final class XMLUtil {
         String name = source.getTemplateName();
 
         try {
-            Document document = PositionalXMLReader.readXML(source.getInputStream(fileName));
+            Document document = read(source.getInputStream(fileName));
 
             return Result.of(document.getDocumentElement());
         } catch (IOException | SAXException e) {
             return Result.error("Exception loading template '%s': %s", name, e.getMessage());
         }
+    }
+
+    public static Document read(final InputStream is) throws IOException, SAXException {
+        final Document doc;
+        SAXParser parser;
+
+        try {
+            final SAXParserFactory factory = SAXParserFactory.newInstance();
+            parser = factory.newSAXParser();
+            final DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+            final DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            doc = docBuilder.newDocument();
+        } catch (final ParserConfigurationException e) {
+            throw new RuntimeException("Can't create SAX parser / DOM builder.", e);
+        }
+
+        XMLReader reader = parser.getXMLReader();
+        XMLHandler handler = new XMLHandler(doc);
+
+        reader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
+
+        parser.parse(is, handler);
+
+        return doc;
     }
 }

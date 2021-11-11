@@ -132,7 +132,11 @@ public final class Proximity {
 
                            if (prototype.source().exists("template.xml")) {
                                XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                       .then(root -> this.loadAndRunPluginsAndScripts(raw, prototype.source(), root, prototype.overrides()))
+                                       .then(root -> this.loadPluginsAndTasks(prototype.source(), root, false))
+                                       .then((List<Plugin> plugins) -> {
+                                           plugins.forEach(plugin -> plugin.initialize(raw));
+                                           return this.runScripts(raw, prototype.overrides());
+                                       })
                                        .then((List<JsonObject> list) -> {
                                            list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
                                                    .then(e -> this.resolveResources(e, prototype.source()))
@@ -233,8 +237,9 @@ public final class Proximity {
         return Result.of(root);
     }
 
-    private Result<List<JsonObject>> loadAndRunPluginsAndScripts(JsonObject raw, TemplateSource source, Element root, JsonObject overrides) {
+    private Result<List<Plugin>> loadPluginsAndTasks(TemplateSource source, Element root, boolean help) {
         NodeList pluginBlocks = root.getElementsByTagName("Plugins");
+        List<Plugin> plugins = new ArrayList<>();
 
         for (int i = 0; i < pluginBlocks.getLength(); ++i) {
             Node n = pluginBlocks.item(i);
@@ -253,11 +258,12 @@ public final class Proximity {
 
                         Result<Plugin> result = this.pluginHandler.loadPlugin(Artifact.create(
                                 repository, group, artifact, versionRange
-                        ), this.taskHandler);
+                        ), this.taskHandler, help);
 
-                        if (result.isError()) return result.unwrap();
-                        else {
-                            result.get().initialize(raw);
+                        if (result.isError()) {
+                            return result.unwrap();
+                        } else {
+                            plugins.add(result.get());
                         }
                     }
                 }
@@ -289,6 +295,10 @@ public final class Proximity {
             }
         }
 
+        return Result.of(plugins);
+    }
+
+    public Result<List<JsonObject>> runScripts(JsonObject raw, JsonObject overrides) {
         List<JsonObject> list = new ArrayList<>();
 
         list.add(raw);
@@ -486,5 +496,22 @@ public final class Proximity {
 
     public TaskHandler getTaskHandler() {
         return this.taskHandler;
+    }
+
+    public void help(TemplateSource.Compound source) {
+        JsonObject json = new JsonObject();
+
+        Values.HELP.set(json, true);
+
+        if (source.exists("template.xml")) {
+            XMLUtil.load(source, "template.xml").ifError(LOG::warn)
+                    .then(root -> {
+                        this.loadPluginsAndTasks(source, root, true);
+                        new RenderableData(this, source, root, json).parseOptions();
+                        return null;
+                    });
+        } else {
+            LOG.warn("template.xml not found for template {}", source.getTemplateName());
+        }
     }
 }

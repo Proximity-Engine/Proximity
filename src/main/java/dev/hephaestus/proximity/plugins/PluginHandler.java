@@ -22,7 +22,7 @@ import java.util.*;
 public class PluginHandler {
     private final Map<Artifact, Plugin> loadedPlugins = new HashMap<>();
 
-    private Result<Plugin> loadPlugin(URL pluginUrl, TaskHandler taskHandler) {
+    private Result<Plugin> loadPlugin(URL pluginUrl, TaskHandler taskHandler, boolean help) {
         Proximity.LOG.debug("Loading plugin from '{}'", pluginUrl);
 
         ClassLoader pluginClassLoader = new PluginClassLoader(pluginUrl);
@@ -42,7 +42,7 @@ public class PluginHandler {
 
             if (result.isError()) return result.unwrap();
 
-            result = this.parseOptions(root.getElementsByTagName("Options"), builder);
+            result = this.parseOptions(root.getElementsByTagName("Options"), builder, help);
 
             if (result.isError()) return result.unwrap();
 
@@ -54,8 +54,12 @@ public class PluginHandler {
         }
     }
 
-    private Result<Void> parseOptions(NodeList optionsTags, Plugin.Builder builder) {
+    private Result<Void> parseOptions(NodeList optionsTags, Plugin.Builder builder, boolean help) {
         List<String> errors = new ArrayList<>();
+
+        if (help) {
+            System.out.println("\nAvailable Options\n");
+        }
 
         for (int i = 0; i < optionsTags.getLength(); ++i) {
             if (optionsTags.item(i) instanceof Element optionsTag) {
@@ -65,33 +69,61 @@ public class PluginHandler {
                     if (optionTags.item(j) instanceof Element option) {
                         String[] id = option.getAttribute("id").split("\\.");
 
+                        if (help) {
+                            System.out.printf("Key: %s%n", option.getAttribute("id"));
+
+                            if (option.hasAttribute("default")) {
+                                System.out.printf("Default: %s%n", option.getAttribute("default"));
+                            }
+                        }
+
                         switch (option.getTagName()) {
                             case "Enumeration" -> {
                                 String defaultValue = option.getAttribute("default");
                                 Box<Boolean> defaultValuePresent = new Box<>(false);
                                 NodeList enumerationValues = option.getElementsByTagName("EnumerationValue");
 
+                                if (help) {
+                                    System.out.print("Possible Values: ");
+                                }
+
                                 for (int k = 0; k < enumerationValues.getLength(); ++k) {
                                     if (enumerationValues.item(k) instanceof Element element) {
-                                        defaultValuePresent.set(defaultValuePresent.get() || element.getAttribute("value").equals(defaultValue));
+                                        if (help) {
+                                            if (k > 0) {
+                                                System.out.print(", ");
+                                            }
+
+                                            System.out.print(element.getAttribute("value"));
+                                        } else {
+                                            defaultValuePresent.set(defaultValuePresent.get() || element.getAttribute("value").equals(defaultValue));
+                                        }
                                     }
                                 }
 
-                                if (defaultValuePresent.get()) {
-                                    builder.add(object -> {
-                                        JsonObject options = object.getAsJsonObject("proximity", "options");
+                                if (help) {
+                                    System.out.println();
+                                } else {
+                                    if (defaultValuePresent.get()) {
+                                        builder.add(object -> {
+                                            JsonObject options = object.getAsJsonObject("proximity", "options");
 
-                                        if (!options.has(id)) {
-                                            options.add(id, defaultValue);
-                                        }
-                                    });
+                                            if (!options.has(id)) {
+                                                options.add(id, defaultValue);
+                                            }
+                                        });
+                                    }
                                 }
                             }
                             case "ToggleOption" -> builder.add(object -> {
-                                JsonObject options = object.getAsJsonObject("proximity", "options");
+                                if (help) {
+                                    System.out.println("Possible Values: [true|false]");
+                                } else {
+                                    JsonObject options = object.getAsJsonObject("proximity", "options");
 
-                                if (!options.has(id) && option.hasAttribute("default")) {
-                                    options.add(id, Boolean.parseBoolean(option.getAttribute("default")));
+                                    if (!options.has(id) && option.hasAttribute("default")) {
+                                        options.add(id, Boolean.parseBoolean(option.getAttribute("default")));
+                                    }
                                 }
                             });
                             case "StringOption" -> builder.add(object -> {
@@ -101,6 +133,14 @@ public class PluginHandler {
                                     options.add(id, option.getAttribute("default"));
                                 }
                             });
+                        }
+
+                        if (help) {
+                            if (option.getUserData("comment") != null) {
+                                System.out.println(option.getUserData("comment"));
+                            }
+
+                            System.out.println();
                         }
                     }
                 }
@@ -156,12 +196,12 @@ public class PluginHandler {
         return Result.of(null);
     }
 
-    public synchronized Result<Plugin> loadPlugin(Artifact artifact, TaskHandler taskHandler) {
+    public synchronized Result<Plugin> loadPlugin(Artifact artifact, TaskHandler taskHandler, boolean help) {
         if (!this.loadedPlugins.containsKey(artifact)) {
             Result<URL> artifactUrl = artifact.getLatestMatchingVersionLocation();
 
             if (artifactUrl.isOk()) {
-                Result<Plugin> result = this.loadPlugin(artifactUrl.get(), taskHandler);
+                Result<Plugin> result = this.loadPlugin(artifactUrl.get(), taskHandler, help);
 
                 if (result.isOk()) {
                     this.loadedPlugins.put(artifact, result.get());
