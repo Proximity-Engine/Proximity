@@ -56,6 +56,7 @@ docker run \
   -v $PWD/cards.txt:/app/cardslist \
   -v $PWD/run/templates:/app/templates \
   -v $PWD/images:/app/images \
+  -v $PWD/art:/app/art \
   proximity:latest \
   --cards=cardslist --template=normal
 ```
