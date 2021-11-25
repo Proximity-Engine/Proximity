@@ -185,61 +185,65 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                         }
                     }
 
-                    switch (option.getTagName()) {
-                        case "Enumeration" -> {
-                            String defaultValue = option.getAttribute("default");
-                            Box<Boolean> defaultValuePresent = new Box<>(false);
-
-                            if (help) {
-                                System.out.print("Possible Values: ");
-                            }
-
-                            XMLUtil.iterate(option, (element, k) -> {
-                                String value = element.getAttribute("value");
+                    try {
+                        switch (option.getTagName()) {
+                            case "Enumeration" -> {
+                                String defaultValue = option.getAttribute("default");
+                                Box<Boolean> defaultValuePresent = new Box<>(false);
 
                                 if (help) {
-                                    if (k > 0) {
-                                        System.out.print(", ");
+                                    System.out.print("Possible Values: ");
+                                }
+
+                                XMLUtil.iterate(option, (element, k) -> {
+                                    String value = element.getAttribute("value");
+
+                                    if (help) {
+                                        if (k > 0) {
+                                            System.out.print(", ");
+                                        }
+
+                                        System.out.print(value);
+                                    } else {
+                                        defaultValuePresent.set(defaultValuePresent.get() || value.equals(defaultValue));
                                     }
+                                });
 
-                                    System.out.print(value);
+                                if (!help) {
+                                    if (defaultValuePresent.get() && !options.has(id)) {
+                                        options.addProperty(id, defaultValue);
+                                    } else if (!defaultValuePresent.get()) {
+                                        errors.add(String.format("Default value '%s' not present in Enumeration '%s'", defaultValue, id));
+                                    }
+                                }
+                            }
+                            case "ToggleOption" -> {
+                                if (help) {
+                                    System.out.println("Possible Values: [true|false]");
                                 } else {
-                                    defaultValuePresent.set(defaultValuePresent.get() || value.equals(defaultValue));
+                                    if (!options.has(id) && option.hasAttribute("default")) {
+                                        options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
+                                    }
                                 }
-                            });
-
-                            if (!help) {
-                                if (defaultValuePresent.get() && !options.has(id)) {
-                                    options.addProperty(id, defaultValue);
-                                } else if (!defaultValuePresent.get()) {
-                                    errors.add(String.format("Default value '%s' not present in Enumeration '%s'", defaultValue, id));
+                            }
+                            case "StringOption" -> {
+                                if (!help) {
+                                    if (!options.has(id) && option.hasAttribute("default")) {
+                                        options.addProperty(id, option.getAttribute("default"));
+                                    }
                                 }
                             }
                         }
-                        case "ToggleOption" -> {
-                            if (help) {
-                                System.out.println("Possible Values: [true|false]");
-                            } else {
-                                if (!options.has(id) && option.hasAttribute("default")) {
-                                    options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
-                                }
-                            }
-                        }
-                        case "StringOption" -> {
-                            if (!help) {
-                                if (!options.has(id) && option.hasAttribute("default")) {
-                                    options.addProperty(id, option.getAttribute("default"));
-                                }
-                            }
-                        }
-                    }
 
-                    if (help) {
-                        if (option.wrapped.getUserData("comment") != null) {
-                            System.out.println(option.wrapped.getUserData("comment"));
-                        }
+                        if (help) {
+                            if (option.wrapped.getUserData("comment") != null) {
+                                System.out.println(option.wrapped.getUserData("comment"));
+                            }
 
-                        System.out.println();
+                            System.out.println();
+                        }
+                    } catch (NoSuchAttributeException e) {
+                        Proximity.LOG.debug(e.getMessage());
                     }
                 })
         );
@@ -532,7 +536,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                 AttributeModifier attributeModifier = RenderableData.this.taskHandler.getTask(AttributeModifier.DEFINITION, function);
 
                 if (element == null) {
-                    throw new RuntimeException(String.format("Element '%s' not found. Used by element '%s', line number '%s'", matcher.group("value"), this.getId(), this.wrapped.getUserData("lineNumber")));
+                    throw new NoSuchAttributeException(String.format("Element '%s' not found. Used by element '%s', line number '%s'", matcher.group("value"), this.getId(), this.wrapped.getUserData("lineNumber")));
                 }
 
                 if (attributeModifier != null) {

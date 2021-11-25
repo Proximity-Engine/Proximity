@@ -471,7 +471,7 @@ public final class Proximity {
 
         discriminate.setAttribute("keyword", "ProximityDiscriminate");
         random.nextBytes(bytes);
-        discriminate.setAttribute("value", new String(bytes));
+        discriminate.setAttribute("value", new String(Base64.getEncoder().encode(bytes)));
 
         IIOMetadataNode text = new IIOMetadataNode("tEXt");
         text.appendChild(discriminate);
