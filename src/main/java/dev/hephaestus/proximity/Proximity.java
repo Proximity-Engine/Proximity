@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity;
 
+import com.github.yuchi.semver.Version;
 import dev.hephaestus.proximity.api.DataSet;
 import dev.hephaestus.proximity.api.Values;
 import dev.hephaestus.proximity.api.tasks.DataFinalization;
@@ -35,7 +36,9 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -46,15 +49,23 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public final class Proximity {
     public static Logger LOG = LogManager.getLogger("Proximity");
+    public static final Version VERSION;
+
+    private static final Collection<String> WARNED_TEMPLATES = new ConcurrentSkipListSet<>();
+
+    static {
+        Version version = Version.from(Proximity.class.getPackage().getImplementationVersion(), false);
+
+        LOG.info("Proximity version: {}", version);
+
+        VERSION = version;
+    }
 
     private final JsonObject options;
     private final TaskHandler taskHandler;
@@ -132,6 +143,7 @@ public final class Proximity {
 
                            if (prototype.source().exists("template.xml")) {
                                XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                       .then(this::checkVersion)
                                        .then(root -> this.loadPluginsAndTasks(prototype.source(), root, false))
                                        .then((List<Plugin> plugins) -> {
                                            plugins.forEach(plugin -> plugin.initialize(raw));
@@ -164,6 +176,22 @@ public final class Proximity {
         LOG.info("Successfully found {} cards. Took {}ms", cards.size(), System.currentTimeMillis() - totalTime);
 
         return Result.of(cards);
+    }
+
+    private Result<Element> checkVersion(Element root) {
+        if (VERSION == null) {
+            Proximity.LOG.warn("Proximity version is null. If you're not running in a dev environment, something is wrong!");
+        } else {
+            Version templateProximityVersion = new Version(root.getAttribute("proximity_version"));
+            String name = root.getAttribute("name");
+
+            if (templateProximityVersion.getMajor() != VERSION.getMajor() || templateProximityVersion.getMinor() != VERSION.getMinor() && !WARNED_TEMPLATES.contains(name)) {
+                Proximity.LOG.warn("Template '{}' created for Proximity version '{}'. There may be errors.", name, templateProximityVersion);
+                WARNED_TEMPLATES.add(name);
+            }
+        }
+
+        return Result.of(root);
     }
 
     private Result<Element> resolveResources(Element root, TemplateSource.Compound source) {
