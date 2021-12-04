@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.xml;
 
 import dev.hephaestus.proximity.Proximity;
+import dev.hephaestus.proximity.api.Values;
 import dev.hephaestus.proximity.api.tasks.AttributeModifier;
 import dev.hephaestus.proximity.api.tasks.TemplateModification;
 import dev.hephaestus.proximity.cards.predicates.CardPredicate;
@@ -108,29 +109,33 @@ public final class RenderableData extends JsonObject implements TemplateSource {
 
         if (init.isError()) return init;
 
-        this.root.apply("Layers", layers -> {
-            List<TemplateModification> modifications = this.taskHandler.getTasks(TemplateModification.DEFINITION);
+        if (!Values.HELP.exists(this) || !Values.HELP.get(this)) {
+            this.root.apply("Layers", layers -> {
+                List<TemplateModification> modifications = this.taskHandler.getTasks(TemplateModification.DEFINITION);
 
-            for (TemplateModification modification : modifications) {
-                modification.apply(this, layers);
-            }
-        });
-
-        return this.root.apply("Layers", (Function<XMLElement, Result<Void>>) layers -> {
-            List<String> errors = new ArrayList<>(0);
-
-            layers.iterate((layer, i) -> {
-                LayerRenderer renderable = this.layerRenderers.get(layer.getTagName());
-
-                if (renderable != null) {
-                    renderable.render(this, layer, graphics, null, true, new Box<>(0F), null)
-                            .ifError(errors::add);
+                for (TemplateModification modification : modifications) {
+                    modification.apply(this, layers);
                 }
             });
 
-            return errors.isEmpty() ? Result.of(null)
-                    : Result.error("Error(s) rendering cards:\n\t%s", String.join("\n\t", errors));
-        }).orElse(Result.of(null));
+            return this.root.apply("Layers", (Function<XMLElement, Result<Void>>) layers -> {
+                List<String> errors = new ArrayList<>(0);
+
+                layers.iterate((layer, i) -> {
+                    LayerRenderer renderable = this.layerRenderers.get(layer.getTagName());
+
+                    if (renderable != null) {
+                        renderable.render(this, layer, graphics, null, true, new Box<>(0F), null)
+                                .ifError(errors::add);
+                    }
+                });
+
+                return errors.isEmpty() ? Result.of(null)
+                        : Result.error("Error(s) rendering cards:\n\t%s", String.join("\n\t", errors));
+            }).orElse(Result.of(null));
+        } else {
+            return init;
+        }
     }
 
     private Result<Void> parseSymbols() {
@@ -163,39 +168,82 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                 : Result.error("Error(s) parsing symbols:\n\t%s", String.join("\n\t", errors));
     }
 
-    private Result<Void> parseOptions() {
+    public Result<Void> parseOptions() {
         List<String> errors = new ArrayList<>();
         JsonObject options = this.getAsJsonObject(Keys.OPTIONS);
+        boolean help = Values.HELP.exists(this) && Values.HELP.get(this);
 
         XMLUtil.iterate(this.root, "Options", (optionList, i) ->
                 XMLUtil.iterate(optionList, (option, j) -> {
                     String id = option.getAttribute("id");
 
-                    switch (option.getTagName()) {
-                        case "Enumeration" -> {
-                            String defaultValue = option.getAttribute("default");
-                            Box<Boolean> defaultValuePresent = new Box<>(false);
+                    if (help) {
+                        System.out.printf("Key: %s%n", id);
 
-                            XMLUtil.iterate(option, (element, k) ->
-                                    defaultValuePresent.set(defaultValuePresent.get()
-                                            || element.getAttribute("value").equals(defaultValue)));
+                        if (option.hasAttribute("default")) {
+                            System.out.printf("Default: %s%n", option.wrapped.getAttribute("default"));
+                        }
+                    }
 
-                            if (defaultValuePresent.get() && !options.has(id)) {
-                                options.addProperty(id, defaultValue);
-                            } else if (!defaultValuePresent.get()) {
-                                errors.add(String.format("Default value '%s' not present in Enumeration '%s'", defaultValue, id));
+                    try {
+                        switch (option.getTagName()) {
+                            case "Enumeration" -> {
+                                String defaultValue = option.getAttribute("default");
+                                Box<Boolean> defaultValuePresent = new Box<>(false);
+
+                                if (help) {
+                                    System.out.print("Possible Values: ");
+                                }
+
+                                XMLUtil.iterate(option, (element, k) -> {
+                                    String value = element.getAttribute("value");
+
+                                    if (help) {
+                                        if (k > 0) {
+                                            System.out.print(", ");
+                                        }
+
+                                        System.out.print(value);
+                                    } else {
+                                        defaultValuePresent.set(defaultValuePresent.get() || value.equals(defaultValue));
+                                    }
+                                });
+
+                                if (!help) {
+                                    if (defaultValuePresent.get() && !options.has(id)) {
+                                        options.addProperty(id, defaultValue);
+                                    } else if (!defaultValuePresent.get()) {
+                                        errors.add(String.format("Default value '%s' not present in Enumeration '%s'", defaultValue, id));
+                                    }
+                                }
+                            }
+                            case "ToggleOption" -> {
+                                if (help) {
+                                    System.out.println("Possible Values: [true|false]");
+                                } else {
+                                    if (!options.has(id) && option.hasAttribute("default")) {
+                                        options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
+                                    }
+                                }
+                            }
+                            case "StringOption" -> {
+                                if (!help) {
+                                    if (!options.has(id) && option.hasAttribute("default")) {
+                                        options.addProperty(id, option.getAttribute("default"));
+                                    }
+                                }
                             }
                         }
-                        case "ToggleOption" -> {
-                            if (!options.has(id) && option.hasAttribute("default")) {
-                                options.addProperty(id, Boolean.parseBoolean(option.getAttribute("default")));
+
+                        if (help) {
+                            if (option.wrapped.getUserData("comment") != null) {
+                                System.out.println(option.wrapped.getUserData("comment"));
                             }
+
+                            System.out.println();
                         }
-                        case "StringOption" -> {
-                            if (!options.has(id) && option.hasAttribute("default")) {
-                                options.addProperty(id, option.getAttribute("default"));
-                            }
-                        }
+                    } catch (NoSuchAttributeException e) {
+                        Proximity.LOG.debug(e.getMessage());
                     }
                 })
         );
@@ -422,24 +470,6 @@ public final class RenderableData extends JsonObject implements TemplateSource {
             });
         }
 
-        public XMLElement getNextSibling() {
-            Node n = this.wrapped;
-
-            while (n != null) {
-                n = n.getNextSibling();
-
-                if (n instanceof Element element) {
-                    return new XMLElement(this.parent, element);
-                }
-            }
-
-            return null;
-        }
-
-        public boolean hasNextSibling() {
-            return this.getNextSibling() != null;
-        }
-
         public String getParentId() {
             return this.parent == null ? "" : this.parent.getId();
         }
@@ -506,7 +536,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                 AttributeModifier attributeModifier = RenderableData.this.taskHandler.getTask(AttributeModifier.DEFINITION, function);
 
                 if (element == null) {
-                    throw new RuntimeException(String.format("Element '%s' not found. Used by element '%s', line number '%s'", matcher.group("value"), this.getId(), this.wrapped.getUserData("lineNumber")));
+                    throw new NoSuchAttributeException(String.format("Element '%s' not found. Used by element '%s', line number '%s'", matcher.group("value"), this.getId(), this.wrapped.getUserData("lineNumber")));
                 }
 
                 if (attributeModifier != null) {

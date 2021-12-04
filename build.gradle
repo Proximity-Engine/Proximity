@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'dev.hephaestus'
-version '0.5.0'
+version '0.5.2'
 
 java {
     withSourcesJar()
@@ -33,7 +33,7 @@ dependencies {
     implementation(shadow('org.graalvm.js:js:21.1.0'))
     implementation(shadow('org.graalvm.js:js-scriptengine:21.1.0'))
     implementation(shadow('com.github.yuchi:npm-semver:1.0.0'))
-    implementation('dev.hephaestus:proximity-mtg:1.0.30')
+    implementation('dev.hephaestus:proximity-mtg:1.0.31')
 }
 
 test {
@@ -44,7 +44,8 @@ jar {
     manifest {
         attributes(
                 'Main-Class': 'dev.hephaestus.proximity.Main',
-                'Multi-Release': 'true'
+                'Multi-Release': 'true',
+                'Implementation-Version': project.version
         )
     }
 }

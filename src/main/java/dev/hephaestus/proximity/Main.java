@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity;
 
 
+import dev.hephaestus.proximity.api.Values;
 import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonObject;
@@ -14,6 +15,7 @@ import dev.hephaestus.proximity.util.ParsingUtil;
 import dev.hephaestus.proximity.util.Result;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.w3c.dom.Element;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,19 +39,27 @@ public class Main {
         JsonObject options = args.left();
         JsonObject overrides = args.right();
 
-        if (args.left().has("debug"
-        ) && args.left().get("debug").getAsBoolean()) {
+        if (options.has("debug") && options.get("debug").getAsBoolean()) {
             Configurator.setLevel(System.getProperty("log4j.logger"), Level.DEBUG);
         }
-
-        Result<Deque<CardPrototype>> prototypes = getDefaultTemplateName(options).then(defaultTemplateName ->
-                loadCardsFromFile(options, overrides, defaultTemplateName, new FileSystemTemplateLoader(Path.of("templates")))
-        );
-
         Proximity proximity = new Proximity(options, TaskHandler.createDefault(), new PluginHandler(), LayerRegistry.createDefault());
 
-        prototypes.ifPresent(proximity::run)
-                .ifError(e -> Proximity.LOG.error(e));
+        if (options.has("help") && options.getAsBoolean("help")) {
+            getDefaultTemplateName(options).then(defaultTemplateName -> {
+                return new FileSystemTemplateLoader(Path.of("templates")).getTemplateFiles(defaultTemplateName);
+            }).then(source -> {
+                proximity.help(new TemplateSource.Compound(source.getTemplateName(), source));
+
+                return null;
+            });
+        } else {
+            Result<Deque<CardPrototype>> prototypes = getDefaultTemplateName(options).then(defaultTemplateName ->
+                    loadCardsFromFile(options, overrides, defaultTemplateName, new FileSystemTemplateLoader(Path.of("templates")))
+            );
+
+            prototypes.ifPresent(proximity::run)
+                    .ifError(e -> Proximity.LOG.error(e));
+        }
     }
 
     private static Result<Deque<CardPrototype>> loadCardsFromFile(JsonObject options, JsonObject overrides, String defaultTemplate, TemplateLoader... templateLoaders) {
