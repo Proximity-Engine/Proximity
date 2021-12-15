@@ -272,6 +272,7 @@
       <xs:element type="AttributeModifierType" name="AttributeModifier" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="GroupType" name="Mask" minOccurs="0" maxOccurs="1"/>
       <xs:element type="GroupType" name="Erase" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="GroupType" name="Color" minOccurs="0" maxOccurs="1"/>
       <xs:element type="CardModifierType" name="CardModifier" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute type="id_type" name="id" use="optional"/>

@@ -2,11 +2,10 @@ plugins {
     id 'java'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
-    id 'org.openjfx.javafxplugin' version '0.0.10'
 }
 
 group 'dev.hephaestus'
-version '0.5.2'
+version '0.5.3'
 
 java {
     withSourcesJar()
@@ -33,7 +32,7 @@ dependencies {
     implementation(shadow('org.graalvm.js:js:21.1.0'))
     implementation(shadow('org.graalvm.js:js-scriptengine:21.1.0'))
     implementation(shadow('com.github.yuchi:npm-semver:1.0.0'))
-    implementation('dev.hephaestus:proximity-mtg:1.0.31')
+    implementation('dev.hephaestus:proximity-mtg:1.0.44')
 }
 
 test {
@@ -49,6 +48,9 @@ jar {
         )
     }
 }
+
+jar.archiveClassifier.set("slim")
+shadowJar.archiveClassifier.set("")
 
 publishing {
     publications {
