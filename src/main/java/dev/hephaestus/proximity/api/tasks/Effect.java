@@ -35,7 +35,13 @@ public interface Effect {
                         try {
                             handler.invoke(null, card, image, effect);
                         } catch (Exception e) {
-                            Proximity.LOG.error(e.getMessage());
+                            Throwable t = e;
+
+                            if (e.getMessage() == null && e.getCause() != null) {
+                                t = e.getCause();
+                            }
+
+                            Proximity.LOG.error(t.getMessage());
                         }
                     })
             );

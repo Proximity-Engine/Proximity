@@ -25,12 +25,21 @@ public class ParsingUtil {
 
     public static String getFileLocation(String parentId, String id, String src) {
         String sep = FileSystems.getDefault().getSeparator();
-        StringBuilder builder = new StringBuilder(parentId.isEmpty() ? "" : (parentId.replace(".", sep)
-                + FileSystems.getDefault().getSeparator()));
+        StringBuilder builder = new StringBuilder(parentId.isEmpty() ? "" : parentId.replace(".", sep));
 
         if (src == null || src.isEmpty()) {
-            builder.append(id);
+            if (!id.isEmpty()) {
+                if (!builder.isEmpty()) {
+                    builder.append(FileSystems.getDefault().getSeparator());
+                }
+
+                builder.append(id);
+            }
         } else {
+            if (!builder.isEmpty()) {
+                builder.append(FileSystems.getDefault().getSeparator());
+            }
+
             String[] split = src.split("/");
 
             for (int i = 0; i < split.length; i++) {

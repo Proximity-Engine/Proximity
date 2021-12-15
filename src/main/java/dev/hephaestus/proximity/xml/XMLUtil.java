@@ -61,7 +61,7 @@ public final class XMLUtil {
                 return Result.of(new IsPresent(key, value));
             }
             case "IsEquals" -> {
-                String[] key = element.getAttribute("key").split("\\.");
+                String key = element.getAttribute("key");
 
                 String value = element.hasAttribute("value") ? element.getAttribute("value") : "true";
 

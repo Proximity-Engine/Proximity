@@ -122,22 +122,18 @@ public final class Artifact {
                 : Result.of(version.toString());
     }
 
-    private Result<URL> createUrl(String version) {
-        try {
-            return Result.of(new URL(String.format("%s/%s/%s/%s/%s-%s.jar",
-                    this.repository,
-                    this.group.replace('.', '/'),
-                    this.artifact,
-                    version,
-                    this.artifact,
-                    version
-            )));
-        } catch (MalformedURLException e) {
-            return Result.error(e.getMessage());
-        }
+    private Result<URI> createUrl(String version) {
+        return Result.of(URI.create(String.format("%s/%s/%s/%s/%s-%s.jar",
+                this.repository,
+                this.group.replace('.', '/'),
+                this.artifact,
+                version,
+                this.artifact,
+                version
+        )));
     }
 
-    public Result<URL> getLatestMatchingVersionLocation() {
+    public Result<URI> getLatestMatchingVersionLocation() {
         return this.loadMetadata().then(this::getLatestMatchingVersion).then(this::createUrl);
     }
 

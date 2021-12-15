@@ -94,7 +94,7 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
 
         apply(style, "italicFont", builder::italics);
         apply(style, "capitalization", Style.Capitalization::parse, builder::capitalization);
-        apply(style, "color", Integer::decode, builder::color);
+        apply(style, "color", Long::decode, builder::color);
         apply(style, "size", Integer::parseInt, builder::size);
         apply(style, "kerning", Float::parseFloat, builder::kerning);
 
@@ -142,6 +142,11 @@ public record Style(String fontName, String italicFontName, Integer size, Float 
 
         public Builder kerning(float kerning) {
             this.kerning = kerning;
+            return this;
+        }
+
+        public Builder color(Long color) {
+            this.color = color == null ? null : color.intValue();
             return this;
         }
 

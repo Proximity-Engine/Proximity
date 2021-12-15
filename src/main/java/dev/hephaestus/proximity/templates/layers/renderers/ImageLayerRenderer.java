@@ -26,10 +26,6 @@ public class ImageLayerRenderer extends LayerRenderer {
 
     @Override
     public Result<Optional<Rectangles>> renderLayer(RenderableData card, RenderableData.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
-        if (!element.hasAttribute("src") && !element.hasAttribute("id") && !element.hasAttribute("url")) {
-            return Result.error("Image layer must have either 'src', 'url', or 'id' attribute");
-        }
-
         int x = (element.hasAttribute("x") ? Integer.decode(element.getAttribute("x")) : 0);
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
 
@@ -67,7 +63,13 @@ public class ImageLayerRenderer extends LayerRenderer {
                 Integer width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
                 Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
 
-                BufferedImage image = scale(this.getImage(element), width, height);
+                BufferedImage image = this.getImage(element);
+
+                if (image == null) {
+                    throw new RuntimeException("Image '" + key + "' could not be found.");
+                }
+
+                image = scale(image, width, height);
 
                 return new Pair<>(image.getWidth(), image.getHeight());
             });

@@ -29,6 +29,7 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Locale;
@@ -116,7 +117,8 @@ public class SVGLayerRenderer extends LayerRenderer {
     private Result<SVGDocument> load(RenderableData card, String src) {
         try {
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document document = documentBuilder.parse(card.getInputStream(src));
+            InputStream inputStream = card.getInputStream(src);
+            Document document = documentBuilder.parse(inputStream);
             Element root = document.getDocumentElement();
             NodeList listOfDefs = root.getElementsByTagName("defs");
 

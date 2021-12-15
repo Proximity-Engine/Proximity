@@ -1,12 +1,15 @@
 package dev.hephaestus.proximity.util;
 
+import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import org.quiltmc.json5.JsonReader;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -55,31 +58,59 @@ public final class RemoteFileCache {
             return false;
         }
     }
+    private Result<Path> fetch(URI file) throws IOException {
+        Path path;
+
+        do {
+            path = Path.of(".cache", randomId());
+        } while (Files.exists(path));
+
+        if (!Files.exists(path.getParent())) {
+            Files.createDirectories(path.getParent());
+        }
+
+        Files.copy(
+                file.toURL().openStream(),
+                path
+        );
+
+        this.index.addProperty(file.toString(), path.toString());
+
+        Files.writeString(Path.of(".cache", "index.json"), this.index.toString());
+
+        return Result.of(path);
+    }
 
     public InputStream open(URI file) throws IOException {
         if (this.index.has(file.toString())) {
             return Files.newInputStream(Path.of(this.index.getAsString(file.toString())));
         } else {
-            Path path;
+            Result<Path> result = fetch(file);
 
-            do {
-                path = Path.of(".cache", randomId());
-            } while (Files.exists(path));
-
-            if (!Files.exists(path.getParent())) {
-                Files.createDirectories(path.getParent());
+            if (result.isError()) {
+                Proximity.LOG.info(result.getError());
+                return null;
+            } else {
+                return Files.newInputStream(result.get());
             }
+        }
+    }
 
-            Files.copy(
-                    file.toURL().openStream(),
-                    path
-            );
+    public Result<URL> getLocation(URI file) throws IOException {
+        if (this.index.has(file.toString())) {
+            try {
+                return Result.of(Path.of(this.index.getAsString(file.toString())).toUri().toURL());
+            } catch (MalformedURLException e) {
+                return Result.error(e.getMessage());
+            }
+        } else {
+            Result<Path> result = fetch(file);
 
-            this.index.addProperty(file.toString(), path.toString());
-
-            Files.writeString(Path.of(".cache", "index.json"), this.index.toString());
-
-            return Files.newInputStream(path);
+            if (result.isError()) {
+                return result.unwrap();
+            } else {
+                return Result.of(result.get().toUri().toURL());
+            }
         }
     }
 

@@ -9,15 +9,17 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+
+import static dev.hephaestus.proximity.xml.RenderableData.KEY;
+import static dev.hephaestus.proximity.xml.RenderableData.XMLElement.handle;
 
 public class JsonObject extends JsonElement {
     private final Map<String, JsonElement> members = new LinkedHashMap<>();
 
-    @HostAccess.Export
     public JsonObject() {
     }
 
-    @HostAccess.Export
     public JsonObject(String key, JsonElement entry) {
         this.members.put(key, entry);
     }
@@ -48,7 +50,6 @@ public class JsonObject extends JsonElement {
     }
 
     @Override
-    @HostAccess.Export
     public JsonObject deepCopy() {
         JsonObject result = new JsonObject();
 
@@ -71,58 +72,78 @@ public class JsonObject extends JsonElement {
         writer.endObject();
     }
 
-    @HostAccess.Export
     public void add(String property, JsonElement value) {
         members.put(property, value == null ? JsonNull.INSTANCE : value);
     }
 
-    @HostAccess.Export
     public void addProperty(String property, String value) {
         add(property, value == null ? JsonNull.INSTANCE : new JsonPrimitive(value));
     }
 
-    @HostAccess.Export
     public void addProperty(String property, Number value) {
         add(property, value == null ? JsonNull.INSTANCE : new JsonPrimitive(value));
     }
 
-    @HostAccess.Export
     public void addProperty(String property, Boolean value) {
         add(property, value == null ? JsonNull.INSTANCE : new JsonPrimitive(value));
     }
 
-    @HostAccess.Export
     public void remove(String key) {
         this.members.remove(key);
     }
 
-    @HostAccess.Export
     public Set<Map.Entry<String, JsonElement>> entrySet() {
         return members.entrySet();
     }
 
-    @HostAccess.Export
     public int size() {
         return members.size();
     }
 
-    @HostAccess.Export
     public boolean has(String memberName) {
         return members.containsKey(memberName);
     }
 
-    @HostAccess.Export
     public JsonElement get(String memberName) {
         return members.get(memberName);
     }
+    
+    public JsonElement getFromFullPath(String path) {
+        String[] key = path.split("\\.");
+        JsonElement element = this;
 
-    @HostAccess.Export
+        for (String k : key) {
+            Matcher m = KEY.matcher(k);
+
+            while(m.find()) {
+                if (element instanceof JsonObject object) {
+                    element = object.get(m.group("key"));
+
+                    if (m.group("range") != null) {
+                        int start = Integer.decode(m.group("start"));
+                        Integer end = m.group("end") == null ? null : Integer.decode(m.group("end"));
+
+                        if (end == null || end == start) {
+                            element = element instanceof JsonArray array ? array.get(start)
+                                    : new JsonPrimitive(Character.toString(element.getAsString().codePointAt(start)));
+                        } else {
+                            element = handle(element, start, end);
+                        }
+                    }
+                } else {
+                    throw new UnsupportedOperationException();
+                }
+            }
+        }
+
+        return element;
+    }
+
     public Optional<JsonElement> getIfPresent(String key) {
         return Optional.ofNullable(this.members.get(key));
     }
 
     @SuppressWarnings("unchecked")
-    @HostAccess.Export
     public <T extends JsonElement> T get(String key, Supplier<T> orAdd) {
         if (!this.members.containsKey(key)) {
             this.add(key, orAdd.get());
@@ -131,13 +152,11 @@ public class JsonObject extends JsonElement {
         return (T) this.get(key);
     }
 
-    @HostAccess.Export
     public JsonArray getAsJsonArray(String... keys) {
         return this.get((o, k) -> o.get(k, JsonArray::new).getAsJsonArray(), keys);
     }
 
     @Override
-    @HostAccess.Export
     public boolean equals(Object o) {
         return (o == this) || (o instanceof JsonObject
                 && ((JsonObject) o).members.equals(members));
@@ -148,24 +167,20 @@ public class JsonObject extends JsonElement {
         return members.hashCode();
     }
 
-    @HostAccess.Export
     public boolean getAsBoolean(String... keys) {
         JsonElement e = get(JsonObject::get, keys);
 
         return e != null && e.isJsonPrimitive() && e.getAsJsonPrimitive().isBoolean() && e.getAsBoolean();
     }
 
-    @HostAccess.Export
     public String getAsString(String... keys) {
         return get((o, k) -> o.get(k).getAsString(), keys);
     }
 
-    @HostAccess.Export
     public int getAsInt(String... keys) {
         return get((o, k) -> o.get(k).getAsInt(), keys);
     }
 
-    @HostAccess.Export
     public JsonObject getAsJsonObject(String... keys) {
         return get((o, k) -> {
             if (!o.has(k)) {
@@ -176,7 +191,6 @@ public class JsonObject extends JsonElement {
         }, keys);
     }
 
-    @HostAccess.Export
     public <T> T get(BiFunction<JsonObject, String, T> getter, String... keys) {
         if (keys.length == 0) throw new UnsupportedOperationException();
         if (keys.length == 1) return getter.apply(this, keys[0]);
@@ -204,22 +218,18 @@ public class JsonObject extends JsonElement {
         return object;
     }
 
-    @HostAccess.Export
     public void add(String[] key, boolean value) {
         this.add(key, new JsonPrimitive(value));
     }
 
-    @HostAccess.Export
     public void add(String[] key, String value) {
         this.add(key, new JsonPrimitive(value));
     }
 
-    @HostAccess.Export
     public void add(String[] key, Number value) {
         this.add(key, new JsonPrimitive(value));
     }
 
-    @HostAccess.Export
     public void add(String[] key, JsonElement value) {
         if (key.length == 0) throw new UnsupportedOperationException();
 
@@ -232,7 +242,6 @@ public class JsonObject extends JsonElement {
         object.add(key[key.length - 1], value);
     }
 
-    @HostAccess.Export
     public boolean has(String... key) {
         if (key.length == 0) throw new UnsupportedOperationException();
 
@@ -247,7 +256,6 @@ public class JsonObject extends JsonElement {
         return object.has(key[key.length - 1]);
     }
 
-    @HostAccess.Export
     public JsonElement get(String... key) {
         if (key.length == 0) throw new UnsupportedOperationException();
 
@@ -262,7 +270,6 @@ public class JsonObject extends JsonElement {
         return object.get(key[key.length - 1]);
     }
 
-    @HostAccess.Export
     public JsonObject copyAll(JsonObject object) {
         for (var entry : object.entrySet()) {
             if (entry.getValue() instanceof JsonObject o) {
@@ -275,12 +282,10 @@ public class JsonObject extends JsonElement {
         return this;
     }
 
-    @HostAccess.Export
     public float getAsFloat(String... keys) {
         return get((o, k) -> o.get(k).getAsFloat(), keys);
     }
 
-    @HostAccess.Export
     public List<String> getKeys() {
         return new ArrayList<>(this.members.keySet());
     }

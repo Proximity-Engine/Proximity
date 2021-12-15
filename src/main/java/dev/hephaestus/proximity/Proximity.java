@@ -3,23 +3,19 @@ package dev.hephaestus.proximity;
 import com.github.yuchi.semver.Version;
 import dev.hephaestus.proximity.api.DataSet;
 import dev.hephaestus.proximity.api.Values;
+import dev.hephaestus.proximity.api.json.JsonElement;
+import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.tasks.DataFinalization;
 import dev.hephaestus.proximity.api.tasks.DataPreparation;
 import dev.hephaestus.proximity.cards.CardPrototype;
-import dev.hephaestus.proximity.api.json.JsonElement;
-import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.plugins.Plugin;
 import dev.hephaestus.proximity.plugins.PluginHandler;
 import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.plugins.util.Artifact;
-import dev.hephaestus.proximity.util.ScriptingUtil;
 import dev.hephaestus.proximity.templates.LayerRegistry;
 import dev.hephaestus.proximity.templates.RemoteFileSource;
 import dev.hephaestus.proximity.templates.TemplateSource;
-import dev.hephaestus.proximity.util.Logging;
-import dev.hephaestus.proximity.util.RemoteFileCache;
-import dev.hephaestus.proximity.util.Result;
-import dev.hephaestus.proximity.util.StatefulGraphics;
+import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerRenderer;
 import dev.hephaestus.proximity.xml.RenderableData;
 import dev.hephaestus.proximity.xml.XMLUtil;
@@ -36,9 +32,7 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -63,6 +57,10 @@ public final class Proximity {
         Version version = Version.from(Proximity.class.getPackage().getImplementationVersion(), false);
 
         LOG.info("Proximity version: {}", version);
+
+        if (version == null) {
+            Proximity.LOG.warn("Proximity version is null. If you're not running in a dev environment, something is wrong!");
+        }
 
         VERSION = version;
     }
@@ -179,9 +177,7 @@ public final class Proximity {
     }
 
     private Result<Element> checkVersion(Element root) {
-        if (VERSION == null) {
-            Proximity.LOG.warn("Proximity version is null. If you're not running in a dev environment, something is wrong!");
-        } else {
+        if (VERSION != null) {
             Version templateProximityVersion = new Version(root.getAttribute("proximity_version"));
             String name = root.getAttribute("name");
 
@@ -418,6 +414,10 @@ public final class Proximity {
             LOG.info("Rendering {} cards on {} threads", cards.size(), threadCount);
 
             for (RenderableData card : cards) {
+                if (Values.DEBUG.get(card)) {
+                    LOG.debug(card.toString());
+                }
+
                 if (threadCount > 1) {
                     //                    this.render(card, finishedCards, errors, countStrLen, finalI, cards.size());
                     executor.submit(() -> this.render(card, finishedCards, errors, countStrLen, cards.size()));

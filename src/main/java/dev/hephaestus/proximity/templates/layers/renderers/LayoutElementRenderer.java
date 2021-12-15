@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates.layers.renderers;
 
+import dev.hephaestus.proximity.api.Values;
 import dev.hephaestus.proximity.util.*;
 import dev.hephaestus.proximity.xml.LayerProperty;
 import dev.hephaestus.proximity.xml.LayerRenderer;
@@ -133,12 +134,23 @@ public class LayoutElementRenderer extends ParentLayerRenderer {
                 } else if (!layerBounds.isEmpty()) {
                     resultBounds.addAll(layerBounds);
 
+                    if (draw && Values.DEBUG.get(card)) {
+                        graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
+                        graphics.push(DrawingUtil.getColor(0xFFFFF00), Graphics2D::setColor, Graphics2D::getColor);
+
+                        for (Rectangle2D rectangle : layerBounds) {
+                            graphics.draw(rectangle);
+                        }
+
+                        graphics.pop(2);
+                    }
+
                     dInLine += this.inLineSizeGetter.apply(layerBounds.getBounds());
                 }
             }
         }
 
-        if (draw && outerBounds != null && card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+        if (draw && outerBounds != null &&  Values.DEBUG.get(card)) {
             graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
             graphics.push(DrawingUtil.getColor(0xFF00FFFF), Graphics2D::setColor, Graphics2D::getColor);
             graphics.drawRect((int) outerBounds.getX(), (int) outerBounds.getY(), (int) outerBounds.getWidth(), (int) outerBounds.getHeight());

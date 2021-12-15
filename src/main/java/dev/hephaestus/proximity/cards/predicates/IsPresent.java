@@ -8,12 +8,12 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class IsPresent implements CardPredicate {
-    private final String[] key;
+    private final String key;
     private final String value;
     private final boolean present;
 
     public IsPresent(String[] key, boolean present) {
-        this.key = Arrays.copyOfRange(key, 0, key.length - 1);
+        this.key = String.join(".", Arrays.copyOfRange(key, 0, key.length - 1));
         this.value = key[key.length - 1];
         this.present = present;
     }

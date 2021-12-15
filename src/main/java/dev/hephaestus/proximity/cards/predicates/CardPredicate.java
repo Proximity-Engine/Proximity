@@ -12,28 +12,17 @@ import java.util.Optional;
 public interface CardPredicate {
     Result<Boolean> test(JsonObject card);
 
-    static Optional<Result<JsonElement>> traverse(JsonObject card, String[] key) {
-        JsonElement element = card;
+    static Optional<Result<JsonElement>> traverse(JsonObject card, String key) {
+        try {
+            JsonElement element = card.getFromFullPath(key);
 
-        for (int i = 0, stringsLength = key.length; i < stringsLength; i++) {
-            String k = key[i];
-
-            if (element.isJsonObject() && element.getAsJsonObject().has(k)) {
-                element = element.getAsJsonObject().get(k);
-            } else if (element.isJsonArray()) {
-                if (i < key.length - 1) {
-                    return Optional.of(Result.error("Cannot test condition with non-terminating Array element %s.", k));
-                }
-            } else if (element.isJsonPrimitive()) {
-                if (i < key.length - 1) {
-                    return Optional.of(Result.error("Cannot test condition with non-terminating Primitive element %s.", k));
-                }
-            } else {
-                return Optional.empty();
+            if (element != null) {
+                return Optional.of(Result.of(element));
             }
+        } catch (Exception ignored) {
         }
 
-        return Optional.of(Result.of(element));
+        return Optional.empty();
     }
 
     final class And implements CardPredicate {

@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.templates.layers.renderers;
 
+import dev.hephaestus.proximity.api.Values;
 import dev.hephaestus.proximity.api.json.JsonElement;
-import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.json.JsonPrimitive;
 import dev.hephaestus.proximity.api.tasks.TextFunction;
 import dev.hephaestus.proximity.text.Style;
@@ -21,9 +21,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.*;
 import java.util.regex.Matcher;
-
-import static dev.hephaestus.proximity.xml.RenderableData.KEY;
-import static dev.hephaestus.proximity.xml.RenderableData.XMLElement.handle;
 
 public class TextLayerRenderer extends LayerRenderer {
     public TextLayerRenderer(RenderableData data) {
@@ -48,7 +45,11 @@ public class TextLayerRenderer extends LayerRenderer {
                 card.getStyle(element.getAttribute("style"))
         );
 
-        List<List<TextComponent>> text = applyCapitalization(parseText(card, style, value), style.capitalization(), style.size());
+        Result<List<List<TextComponent>>> text = applyCapitalization(parseText(card, style, value), style.capitalization(), style.size());
+
+        if (text.isError()) {
+            return text.unwrap();
+        }
 
         if (bounds == null) {
             bounds = element.getProperty(LayerProperty.BOUNDS);
@@ -63,7 +64,7 @@ public class TextLayerRenderer extends LayerRenderer {
                 y,
                 card,
                 style,
-                text,
+                text.get(),
                 alignment,
                 width != null && height != null ? new Rectangle(x, y, width, height) : null,
                 bounds,
@@ -78,7 +79,7 @@ public class TextLayerRenderer extends LayerRenderer {
         return true;
     }
 
-    private List<List<TextComponent>> parseText(RenderableData card, Style baseStyle, String string) {
+    private Result<List<List<TextComponent>>> parseText(RenderableData card, Style baseStyle, String string) {
         Matcher matcher = RenderableData.SUBSTITUTE.matcher(string);
 
         List<List<TextComponent>> result = new ArrayList<>();
@@ -94,46 +95,31 @@ public class TextLayerRenderer extends LayerRenderer {
 
             String functionName = matcher.group("function");
 
-            String[] key = matcher.group("value").split("\\.");
-            JsonElement e = card;
-
-            for (String k : key) {
-                Matcher m = KEY.matcher(k);
-
-                while(m.find()) {
-                    if (e instanceof JsonObject object) {
-                        e = object.get(m.group("key"));
-
-                        if (m.group("range") != null) {
-                            e = handle(e, Integer.decode(m.group("beginning")), Integer.decode(m.group("end")));
-                        }
-                    } else {
-                        throw new UnsupportedOperationException();
-                    }
-                }
-            }
+            JsonElement element = card.getFromFullPath(matcher.group("value"));
 
             previousEnd = matcher.end();
 
-            if (functionName == null) {
-                result.add(Collections.singletonList(new TextComponent.Literal(baseStyle, e instanceof JsonPrimitive primitive && primitive.isString() ? e.getAsString() : e.toString())));
+            if (element == null) {
+                return Result.error("Element '%s' is null.", matcher.group("value"));
+            } else if (functionName == null) {
+                result.add(Collections.singletonList(new TextComponent.Literal(baseStyle, element instanceof JsonPrimitive primitive && primitive.isString() ? element.getAsString() : element.toString())));
             } else {
                 TextFunction function = this.data.getTaskHandler().getTask("TextFunction", functionName);
 
                 if (function != null) {
                     result.addAll(function.apply(
-                            e instanceof JsonPrimitive primitive && primitive.isString()
-                                    ? e.getAsString()
-                                    : e.toString(),
+                            element instanceof JsonPrimitive primitive && primitive.isString()
+                                    ? element.getAsString()
+                                    : element.toString(),
                             card,
                             card.getStyles()::get,
                             baseStyle
                     ));
                 } else {
                     result.add(Collections.singletonList(new TextComponent.Literal(baseStyle,
-                            e instanceof JsonPrimitive primitive && primitive.isString()
-                                    ? e.getAsString()
-                                    : e.toString())
+                            element instanceof JsonPrimitive primitive && primitive.isString()
+                                    ? element.getAsString()
+                                    : element.toString())
                             )
                     );
                 }
@@ -193,15 +179,17 @@ public class TextLayerRenderer extends LayerRenderer {
             }
         }
 
-        return result;
+        return Result.of(result);
     }
 
-    private static List<List<TextComponent>> applyCapitalization(List<List<TextComponent>> text, Style.Capitalization caps, Integer fontSize) {
+    private static Result<List<List<TextComponent>>> applyCapitalization(Result<List<List<TextComponent>>> text, Style.Capitalization caps, Integer fontSize) {
+        if (text.isError()) return text.unwrap();
+
         if (caps == null || fontSize == null) return text;
 
         List<List<TextComponent>> result = new ArrayList<>();
 
-        for (List<TextComponent> list : text) {
+        for (List<TextComponent> list : text.get()) {
             List<TextComponent> level = new ArrayList<>();
 
             for (TextComponent component : list) {
@@ -229,7 +217,7 @@ public class TextLayerRenderer extends LayerRenderer {
             result.add(level);
         }
 
-        return result;
+        return Result.of(result);
     }
 
     public static class Job {
@@ -498,7 +486,7 @@ public class TextLayerRenderer extends LayerRenderer {
                 graphics.push(this.x, this.y);
             }
 
-            if (draw && this.wrap != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+            if (draw && this.wrap != null && Values.DEBUG.get(this.card)) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xF0F0F0), Graphics2D::setColor, Graphics2D::getColor);
 
@@ -633,7 +621,7 @@ public class TextLayerRenderer extends LayerRenderer {
 
             graphics.pop("Text");
 
-            if (draw && !bounds.isEmpty() && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+            if (draw && !bounds.isEmpty() && Values.DEBUG.get(this.card)) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
                 graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
 
@@ -644,9 +632,9 @@ public class TextLayerRenderer extends LayerRenderer {
                 graphics.pop(2);
             }
 
-            if (draw && wrap != null && this.card.getAsJsonObject(Keys.OPTIONS).getAsBoolean("debug")) {
+            if (draw && wrap != null && Values.DEBUG.get(this.card)) {
                 graphics.push(new BasicStroke(5), Graphics2D::setStroke, Graphics2D::getStroke);
-                graphics.push(DrawingUtil.getColor(0xFF0000FF), Graphics2D::setColor, Graphics2D::getColor);
+                graphics.push(DrawingUtil.getColor(0xFFFF00FF), Graphics2D::setColor, Graphics2D::getColor);
 
                 for (Rectangle2D rectangle : wrap) {
                     graphics.drawRect((int) rectangle.getX(), (int) rectangle.getY(), (int) rectangle.getWidth(), (int) rectangle.getHeight());

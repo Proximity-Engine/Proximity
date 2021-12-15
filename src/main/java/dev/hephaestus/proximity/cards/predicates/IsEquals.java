@@ -7,7 +7,7 @@ import dev.hephaestus.proximity.util.Result;
 
 import java.util.Optional;
 
-public record IsEquals(String[] key, String value) implements CardPredicate {
+public record IsEquals(String key, String value) implements CardPredicate {
     @Override
     public Result<Boolean> test(JsonObject card) {
         Optional<Result<JsonElement>> optional = CardPredicate.traverse(card, key);

@@ -1,21 +1,19 @@
 package dev.hephaestus.proximity;
 
 
-import dev.hephaestus.proximity.api.Values;
-import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.api.json.JsonElement;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.json.JsonPrimitive;
+import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.plugins.PluginHandler;
-import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.plugins.PluginPolicy;
+import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.templates.*;
 import dev.hephaestus.proximity.util.Pair;
 import dev.hephaestus.proximity.util.ParsingUtil;
 import dev.hephaestus.proximity.util.Result;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.w3c.dom.Element;
 
 import java.io.BufferedReader;
 import java.io.IOException;

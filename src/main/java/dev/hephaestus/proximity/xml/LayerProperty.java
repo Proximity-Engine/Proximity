@@ -22,7 +22,7 @@ public abstract class LayerProperty<T> {
 
             apply(element, "italicFont", builder::italics);
             apply(element, "capitalization", Style.Capitalization::parse, builder::capitalization);
-            apply(element, "color", Integer::decode, builder::color);
+            apply(element, "color", Long::decode, builder::color);
             apply(element, "size", Integer::parseInt, builder::size);
             apply(element, "kerning", Float::parseFloat, builder::kerning);
 

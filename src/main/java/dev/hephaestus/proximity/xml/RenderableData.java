@@ -504,32 +504,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
 
                 String function = matcher.group("function");
 
-                String[] key = matcher.group("value").split("\\.");
-                JsonElement element = RenderableData.this;
-
-                for (String k : key) {
-                    Matcher m = KEY.matcher(k);
-
-                    while(m.find()) {
-                        if (element instanceof JsonObject object) {
-                            element = object.get(m.group("key"));
-
-                            if (m.group("range") != null) {
-                                int start = Integer.decode(m.group("start"));
-                                Integer end = m.group("end") == null ? null : Integer.decode(m.group("end"));
-
-                                if (end == null || end == start) {
-                                    element = element instanceof JsonArray array ? array.get(start)
-                                            : new JsonPrimitive(Character.toString(element.getAsString().codePointAt(start)));
-                                } else {
-                                    element = handle(element, start, end);
-                                }
-                            }
-                        } else {
-                            throw new UnsupportedOperationException();
-                        }
-                    }
-                }
+                JsonElement element = RenderableData.this.getFromFullPath(matcher.group("value"));
 
                 previousEnd = matcher.end();
 

@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.plugins.util.Artifact;
 import dev.hephaestus.proximity.util.Box;
+import dev.hephaestus.proximity.util.RemoteFileCache;
 import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,16 +17,29 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.net.URL;
 import java.util.*;
 
 public class PluginHandler {
     private final Map<Artifact, Plugin> loadedPlugins = new HashMap<>();
 
-    private Result<Plugin> loadPlugin(URL pluginUrl, TaskHandler taskHandler, boolean help) {
+    private Result<Plugin> loadPlugin(URI pluginUrl, TaskHandler taskHandler, boolean help) {
         Proximity.LOG.debug("Loading plugin from '{}'", pluginUrl);
 
-        ClassLoader pluginClassLoader = new PluginClassLoader(pluginUrl);
+        Result<URL> pluginJar;
+
+        try {
+            pluginJar = RemoteFileCache.load().getLocation(pluginUrl);
+        } catch (IOException e) {
+            return Result.error(e.getMessage());
+        }
+
+        if (pluginJar.isError()) {
+            return pluginJar.unwrap();
+        }
+
+        ClassLoader pluginClassLoader = new PluginClassLoader(pluginJar.get());
         InputStream plugin = pluginClassLoader.getResourceAsStream("plugin.proximity.xml");
 
         if (plugin == null) {
@@ -198,7 +212,7 @@ public class PluginHandler {
 
     public synchronized Result<Plugin> loadPlugin(Artifact artifact, TaskHandler taskHandler, boolean help) {
         if (!this.loadedPlugins.containsKey(artifact)) {
-            Result<URL> artifactUrl = artifact.getLatestMatchingVersionLocation();
+            Result<URI> artifactUrl = artifact.getLatestMatchingVersionLocation();
 
             if (artifactUrl.isOk()) {
                 Result<Plugin> result = this.loadPlugin(artifactUrl.get(), taskHandler, help);

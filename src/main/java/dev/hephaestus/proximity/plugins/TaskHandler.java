@@ -101,9 +101,9 @@ public final class TaskHandler implements TaskScheduler {
 
         handler.put(Effect.DEFINITION, "blur", Blur::apply);
         handler.put(Effect.DEFINITION, "hsb", HSB::apply);
-        handler.put(Effect.DEFINITION, "hue", Hue::apply);
-        handler.put(Effect.DEFINITION, "brightness", Brightness::apply);
-        handler.put(Effect.DEFINITION, "saturation", Saturation::apply);
+        handler.put(Effect.DEFINITION, "hue", HSB::hue);
+        handler.put(Effect.DEFINITION, "saturation", HSB::saturation);
+        handler.put(Effect.DEFINITION, "brightness", HSB::brightness);
 
         handler.put(AttributeModifier.DEFINITION, "join", (input, data) -> {
             if (input.isJsonArray()) {
