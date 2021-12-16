@@ -32,6 +32,7 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -72,6 +73,8 @@ public final class Proximity {
     private final RemoteFileCache cache;
     private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
 
+    private long lastScryfallRequest = 0;
+
     public Proximity(JsonObject options, TaskHandler taskHandler, PluginHandler pluginHandler, LayerRegistry layers) {
         this.options = options;
         this.taskHandler = taskHandler;
@@ -103,71 +106,83 @@ public final class Proximity {
 
     private Result<Deque<RenderableData>> getCardInfo(Deque<CardPrototype> prototypes) {
         LOG.info("Fetching info for {} cards...", prototypes.size());
+        Deque<RenderableData> cards = new ArrayDeque<>();
 
-        long lastRequest = 0;
+        int i = 1;
+        int prototypeCountLength = Integer.toString(prototypes.size()).length();
+        long totalTime = System.currentTimeMillis();
 
-       Deque<RenderableData> cards = new ArrayDeque<>();
+        List<CardPrototype> found = new ArrayList<>(prototypes.size());
 
-       int i = 1;
-       int prototypeCountLength = Integer.toString(prototypes.size()).length();
-       long totalTime = System.currentTimeMillis();
-
-       for (CardPrototype prototype : prototypes) {
+        for (CardPrototype prototype : prototypes) {
            long time = System.currentTimeMillis();
 
            // We respect Scryfall's wishes and wait between 50-100 seconds between requests.
-           if (time - lastRequest < 50) {
+           if (time - this.lastScryfallRequest < 50) {
                try {
-                   LOG.debug("Sleeping for {}ms", time - lastRequest);
-                   Thread.sleep(time - lastRequest);
+                   LOG.debug("Sleeping for {}ms", time - this.lastScryfallRequest);
+                   Thread.sleep(time - this.lastScryfallRequest);
                } catch (InterruptedException e) {
                    e.printStackTrace();
                }
            }
 
-           lastRequest = System.currentTimeMillis();
-
            getCardInfo(prototype)
+                   .ifError(LOG::warn)
                    .ifPresent(raw -> {
-                       raw.getAsJsonObject("proximity", "options")
-                               .copyAll(this.options)
-                               .copyAll(prototype.options());
+                       prototype.setData(raw);
+                       found.add(prototype);
+                   });
 
-                       Values.LIST_NAME.set(raw, prototype.listName());
+            System.out.printf("%" + prototypeCountLength + "d/%d\r", i++, prototypes.size());
+        }
 
-                       for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
-                           int finalJ = j + prototype.number();
-                           Values.ITEM_NUMBER.set(raw, finalJ);
+        i = 0;
 
-                           if (prototype.source().exists("template.xml")) {
-                               XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                       .then(this::checkVersion)
-                                       .then(root -> this.loadPluginsAndTasks(prototype.source(), root, false))
-                                       .then((List<Plugin> plugins) -> {
-                                           plugins.forEach(plugin -> plugin.initialize(raw));
-                                           return this.runScripts(raw, prototype.overrides());
-                                       })
-                                       .then((List<JsonObject> list) -> {
-                                           list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                                   .then(e -> this.resolveResources(e, prototype.source()))
-                                                   .then(e -> this.resolveImports(e, prototype.source()))
-                                                   .then(root -> Result.of(new RenderableData(this, prototype.source(), root, card)))
-                                                   .then(renderable -> {
-                                                       cards.add(renderable);
-                                                       return Result.of((Void) null);
-                                                   })
-                                           );
+        LOG.info("Processing info for {} cards...", found.size());
 
-                                           return Result.of((Void) null);
-                                       });
-                           } else {
-                               LOG.warn("template.xml not found for template {}", prototype.source().getTemplateName());
-                           }
-                       }
-                   })
-                   .ifError(LOG::warn);
-           System.out.printf("%" + prototypeCountLength + "d/%d\r", i++, prototypes.size());
-       }
+        int foundLength = Integer.toString(found.size()).length();
+
+
+        for (CardPrototype prototype : found) {
+            prototype.getData().getAsJsonObject("proximity", "options")
+                    .copyAll(this.options)
+                    .copyAll(prototype.options());
+
+            Values.LIST_NAME.set(prototype.getData(), prototype.listName());
+
+            for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
+                int finalJ = j + prototype.number();
+                Values.ITEM_NUMBER.set(prototype.getData(), finalJ);
+
+                if (prototype.source().exists("template.xml")) {
+                    XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                            .then(this::checkVersion)
+                            .then(root -> this.loadPluginsAndTasks(prototype.source(), root, false))
+                            .then((List<Plugin> plugins) -> {
+                                plugins.forEach(plugin -> plugin.initialize(prototype.getData()));
+                                return this.runScripts(prototype.getData(), prototype.overrides());
+                            })
+                            .then((List<JsonObject> list) -> {
+                                list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                        .then(e -> this.resolveResources(e, prototype.source()))
+                                        .then(e -> this.resolveImports(e, prototype.source()))
+                                        .then(root -> Result.of(new RenderableData(this, prototype.source(), root, card)))
+                                        .then(renderable -> {
+                                            cards.add(renderable);
+                                            return Result.of((Void) null);
+                                        })
+                                );
+
+                                return Result.of((Void) null);
+                            });
+                } else {
+                    LOG.warn("template.xml not found for template {}", prototype.source().getTemplateName());
+                }
+
+                System.out.printf("%" + foundLength + "d/%d\r", i++, found.size());
+            }
+        }
 
         System.out.printf("%" + prototypeCountLength + "d/%d%n", i - 1, prototypes.size());
 
@@ -344,60 +359,66 @@ public final class Proximity {
     }
 
     private Result<JsonObject> getCardInfo(CardPrototype prototype) {
-        StringBuilder uri = new StringBuilder("https://api.scryfall.com/cards/named?");
+        StringBuilder builder = new StringBuilder("https://api.scryfall.com/cards/named?");
 
-        uri.append("fuzzy=").append(URLEncoder.encode(prototype.cardName(), StandardCharsets.UTF_8));
+        builder.append("fuzzy=").append(URLEncoder.encode(prototype.cardName(), StandardCharsets.UTF_8));
 
         if (prototype.options().has("set_code")) {
             if (prototype.options().has("collector_number")) {
-                uri = new StringBuilder("https://api.scryfall.com/cards/")
+                builder = new StringBuilder("https://api.scryfall.com/cards/")
                         .append(prototype.options().getAsString("set_code").toLowerCase(Locale.ROOT))
                         .append("/")
                         .append(prototype.options().getAsString("collector_number"))
                 ;
             } else {
-                uri.append("&set=").append(prototype.options().getAsString("set_code"));
+                builder.append("&set=").append(prototype.options().getAsString("set_code"));
             }
         }
 
-        String string = uri.toString();
+        String string = builder.toString();
 
         return this.cardInfo.computeIfAbsent(string, s -> {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(s))
-                    .GET()
-                    .build();
-
             try {
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                return Result.of(JsonObject.parseObject(JsonReader.json5(this.cache.compute(URI.create(s), uri -> {
+                    HttpClient client = HttpClient.newHttpClient();
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(uri)
+                            .GET()
+                            .build();
 
-                if (response.statusCode() == 200) {
-                    String responseBody = response.body();
-                    JsonObject cardInfo = JsonObject.parseObject(JsonReader.json5(responseBody));
+                    this.lastScryfallRequest = System.currentTimeMillis();
 
-                    return Result.of(cardInfo);
-                } else {
-                    StringBuilder message = new StringBuilder("Could not find card ").append(prototype.cardName());
+                    try {
+                        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                    if (prototype.options().has("set_code")) {
-                        message.append(" (")
-                                .append(prototype.options().getAsString("set_code").toUpperCase(Locale.ROOT))
-                                .append(")");
+                        if (response.statusCode() == 200) {
+                            return new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8));
+                        } else {
+                            StringBuilder message = new StringBuilder("Could not find card ").append(prototype.cardName());
 
-                        if (prototype.options().has("collector_number")) {
-                            message.append(" #")
-                                    .append(prototype.options().getAsString("collector_number").toUpperCase(Locale.ROOT));
+                            if (prototype.options().has("set_code")) {
+                                message.append(" (")
+                                        .append(prototype.options().getAsString("set_code").toUpperCase(Locale.ROOT))
+                                        .append(")");
+
+                                if (prototype.options().has("collector_number")) {
+                                    message.append(" #")
+                                            .append(prototype.options().getAsString("collector_number").toUpperCase(Locale.ROOT));
+                                }
+                            }
+
+                            JsonObject body = JsonObject.parseObject(JsonReader.json(response.body()));
+                            String details = "[" + response.statusCode() + "] " + (body.has("details") ? body.getAsString("details") : "");
+                            LOG.error("{}: {}", message.toString(), details);
+
+                            return null;
                         }
+                    } catch (Exception e) {
+                        return null;
                     }
-
-                    JsonObject body = JsonObject.parseObject(JsonReader.json(response.body()));
-                    String details = "[" + response.statusCode() + "] " + (body.has("details") ? body.getAsString("details") : "");
-
-                    return Result.error("%s: %s", message.toString(), details);
-                }
-            } catch (Exception e) {
-                return Result.error(e.getMessage());
+                }))));
+            } catch (IOException e) {
+                return Result.error("Failed to get info for '%s': %s", prototype.cardName(), e.getMessage());
             }
         });
     }

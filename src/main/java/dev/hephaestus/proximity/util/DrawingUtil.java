@@ -17,9 +17,17 @@ public final class DrawingUtil {
 
     public static Font getFont(TemplateSource files, String fontName, float size) {
         Font font = FONTS.computeIfAbsent(fontName, name -> {
-            if (files.exists("fonts/" + fontName + ".ttf")) {
+            String fontLocation = null;
+
+            if (files.exists("fonts/" + fontName + ".otf")) {
+                fontLocation = "fonts/" + fontName + ".otf";
+            } else if (files.exists("fonts/" + fontName + ".ttf")) {
+                fontLocation = "fonts/" + fontName + ".ttf";
+            }
+
+            if (fontLocation != null) {
                 try {
-                    InputStream stream = files.getInputStream("fonts/" + fontName + ".ttf");
+                    InputStream stream = files.getInputStream(fontLocation);
 
                     return stream != null ? Font.createFont(Font.TRUETYPE_FONT, stream) : null;
                 } catch (FontFormatException | IOException ignored) {

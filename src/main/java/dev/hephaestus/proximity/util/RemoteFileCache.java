@@ -59,26 +59,7 @@ public final class RemoteFileCache {
         }
     }
     private Result<Path> fetch(URI file) throws IOException {
-        Path path;
-
-        do {
-            path = Path.of(".cache", randomId());
-        } while (Files.exists(path));
-
-        if (!Files.exists(path.getParent())) {
-            Files.createDirectories(path.getParent());
-        }
-
-        Files.copy(
-                file.toURL().openStream(),
-                path
-        );
-
-        this.index.addProperty(file.toString(), path.toString());
-
-        Files.writeString(Path.of(".cache", "index.json"), this.index.toString());
-
-        return Result.of(path);
+        return Result.of(this.compute(file, uri -> uri.toURL().openStream()));
     }
 
     public InputStream open(URI file) throws IOException {
@@ -93,6 +74,26 @@ public final class RemoteFileCache {
             } else {
                 return Files.newInputStream(result.get());
             }
+        }
+    }
+
+    public Path compute(URI file, Fetcher fetcher) throws IOException {
+        if (!this.index.has(file.toString())) {
+            Path path;
+
+            do {
+                path = Path.of(".cache", randomId());
+            } while (Files.exists(path));
+
+            Files.copy(fetcher.fetch(file), path);
+
+            this.index.addProperty(file.toString(), path.toString());
+
+            Files.writeString(Path.of(".cache", "index.json"), this.index.toString());
+
+            return path;
+        } else {
+            return Path.of(this.index.getAsString(file.toString()));
         }
     }
 
@@ -123,5 +124,9 @@ public final class RemoteFileCache {
             result[i] = CHARS[randomCharIndex];
         }
         return new String(result);
+    }
+
+    public interface Fetcher {
+        InputStream fetch(URI uri) throws IOException;
     }
 }
