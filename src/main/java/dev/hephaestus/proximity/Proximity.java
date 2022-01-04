@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class Proximity {
@@ -137,58 +138,61 @@ public final class Proximity {
             System.out.printf("%" + prototypeCountLength + "d/%d\r", i++, prototypes.size());
         }
 
-        i = 0;
+        LOG.info("Successfully found {} cards. Took {}ms", found.size(), System.currentTimeMillis() - totalTime);
 
-        LOG.info("Processing info for {} cards...", found.size());
+        totalTime = System.currentTimeMillis();
 
-        int foundLength = Integer.toString(found.size()).length();
+        Deque<String> errors = new ConcurrentLinkedDeque<>();
 
+        LOG.info("Processing {} cards", found.size());
 
         for (CardPrototype prototype : found) {
-            prototype.getData().getAsJsonObject("proximity", "options")
-                    .copyAll(this.options)
-                    .copyAll(prototype.options());
-
-            Values.LIST_NAME.set(prototype.getData(), prototype.listName());
-
-            for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
-                int finalJ = j + prototype.number();
-                Values.ITEM_NUMBER.set(prototype.getData(), finalJ);
-
-                if (prototype.source().exists("template.xml")) {
-                    XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                            .then(this::checkVersion)
-                            .then(root -> this.loadPluginsAndTasks(prototype.source(), root, false))
-                            .then((List<Plugin> plugins) -> {
-                                plugins.forEach(plugin -> plugin.initialize(prototype.getData()));
-                                return this.runScripts(prototype.getData(), prototype.overrides());
-                            })
-                            .then((List<JsonObject> list) -> {
-                                list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
-                                        .then(e -> this.resolveResources(e, prototype.source()))
-                                        .then(e -> this.resolveImports(e, prototype.source()))
-                                        .then(root -> Result.of(new RenderableData(this, prototype.source(), root, card)))
-                                        .then(renderable -> {
-                                            cards.add(renderable);
-                                            return Result.of((Void) null);
-                                        })
-                                );
-
-                                return Result.of((Void) null);
-                            });
-                } else {
-                    LOG.warn("template.xml not found for template {}", prototype.source().getTemplateName());
-                }
-
-                System.out.printf("%" + foundLength + "d/%d\r", i++, found.size());
-            }
+            this.processCard(prototype, cards::add, errors::add);
         }
 
-        System.out.printf("%" + prototypeCountLength + "d/%d%n", i - 1, prototypes.size());
+        LOG.info("Successfully processed {} cards. Took {}ms", cards.size(), System.currentTimeMillis() - totalTime);
 
-        LOG.info("Successfully found {} cards. Took {}ms", cards.size(), System.currentTimeMillis() - totalTime);
+        return errors.isEmpty()
+                ? Result.of(cards)
+                : Result.error("Error rendering cards:\n\t%s", String.join("\n\t", errors));
+    }
 
-        return Result.of(cards);
+    private void processCard(CardPrototype prototype, Consumer<RenderableData> dataConsumer, Consumer<String> errorConsumer) {
+        prototype.getData().getAsJsonObject("proximity", "options")
+                .copyAll(this.options)
+                .copyAll(prototype.options());
+
+        Values.LIST_NAME.set(prototype.getData(), prototype.listName());
+
+        for (int j = 0; j < prototype.options().getAsInt("count"); ++j) {
+            int finalJ = j + prototype.number();
+            Values.ITEM_NUMBER.set(prototype.getData(), finalJ);
+
+            if (prototype.source().exists("template.xml")) {
+                XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                        .then(this::checkVersion)
+                        .then(root -> this.loadPluginsAndTasks(prototype.source(), root, false))
+                        .then((List<Plugin> plugins) -> {
+                            plugins.forEach(plugin -> plugin.initialize(prototype.getData()));
+                            return this.runScripts(prototype.getData(), prototype.overrides());
+                        })
+                        .then((List<JsonObject> list) -> {
+                            list.forEach(card -> XMLUtil.load(prototype.source(), "template.xml").ifError(LOG::warn)
+                                    .then(e -> this.resolveResources(e, prototype.source()))
+                                    .then(e -> this.resolveImports(e, prototype.source()))
+                                    .then(root -> Result.of(new RenderableData(this, prototype.source(), root, card)))
+                                    .then(renderable -> {
+                                        dataConsumer.accept(renderable);
+                                        return Result.of((Void) null);
+                                    })
+                            );
+
+                            return Result.of((Void) null);
+                        }).ifError(errorConsumer::accept);
+            } else {
+                LOG.error("template.xml not found for template {}", prototype.source().getTemplateName());
+            }
+        }
     }
 
     private Result<Element> checkVersion(Element root) {
@@ -418,7 +422,7 @@ public final class Proximity {
                     }
                 }))));
             } catch (IOException e) {
-                return Result.error("Failed to get info for '%s': %s", prototype.cardName(), e.getMessage());
+                return Result.error("Failed to get info for '%s': %s", prototype.cardName(), ExceptionUtil.getErrorMessage(e));
             }
         });
     }
@@ -460,7 +464,7 @@ public final class Proximity {
                         ? Result.of(finishedCards)
                         : Result.error("Error rendering cards:\n\t%s", String.join("\n\t", errors));
             } catch (InterruptedException e) {
-                return Result.error(e.getMessage());
+                return Result.error(ExceptionUtil.getErrorMessage(e));
             }
         }
 
@@ -495,7 +499,7 @@ public final class Proximity {
             }
         } catch (Throwable throwable) {
             LOG.error(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}FAILED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_RED, Logging.ANSI_RESET);
-            LOG.error(throwable.getMessage());
+            LOG.error(ExceptionUtil.getErrorMessage(throwable));
 
             for (StackTraceElement element : throwable.getStackTrace()) {
                 LOG.debug(element);

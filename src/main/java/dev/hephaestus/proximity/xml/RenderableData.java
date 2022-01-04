@@ -243,7 +243,7 @@ public final class RenderableData extends JsonObject implements TemplateSource {
                             System.out.println();
                         }
                     } catch (NoSuchAttributeException e) {
-                        Proximity.LOG.debug(e.getMessage());
+                        Proximity.LOG.debug(ExceptionUtil.getErrorMessage(e));
                     }
                 })
         );

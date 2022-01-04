@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.plugins.util;
 import com.github.yuchi.semver.Range;
 import com.github.yuchi.semver.Version;
 import dev.hephaestus.proximity.Proximity;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -12,9 +13,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -89,7 +88,7 @@ public final class Artifact {
 
             return Result.of(document.getDocumentElement());
         } catch (Exception e) {
-            return Result.error(e.getMessage());
+            return Result.error(ExceptionUtil.getErrorMessage(e));
         }
     }
 

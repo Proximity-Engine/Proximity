@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.api.tasks;
 import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.plugins.TaskDefinition;
 import dev.hephaestus.proximity.plugins.util.TaskParser;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Element;
 
@@ -32,7 +33,7 @@ public interface DataFinalization {
                         try {
                             handler.invoke(null);
                         } catch (Exception e) {
-                            Proximity.LOG.error(e.getMessage());
+                            Proximity.LOG.error(ExceptionUtil.getErrorMessage(e));
                         }
                     })
             );

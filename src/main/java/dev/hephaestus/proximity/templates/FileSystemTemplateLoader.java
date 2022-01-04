@@ -1,5 +1,6 @@
 package dev.hephaestus.proximity.templates;
 
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.Result;
 
 import java.io.IOException;
@@ -11,7 +12,7 @@ public record FileSystemTemplateLoader(Path root) implements TemplateLoader {
         try {
             return Result.of(new FileSystemTemplateSource(this.root.resolve(name)));
         } catch (IOException e) {
-            return Result.error(e.getMessage());
+            return Result.error(ExceptionUtil.getErrorMessage(e));
         }
     }
 }

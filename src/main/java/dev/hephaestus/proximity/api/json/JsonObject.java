@@ -1,6 +1,5 @@
 package dev.hephaestus.proximity.api.json;
 
-import org.graalvm.polyglot.HostAccess;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
 import org.quiltmc.json5.JsonWriter;

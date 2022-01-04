@@ -19,7 +19,7 @@ public class ParsingUtil {
         try {
             return Result.of(JsonElement.parseElement(JsonReader.json(value)));
         } catch (IOException e) {
-            return Result.error(e.getMessage());
+            return Result.error(ExceptionUtil.getErrorMessage(e));
         }
     }
 

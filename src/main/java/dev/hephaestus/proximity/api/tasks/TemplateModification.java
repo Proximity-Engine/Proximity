@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.plugins.TaskDefinition;
 import dev.hephaestus.proximity.plugins.util.TaskParser;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.xml.RenderableData;
 import org.w3c.dom.Element;
@@ -33,7 +34,7 @@ public interface TemplateModification {
                         try {
                             handler.invoke(null, data, layers);
                         } catch (Exception e) {
-                            Proximity.LOG.error(e.getMessage());
+                            Proximity.LOG.error(ExceptionUtil.getErrorMessage(e));
                         }
                     })
             );

@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.plugins.util.Artifact;
 import dev.hephaestus.proximity.util.Box;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.RemoteFileCache;
 import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Document;
@@ -32,7 +33,7 @@ public class PluginHandler {
         try {
             pluginJar = RemoteFileCache.load().getLocation(pluginUrl);
         } catch (IOException e) {
-            return Result.error(e.getMessage());
+            return Result.error(ExceptionUtil.getErrorMessage(e));
         }
 
         if (pluginJar.isError()) {
@@ -64,7 +65,7 @@ public class PluginHandler {
 
             return Result.of(builder.build());
         } catch (SAXException | ParserConfigurationException | IOException e) {
-            return Result.error("%s: %s", e.getClass().getSimpleName(), e.getMessage());
+            return Result.error("%s: %s", e.getClass().getSimpleName(), ExceptionUtil.getErrorMessage(e));
         }
     }
 
@@ -204,7 +205,7 @@ public class PluginHandler {
                 taskHandler.put(taskDefinition, parsingResult.get());
             }
         } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
-            return Result.error("%s: %s", e.getClass().getSimpleName(), e.getMessage());
+            return Result.error("%s: %s", e.getClass().getSimpleName(), ExceptionUtil.getErrorMessage(e));
         }
 
         return Result.of(null);

@@ -166,7 +166,7 @@ public class SVGLayerRenderer extends LayerRenderer {
 
             return Result.of(factory.createSVGDocument(src, new StringReader(svgString)));
         } catch (ParserConfigurationException | IOException | SAXException | DOMException e) {
-            return Result.error(e.getMessage());
+            return Result.error(ExceptionUtil.getErrorMessage(e));
         }
     }
 

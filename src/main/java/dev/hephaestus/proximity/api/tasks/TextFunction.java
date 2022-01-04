@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.plugins.TaskDefinition;
 import dev.hephaestus.proximity.plugins.util.TaskParser;
 import dev.hephaestus.proximity.text.Style;
 import dev.hephaestus.proximity.text.TextComponent;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.Outline;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.util.Shadow;
@@ -99,7 +100,7 @@ public interface TextFunction {
                             //noinspection unchecked
                             return (List<List<TextComponent>>) handler.invoke(null, input, data, styles, baseStyle);
                         } catch (Exception e) {
-                            Proximity.LOG.error(e.getMessage());
+                            Proximity.LOG.error(ExceptionUtil.getErrorMessage(e));
                             return null;
                         }
                     })

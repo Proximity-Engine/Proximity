@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.Proximity;
 import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.plugins.TaskDefinition;
 import dev.hephaestus.proximity.plugins.util.TaskParser;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.Result;
 import dev.hephaestus.proximity.xml.RenderableData;
 import org.w3c.dom.Element;
@@ -35,13 +36,7 @@ public interface Effect {
                         try {
                             handler.invoke(null, card, image, effect);
                         } catch (Exception e) {
-                            Throwable t = e;
-
-                            if (e.getMessage() == null && e.getCause() != null) {
-                                t = e.getCause();
-                            }
-
-                            Proximity.LOG.error(t.getMessage());
+                            Proximity.LOG.error(ExceptionUtil.getErrorMessage(e));
                         }
                     })
             );

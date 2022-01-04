@@ -6,7 +6,6 @@ import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.json.JsonPrimitive;
 import dev.hephaestus.proximity.cards.CardPrototype;
 import dev.hephaestus.proximity.plugins.PluginHandler;
-import dev.hephaestus.proximity.plugins.PluginPolicy;
 import dev.hephaestus.proximity.plugins.TaskHandler;
 import dev.hephaestus.proximity.templates.*;
 import dev.hephaestus.proximity.util.Pair;
@@ -19,7 +18,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.Policy;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.regex.Matcher;
@@ -29,9 +27,6 @@ public class Main {
     public static Pattern LINE = Pattern.compile("^(?:(?<count>\\d+[xX]?) )?(?<name>.+?)(?: \\((?<set>.+)\\)(?: (?<collector>[a-zA-Z0-9]+?))?)?(?: (?<options>--.+))*?$");
 
     public static void main(String[] argArray) {
-        Policy.setPolicy(new PluginPolicy());
-        System.setSecurityManager(new SecurityManager());
-
         Pair<JsonObject, JsonObject> args = parseArgs(argArray);
 
         JsonObject options = args.left();

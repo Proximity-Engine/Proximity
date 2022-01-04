@@ -5,6 +5,7 @@ import dev.hephaestus.proximity.cards.predicates.IsEquals;
 import dev.hephaestus.proximity.cards.predicates.IsPresent;
 import dev.hephaestus.proximity.cards.predicates.Range;
 import dev.hephaestus.proximity.templates.TemplateSource;
+import dev.hephaestus.proximity.util.ExceptionUtil;
 import dev.hephaestus.proximity.util.ParsingUtil;
 import dev.hephaestus.proximity.util.Result;
 import org.w3c.dom.Document;
@@ -130,7 +131,7 @@ public final class XMLUtil {
 
             return Result.of(document.getDocumentElement());
         } catch (IOException | SAXException e) {
-            return Result.error("Exception loading template '%s': %s", name, e.getMessage());
+            return Result.error("Exception loading template '%s': %s", name, ExceptionUtil.getErrorMessage(e));
         }
     }
 

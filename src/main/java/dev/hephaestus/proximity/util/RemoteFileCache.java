@@ -102,7 +102,7 @@ public final class RemoteFileCache {
             try {
                 return Result.of(Path.of(this.index.getAsString(file.toString())).toUri().toURL());
             } catch (MalformedURLException e) {
-                return Result.error(e.getMessage());
+                return Result.error(ExceptionUtil.getErrorMessage(e));
             }
         } else {
             Result<Path> result = fetch(file);
