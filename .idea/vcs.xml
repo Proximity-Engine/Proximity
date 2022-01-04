@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/run/set_symbols/1.0.0" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/run/templates/M15-Master-Template" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/run/templates/normal" vcs="Git" />
+  </component>
+</project>
