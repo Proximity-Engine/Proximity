@@ -8,6 +8,7 @@ import dev.hephaestus.proximity.api.json.JsonObject;
 import dev.hephaestus.proximity.api.tasks.DataFinalization;
 import dev.hephaestus.proximity.api.tasks.DataPreparation;
 import dev.hephaestus.proximity.cards.CardPrototype;
+import dev.hephaestus.proximity.mtg.MTGValues;
 import dev.hephaestus.proximity.plugins.Plugin;
 import dev.hephaestus.proximity.plugins.PluginHandler;
 import dev.hephaestus.proximity.plugins.TaskHandler;
@@ -472,9 +473,14 @@ public final class Proximity {
     }
 
     private void render(RenderableData card, AtomicInteger finishedCards, Deque<String> errors, int countStrLen, int cardCount) {
-        long cardTime = System.currentTimeMillis();
-
         String name = card.getName();
+
+        if (Values.OVERWRITE.exists(card) && !Values.OVERWRITE.get(card) && Files.exists(card.getPath())) {
+            LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d           %-55s {}PASS{}", finishedCards.get(), cardCount, name), Logging.ANSI_YELLOW, Logging.ANSI_RESET);
+            return;
+        }
+
+        long cardTime = System.currentTimeMillis();
 
         try {
             BufferedImage image = new BufferedImage(card.getWidth(), card.getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -482,15 +488,7 @@ public final class Proximity {
             Result<Void> result = card.render(new StatefulGraphics(image)).ifError(errors::add);
 
             if (result.isOk()) {
-                Path path = Path.of("images");
-
-                for (JsonElement element : card.getAsJsonArray("proximity", "path")) {
-                    path = path.resolve(element.getAsString());
-                }
-
-                path = path.resolveSibling(path.getFileName().toString() + ".png");
-
-                this.save(image, path);
+                this.save(image, card.getPath());
 
                 finishedCards.incrementAndGet();
                 LOG.info(String.format("%" + countStrLen + "d/%" + countStrLen + "d  %5dms  %-55s {}SAVED{}", finishedCards.get(), cardCount, System.currentTimeMillis() - cardTime, name), Logging.ANSI_GREEN, Logging.ANSI_RESET);

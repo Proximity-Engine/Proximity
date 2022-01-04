@@ -52,6 +52,8 @@ public class ParsingUtil {
                     } else {
                         builder = new StringBuilder();
                     }
+                } else if (string.equals("~")) {
+                    builder = new StringBuilder();
                 } else {
                     builder.append(string);
                 }

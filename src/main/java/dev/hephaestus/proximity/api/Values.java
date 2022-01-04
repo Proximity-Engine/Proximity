@@ -9,6 +9,7 @@ public final class Values {
     public static final Value<String> LIST_NAME = Value.createString("list_name");
     public static final Value<Boolean> HELP = Value.createBoolean("options", "help");
     public static final Value<Boolean> DEBUG = Value.createBoolean("options" , "debug");
+    public static final Value<Boolean> OVERWRITE = Value.createBoolean("options", "overwrite");
 
     private Values() {
     }

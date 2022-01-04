@@ -22,6 +22,7 @@ import org.w3c.dom.NodeList;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -369,6 +370,18 @@ public final class RenderableData extends JsonObject implements TemplateSource {
 
     public LayerRenderer getLayerRenderer(String tagName) {
         return this.layerRenderers.get(tagName);
+    }
+
+    public Path getPath() {
+        Path path = Path.of("images");
+
+        for (JsonElement element : Values.PATH.get(this)) {
+            path = path.resolve(element.getAsString());
+        }
+
+        path = path.resolveSibling(path.getFileName().toString() + ".png");
+
+        return path;
     }
 
     public final class XMLElement {
