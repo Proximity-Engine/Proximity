@@ -13,12 +13,14 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ImageLayerRenderer extends LayerRenderer {
-    private static final Map<String, Pair<Integer, Integer>> IMAGE_DIMENSION_CACHE = new ConcurrentHashMap<>();
+    private static final Map<RenderableData.XMLElement, Map<String, Pair<Integer, Integer>>> IMAGE_DIMENSION_CACHE = new ConcurrentHashMap<>();
 
     public ImageLayerRenderer(RenderableData data) {
         super( data);
@@ -28,6 +30,9 @@ public class ImageLayerRenderer extends LayerRenderer {
     public Result<Optional<Rectangles>> renderLayer(RenderableData card, RenderableData.XMLElement element, StatefulGraphics graphics, Rectangles wrap, boolean draw, Box<Float> scale, Rectangle2D bounds) {
         int x = (element.hasAttribute("x") ? Integer.decode(element.getAttribute("x")) : 0);
         int y = (element.hasAttribute("y") ? Integer.decode(element.getAttribute("y")) : 0);
+
+        ContentAlignment verticalAlignment = element.hasAttribute("vertical_alignment") ? ContentAlignment.valueOf(element.getAttribute("vertical_alignment").toUpperCase(Locale.ROOT)) : ContentAlignment.START;
+        ContentAlignment horizontalAlignment = element.hasAttribute("horizontal_alignment") ? ContentAlignment.valueOf(element.getAttribute("horizontal_alignment").toUpperCase(Locale.ROOT)) : ContentAlignment.START;
 
         String cacheKey;
 
@@ -48,6 +53,9 @@ public class ImageLayerRenderer extends LayerRenderer {
                 throw new RuntimeException("Image '" + cacheKey + "' could not be found.");
             }
 
+            x = align(x, image.getWidth(), horizontalAlignment);
+            y = align(y, image.getHeight(), verticalAlignment);
+
             graphics.push(x, y);
             graphics.drawImage(image, null, null);
             graphics.pop();
@@ -59,7 +67,7 @@ public class ImageLayerRenderer extends LayerRenderer {
                     image.getHeight()
             ))));
         } else {
-            Pair<Integer, Integer> dimensions = IMAGE_DIMENSION_CACHE.computeIfAbsent(cacheKey, key -> {
+            Pair<Integer, Integer> dimensions = IMAGE_DIMENSION_CACHE.computeIfAbsent(element, e -> new HashMap<>()).computeIfAbsent(cacheKey, key -> {
                 Integer width = element.hasAttribute("width") ? Integer.decode(element.getAttribute("width")) : null;
                 Integer height = element.hasAttribute("height") ? Integer.decode(element.getAttribute("height")) : null;
 
@@ -74,8 +82,20 @@ public class ImageLayerRenderer extends LayerRenderer {
                 return new Pair<>(image.getWidth(), image.getHeight());
             });
 
+            x = align(x, dimensions.left(), horizontalAlignment);
+            y = align(y, dimensions.right(), verticalAlignment);
+
             return Result.of(Optional.of(Rectangles.singleton(new Rectangle2D.Double(x, y, dimensions.left(), dimensions.right()))));
         }
+    }
+
+    private int align(int pos, int size, ContentAlignment alignment) {
+        switch (alignment) {
+            case MIDDLE -> pos -= (int) (size * 0.5);
+            case END -> pos -= size;
+        }
+
+        return pos;
     }
 
     private BufferedImage getImage(RenderableData.XMLElement element) {
