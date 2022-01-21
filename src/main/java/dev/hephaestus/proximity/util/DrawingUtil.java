@@ -41,7 +41,7 @@ public final class DrawingUtil {
     }
 
     public static Color getColor(int color) {
-        return COLORS.computeIfAbsent(color, Color::new);
+        return COLORS.computeIfAbsent(color, value -> new Color(value, ((value >>> 24) > 0)));
     }
 
     public static Rectangle2D encompassing(Rectangle2D r1, Rectangle2D r2) {

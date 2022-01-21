@@ -30,7 +30,12 @@ public final class RemoteFileCache {
     }
 
     public static RemoteFileCache load() throws IOException {
-        Path path = Path.of(".cache", "index.json");
+        Path cache = Path.of(".cache");
+        Path path = cache.resolve("index.json");
+
+        if (!Files.exists(cache)) {
+            Files.createDirectories(cache);
+        }
 
         if (Files.exists(path)) {
             return new RemoteFileCache(JsonObject.parseObject(JsonReader.json(path)));

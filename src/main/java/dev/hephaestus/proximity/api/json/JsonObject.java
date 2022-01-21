@@ -120,7 +120,12 @@ public class JsonObject extends JsonElement {
 
                     if (m.group("range") != null) {
                         int start = Integer.decode(m.group("start"));
-                        Integer end = m.group("end") == null ? null : Integer.decode(m.group("end"));
+                        String endString = m.group("end");
+                        Integer end = endString == null
+                                ? null
+                                : endString.length() > 1
+                                    ? Integer.decode(endString.substring(1))
+                                    : -1;
 
                         if (end == null || end == start) {
                             element = element instanceof JsonArray array ? array.get(start)
@@ -129,6 +134,10 @@ public class JsonObject extends JsonElement {
                             element = handle(element, start, end);
                         }
                     }
+                } else if (m.group("key").equals("length") && (element.isJsonArray() || (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()))) {
+                    element = new JsonPrimitive(element.isJsonArray() ? element.getAsJsonArray().size() : element.getAsJsonPrimitive().getAsString().length());
+                } else if (element == null) {
+                    return null;
                 } else {
                     throw new UnsupportedOperationException();
                 }

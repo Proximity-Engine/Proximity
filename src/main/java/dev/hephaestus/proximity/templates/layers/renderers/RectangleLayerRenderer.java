@@ -28,7 +28,7 @@ public class RectangleLayerRenderer extends LayerRenderer {
 
         Rectangle2D rectangle = new Rectangle2D.Double(x, y, width, height);
 
-        if ((color & 0xFF000000) != 0) {
+        if (draw && (color & 0xFF000000) != 0) {
             graphics.push(new Color(color, (color & 0xFF000000) >>> 24 != 255), Graphics2D::setColor, Graphics2D::getColor);
             graphics.fill(rectangle);
             graphics.pop();

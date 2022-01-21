@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'dev.hephaestus'
-version '0.6.0'
+version '0.6.1'
 
 java {
     withSourcesJar()
@@ -32,7 +32,7 @@ dependencies {
     implementation(shadow('org.graalvm.js:js:21.1.0'))
     implementation(shadow('org.graalvm.js:js-scriptengine:21.1.0'))
     implementation(shadow('com.github.yuchi:npm-semver:1.0.0'))
-    implementation('dev.hephaestus:proximity-mtg:1.0.49')
+    implementation('dev.hephaestus:proximity-mtg:1.0.55')
 }
 
 test {
