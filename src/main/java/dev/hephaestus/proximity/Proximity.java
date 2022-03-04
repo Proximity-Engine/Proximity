@@ -373,8 +373,11 @@ public final class Proximity {
                 builder = new StringBuilder("https://api.scryfall.com/cards/")
                         .append(prototype.options().getAsString("set_code").toLowerCase(Locale.ROOT))
                         .append("/")
-                        .append(prototype.options().getAsString("collector_number"))
-                ;
+                        .append(prototype.options().getAsString("collector_number"));
+
+                if (prototype.options().has("lang")) {
+                    builder.append("/").append(prototype.options().getAsString("lang"));
+                }
             } else {
                 builder.append("&set=").append(prototype.options().getAsString("set_code"));
             }
