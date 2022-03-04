@@ -74,6 +74,7 @@ public final class Proximity {
     private final LayerRegistry layers;
     private final RemoteFileCache cache;
     private final HashMap<String, Result<JsonObject>> cardInfo = new HashMap<>();
+    private final HashMap<String, JsonObject> setInfo = new HashMap<>();
 
     private long lastScryfallRequest = 0;
 
@@ -387,7 +388,7 @@ public final class Proximity {
 
         return this.cardInfo.computeIfAbsent(string, s -> {
             try {
-                return Result.of(JsonObject.parseObject(JsonReader.json5(this.cache.compute(URI.create(s), uri -> {
+                JsonObject card = JsonObject.parseObject(JsonReader.json5(this.cache.compute(URI.create(s), uri -> {
                     HttpClient client = HttpClient.newHttpClient();
                     HttpRequest request = HttpRequest.newBuilder()
                             .uri(uri)
@@ -424,7 +425,48 @@ public final class Proximity {
                     } catch (Exception e) {
                         return null;
                     }
-                }))));
+                })));
+
+                long time = System.currentTimeMillis();
+
+                if (time - this.lastScryfallRequest < 50) {
+                    try {
+                        LOG.debug("Sleeping for {}ms", time - this.lastScryfallRequest);
+                        Thread.sleep(time - this.lastScryfallRequest);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                JsonObject set = JsonObject.parseObject(JsonReader.json5(this.cache.compute(URI.create("https://api.scryfall.com/sets/" + card.getAsString("set")), uri -> {
+                    HttpClient client = HttpClient.newHttpClient();
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(uri)
+                            .GET()
+                            .build();
+
+                    this.lastScryfallRequest = System.currentTimeMillis();
+
+                    try {
+                        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                        if (response.statusCode() == 200) {
+                            return new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8));
+                        } else {
+                            JsonObject body = JsonObject.parseObject(JsonReader.json(response.body()));
+                            String details = "[" + response.statusCode() + "] " + (body.has("details") ? body.getAsString("details") : "");
+                            LOG.error("{}: {}", "Could not find set " + uri, details);
+
+                            return null;
+                        }
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })));
+
+                card.add(new String[] {"proximity", "set"}, set.deepCopy());
+
+                return Result.of(card);
             } catch (IOException e) {
                 return Result.error("Failed to get info for '%s': %s", prototype.cardName(), ExceptionUtil.getErrorMessage(e));
             }
