@@ -1,1 +1,10 @@
+.gradle
 /run/
+/build/
+/images/
+/templates/
+/art/
+
+*.swp
+*.txt
+*.zip

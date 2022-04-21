@@ -1,0 +1,12 @@
+.git
+.gradle
+.idea
+art
+build
+images
+run
+templates
+
+*.zip
+gradlew.bat
+template.xsd
