@@ -1,0 +1,2 @@
+rootProject.name = 'proximity'
+include 'application', 'utilities', 'json'

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import dev.hephaestus.proximity.app.impl.menu.ImportMenu?>
+<?import dev.hephaestus.proximity.app.impl.menu.OpenButton?>
+<?import dev.hephaestus.proximity.app.impl.menu.SaveAsButton?>
+<?import dev.hephaestus.proximity.app.impl.menu.SaveButton?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.layout.HBox?>
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      styleClass="menu-bar">
+    <MenuButton fx:id="file" text="File">
+        <items>
+            <OpenButton text="Open"/>
+            <ImportMenu text="Import"/>
+            <SeparatorMenuItem/>
+            <SaveButton text="Save"/>
+            <SaveAsButton text="Save as..."/>
+        </items>
+    </MenuButton>
+</HBox>

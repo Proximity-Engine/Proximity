@@ -1,0 +1,28 @@
+plugins {
+    id 'proximity.java-conventions'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+javafx {
+    version = "19"
+    modules = [ 'javafx.controls' ]
+}
+
+group = 'dev.hephaestus.proximity'
+version = '1.0.0-SNAPSHOT'
+
+dependencies {
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}

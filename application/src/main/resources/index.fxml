@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import dev.hephaestus.proximity.app.impl.DataEntryArea?>
+<?import dev.hephaestus.proximity.app.impl.PreviewPane?>
+<?import dev.hephaestus.proximity.app.impl.sidebar.OptionsPane?>
+<?import dev.hephaestus.proximity.app.impl.sidebar.Category?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Rectangle?>
+<?import dev.hephaestus.proximity.app.impl.Spinner?>
+<VBox fx:id="root" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="dev.hephaestus.proximity.app.impl.Proximity"
+      prefWidth="800.0" prefHeight="400.0" >
+    <fx:include source="menuBar.fxml"  prefWidth="${root.width}"/>
+    <HBox fx:id="content" prefWidth="${root.width}" VBox.vgrow="ALWAYS">
+        <VBox fx:id="sidebar" prefWidth="38" minWidth="38" maxWidth="38">
+            <Category name="Options">
+                <graphic>
+                    <ImageView>
+                        <Image url="@icons/options.png"/>
+                    </ImageView>
+                </graphic>
+                <pane>
+                    <OptionsPane fx:id="options"/>
+                </pane>
+            </Category>
+        </VBox>
+        <HBox fx:id="sidebarPanes"/>
+        <DataEntryArea fx:id="dataEntryArea" HBox.hgrow="ALWAYS">
+
+        </DataEntryArea>
+        <PreviewPane fx:id="previewPane"/>
+    </HBox>
+</VBox>

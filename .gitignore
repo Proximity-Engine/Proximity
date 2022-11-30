@@ -1,0 +1,5 @@
+/application/build/
+/application/logs/
+/buildSrc/build/
+/json/build/
+/utilities/build/

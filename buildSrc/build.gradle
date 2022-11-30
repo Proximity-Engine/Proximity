@@ -1,0 +1,21 @@
+plugins {
+    id 'groovy-gradle-plugin'
+}
+
+gradlePlugin {
+    plugins {
+        // here we register our plugin with an ID
+        register("extra-java-module-info") {
+            id = "extra-java-module-info"
+            implementationClass = "dev.hephaestus.proximity.transform.javamodules.ExtraModuleInfoPlugin"
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.ow2.asm:asm:8.0.1'
+}
