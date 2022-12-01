@@ -15,9 +15,12 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 
 import java.io.IOException;
 import java.lang.module.Configuration;
@@ -103,6 +106,10 @@ public class Proximity {
         }
     }
 
+    public static Window getWindow() {
+        return INSTANCE.root.getScene().getWindow();
+    }
+
     @FXML public void initialize() {
         initialize(this.root);
     }
@@ -115,6 +122,12 @@ public class Proximity {
 
             if (node instanceof Pane p) {
                 initialize(p);
+            } else if (node instanceof MenuButton menuButton) {
+                for (MenuItem item : menuButton.getItems()) {
+                    if (item instanceof Initializable initializable) {
+                        initializable.initialize();
+                    }
+                }
             }
         }
     }

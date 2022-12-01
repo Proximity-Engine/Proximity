@@ -25,7 +25,7 @@ public class SaveButton extends MenuItem implements Initializable {
                 fileChooser.setTitle("Save Project");
                 fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Proximity Project", "*.pxproject"));
 
-                File file = fileChooser.showSaveDialog(this.getGraphic().getScene().getWindow());
+                File file = fileChooser.showSaveDialog(Proximity.getWindow());
 
                 if (file != null) {
                     path = file.toPath();

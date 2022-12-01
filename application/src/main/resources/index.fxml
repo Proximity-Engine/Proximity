@@ -2,13 +2,11 @@
 
 <?import dev.hephaestus.proximity.app.impl.DataEntryArea?>
 <?import dev.hephaestus.proximity.app.impl.PreviewPane?>
-<?import dev.hephaestus.proximity.app.impl.sidebar.OptionsPane?>
 <?import dev.hephaestus.proximity.app.impl.sidebar.Category?>
+<?import dev.hephaestus.proximity.app.impl.sidebar.OptionsPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.shape.Rectangle?>
-<?import dev.hephaestus.proximity.app.impl.Spinner?>
 <VBox fx:id="root" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="dev.hephaestus.proximity.app.impl.Proximity"

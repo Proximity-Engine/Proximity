@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.app.impl.menu;
 import dev.hephaestus.proximity.app.impl.Initializable;
 import dev.hephaestus.proximity.app.impl.Project;
 import dev.hephaestus.proximity.app.impl.Proximity;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -20,7 +21,7 @@ public class OpenButton extends MenuItem implements Initializable {
             fileChooser.setTitle("Open Project");
             fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Proximity Project", "*.pxproject"));
 
-            File file = fileChooser.showOpenDialog(this.getGraphic().getScene().getWindow());
+            File file = fileChooser.showOpenDialog(Proximity.getWindow());
 
             if (file != null) {
                 Project project = Proximity.getCurrentProject();
