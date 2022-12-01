@@ -34,7 +34,6 @@ public class Proximity {
     // TODO: Allow multiple data providers
     private static final Collection<DataProvider<?>> DATA_PROVIDERS = new TreeSet<>(Comparator.comparing(o -> o.getClass().getModule().getName()));
 
-    private static final List<Plugin> PLUGINS = new ArrayList<>();
     private static final SelectionManager SELECTION_MANAGER = new SelectionManager();
     private static final SimpleBooleanProperty PAUSED = new SimpleBooleanProperty(false);
     private static final SimpleObjectProperty<SidebarPane> activeCategory = new SimpleObjectProperty<>();
@@ -138,7 +137,15 @@ public class Proximity {
 
 
     public static <T> Iterable<T> getImplementations(Class<T> serviceClass) {
-        return MODULES == null ? Collections.emptyList() : ServiceLoader.load(MODULES, serviceClass);
+        List<T> services = new ArrayList<>();
+
+        ServiceLoader.load(ModuleLayer.boot(), serviceClass).forEach(services::add);
+
+        if (MODULES != null) {
+            ServiceLoader.load(MODULES, serviceClass).forEach(services::add);
+        }
+
+        return services;
     }
 
     public static Plugin load(URL jar) throws IOException, PluginInstantiationException {
@@ -164,16 +171,8 @@ public class Proximity {
         return (DataProvider<D>) DATA_PROVIDER;
     }
 
-    public static Iterable<Template<?>> templates() {
-        List<Template<?>> templates = new LinkedList<>();
-
-        for (Plugin plugin : PLUGINS) {
-            for (Iterator<Template<?>> it = plugin.getEntrypoints("templates"); it.hasNext(); ) {
-                templates.add(it.next());
-            }
-        }
-
-        return templates;
+    public static Iterable<Template> templates() {
+        return getImplementations(Template.class);
     }
 
     public static boolean isPaused() {
@@ -204,12 +203,20 @@ public class Proximity {
         LOG.print(error);
     }
 
+    public static void print(String message, Throwable error) {
+        LOG.print(message, error);
+    }
+
     public static void write(String message, Object... args) {
         LOG.write(message, args);
     }
 
     public static void write(Throwable error) {
         LOG.write(error);
+    }
+
+    public static void write(String message, Throwable error) {
+        LOG.write(message, error);
     }
 
     public static Project getCurrentProject() {
@@ -229,13 +236,9 @@ public class Proximity {
     }
 
     public static Template<?> getTemplate(String name) {
-        for (Plugin plugin : PLUGINS) {
-            for (Iterator<Template<?>> it = plugin.getEntrypoints("templates"); it.hasNext(); ) {
-                Template<?> template = it.next();
-
-                if (template.getName().equalsIgnoreCase(name)) {
-                    return template;
-                }
+        for (Template<?> template : templates()) {
+            if (template.getName().equalsIgnoreCase(name)) {
+                return template;
             }
         }
 

@@ -53,8 +53,18 @@ public final class LogImpl implements Log {
     }
 
     @Override
+    public void print(String message, Throwable error) {
+        this.print(this.name, message, error, false);
+    }
+
+    @Override
     public void write(String message, Object... args) {
         this.print(this.name, message, true, args);
+    }
+
+    @Override
+    public void write(String message, Throwable error) {
+        this.print(this.name, message, error, true);
     }
 
     @Override
@@ -62,7 +72,7 @@ public final class LogImpl implements Log {
         this.print(this.name, error, true);
     }
 
-    protected synchronized void print(String name, String message, boolean quiet, Object... args) {
+    synchronized void print(String name, String message, boolean quiet, Object... args) {
         message = this.format(name, args.length > 0 ? String.format(message, args) : message);
 
         if (!quiet) {
@@ -79,9 +89,33 @@ public final class LogImpl implements Log {
         }
     }
 
-    protected synchronized void print(String name, Throwable error, boolean quiet) {
+    synchronized void print(String name, Throwable error, boolean quiet) {
         if (!quiet) {
             System.out.println(this.format(name, ExceptionUtil.getErrorMessage(error)));
+        }
+
+        if (this.printWriter != null) {
+            try {
+                error.printStackTrace(this.printWriter);
+                this.printWriter.flush();
+            } catch (Exception e) {
+                System.out.println(this.format(name, "ERROR - Failed to write to log:" + ExceptionUtil.getErrorMessage(e)));
+            }
+        }
+    }
+
+    private synchronized void print(String name, String message, Throwable error, boolean quiet) {
+        if (!quiet) {
+            System.out.println(this.format(name, message + ": " + ExceptionUtil.getErrorMessage(error)));
+        }
+
+        if (this.logWriter != null) {
+            try {
+                this.logWriter.write(this.format(name, message + ": " + ExceptionUtil.getErrorMessage(error)) + '\n');
+                this.logWriter.flush();
+            } catch (IOException e) {
+                System.out.println(this.format(name, "ERROR - Failed to write to log:" + ExceptionUtil.getErrorMessage(e)));
+            }
         }
 
         if (this.printWriter != null) {

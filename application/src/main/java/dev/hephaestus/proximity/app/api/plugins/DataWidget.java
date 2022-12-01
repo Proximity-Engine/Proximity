@@ -2,8 +2,10 @@ package dev.hephaestus.proximity.app.api.plugins;
 
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
+import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonObject;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleListProperty;
@@ -60,6 +62,11 @@ public abstract class DataWidget<D extends RenderJob> implements Iterable<DataWi
 
     public static abstract class Entry<D extends RenderJob> extends SimpleObjectProperty<D> {
         private final ObjectProperty<Template<D>> template = new SimpleObjectProperty<>();
+        private final ObjectProperty<DocumentImpl<D>> document = new SimpleObjectProperty<>();
+
+        public Entry() {
+            this.document.bind(Bindings.createObjectBinding(() -> this.template.get() == null ? null : new DocumentImpl<>(this.get(), this.template.getValue(), this.getWidget().errors), this, this.template));
+        }
 
         public abstract Pane getRootPane();
         public abstract DataWidget<D> getWidget();
@@ -92,6 +99,11 @@ public abstract class DataWidget<D extends RenderJob> implements Iterable<DataWi
         @ApiStatus.Internal
         public final Property<Template<D>> template() {
             return this.template;
+        }
+
+        @ApiStatus.Internal
+        public final Property<DocumentImpl<D>> document() {
+            return this.document;
         }
     }
 }

@@ -37,7 +37,7 @@ public class ExportPane extends SidebarPane {
             Template<D> template = entry.template().getValue();
             CANVAS canvas = renderer.createCanvas(template.getWidth(), template.getHeight());
 
-            Document<D> document = new DocumentImpl<>(entry.getValue(), template);
+            Document<D> document = new DocumentImpl<>(entry.getValue(), template, entry.getWidget().getErrorProperty());
 
             try {
                 renderer.render(document, canvas);

@@ -43,7 +43,7 @@ public abstract class Renderer<CANVAS> {
     }
 
     private void render(Selector<?> selector, CANVAS canvas) throws IOException {
-        Optional<? extends Element<?>> optional = selector.getFirstVisible();
+        Optional<? extends Element<?>> optional = selector.getSelected();
 
         if (optional.isPresent()) {
             this.render(optional.get(), canvas);

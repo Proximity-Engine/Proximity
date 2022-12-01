@@ -5,6 +5,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="proximity.application.main" options="--add-exports javafx.base/com.sun.javafx=dev.hephaestus.proximity.app --add-exports javafx.controls/com.sun.javafx.scene.control.behavior=dev.hephaestus.proximity.app --add-exports javafx.controls/com.sun.javafx.scene.control.skin=dev.hephaestus.proximity.app" />
       <module name="proximity.json.main" options="--add-exports org.quiltmc.quilt-json5/org.quiltmc.json5=dev.hephaestus.proximity.json" />
     </option>
   </component>

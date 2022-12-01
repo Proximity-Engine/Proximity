@@ -26,12 +26,16 @@ public interface Log {
      */
     void print(Throwable error);
 
+    void print(String message, Throwable error);
+
     /**
      * Writes the given message to the log file without writing it to stdout.
      *
      * @param message some message to log
      */
     void write(String message, Object... args);
+
+    void write(String message, Throwable error);
 
     /**
      * Writes the given message to the log file without writing it to stdout.

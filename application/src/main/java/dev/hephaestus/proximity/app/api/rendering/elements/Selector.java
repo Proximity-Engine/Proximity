@@ -5,6 +5,8 @@ import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
@@ -33,8 +35,7 @@ public interface Selector<D extends RenderJob> extends Element<D> {
     Image<D> image(String id, Option<String, ?, ? super D> src);
     Image<D> image(String id, String src, Predicate<D> visibilityPredicate);
     Image<D> image(Function<D, String> id, Predicate<D> visibilityPredicate);
-    Image<D> image(ThrowingFunction<D, URL, MalformedURLException> srcGetter);
-    Image<D> image(ThrowingFunction<D, URL, MalformedURLException> srcGetter, Predicate<D> visibilityPredicate);
+    Image<D> image(ThrowingFunction<D, InputStream, IOException> srcGetter);
 
     Text<D> text(Function<D, String> textGetter);
     Text<D> text();
@@ -43,7 +44,7 @@ public interface Selector<D extends RenderJob> extends Element<D> {
 
     TextBox<D> textBox(int x, int y, int width, int height);
 
-    Optional<? extends Element<?>> getFirstVisible();
+    Optional<? extends Element<?>> getSelected();
 
     boolean isVisible();
 }

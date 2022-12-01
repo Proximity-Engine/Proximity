@@ -8,12 +8,12 @@ import dev.hephaestus.proximity.app.api.rendering.util.ImagePosition;
 import dev.hephaestus.proximity.app.api.rendering.util.Rect;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 
 @ApiStatus.NonExtendable
 public interface Image<D extends RenderJob> extends Child<D> {
-    ThrowingProperty<D, URL, Image<D>, MalformedURLException> src();
+    ThrowingProperty<D, InputStream, Image<D>, IOException> src();
     Property<D, ImagePosition, Image<D>> position();
     VisibilityProperty<D, Image<D>> visibility();
 

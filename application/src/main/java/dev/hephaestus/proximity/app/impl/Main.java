@@ -16,7 +16,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Path workingDirectory = Path.of(this.getParameters().getNamed().getOrDefault("working-directory", "logs"));
+        Path workingDirectory = Path.of(this.getParameters().getNamed().getOrDefault("working-directory", "."));
         Path pluginDirectory = Path.of(this.getParameters().getNamed().getOrDefault("plugin-directory", "plugins"));
 
         Proximity.init(workingDirectory, pluginDirectory);

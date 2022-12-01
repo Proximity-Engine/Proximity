@@ -1,12 +1,14 @@
 package dev.hephaestus.proximity.app.impl.rendering.elements;
 
 import dev.hephaestus.proximity.app.api.RenderJob;
+import dev.hephaestus.proximity.app.api.logging.ExceptionUtil;
 import dev.hephaestus.proximity.app.api.rendering.elements.Image;
 import dev.hephaestus.proximity.app.api.rendering.properties.Property;
 import dev.hephaestus.proximity.app.api.rendering.properties.ThrowingProperty;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.ImagePosition;
 import dev.hephaestus.proximity.app.api.rendering.util.Rect;
+import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import dev.hephaestus.proximity.app.impl.rendering.properties.BasicProperty;
 import dev.hephaestus.proximity.app.impl.rendering.properties.BasicThrowingProperty;
@@ -17,8 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.UnknownHostException;
 
 public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> implements Image<D> {
     public static final String[] IMAGE_FILE_TYPES = {
@@ -27,7 +28,7 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
 
     private final VisibilityProperty<Image<D>> visibility;
     private final BasicProperty<D, ImagePosition, Image<D>> position;
-    private final BasicThrowingProperty<D, URL, Image<D>, MalformedURLException> src;
+    private final ThrowingProperty<D, InputStream, Image<D>, IOException> src;
 
     private Rect dimensions;
 
@@ -40,11 +41,11 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
         this.position = new BasicProperty<>(this, data, new ImagePosition.Direct(0, 0));
         this.src = new BasicThrowingProperty<>(this, data);
 
-        this.src.set(d -> document.getResourceLocation(this.getPath(), IMAGE_FILE_TYPES));
+        this.src.set(d -> document.getResource(this.getPath(), IMAGE_FILE_TYPES));
     }
 
     @Override
-    public ThrowingProperty<D, URL, Image<D>, MalformedURLException> src() {
+    public ThrowingProperty<D, InputStream, Image<D>, IOException> src() {
         return this.src;
     }
 
@@ -67,22 +68,24 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            InputStream in = this.src.get().openStream();
+            InputStream in = this.src.get();
 
             // Check for files when the file extension is not specified
             for (int i = 0; in == null && i < IMAGE_FILE_TYPES.length; i++) {
-                in = this.getDocument().getTemplate().getResourceAsStream(this.src + "." + IMAGE_FILE_TYPES[i]);
+                in = this.getDocument().getTemplate().getResource(this.src + "." + IMAGE_FILE_TYPES[i]);
             }
 
             if (in != null) {
                 in.transferTo(out);
             } else {
-                // TODO: Errors!
-                System.out.printf("\"%s\" not found.%n", this.src);
+                this.getDocument().getErrors().add(String.format("\"%s\" not found.%n", this.src));
             }
-        } catch (IOException e) {
-            // TODO: Errors!
-            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            Proximity.print("Failed to connect to host", e);
+            this.getDocument().getErrors().add("Failed to connect to host: " + ExceptionUtil.getErrorMessage(e));
+        } catch (Throwable e) {
+            Proximity.print(e);
+            this.getDocument().getErrors().add(ExceptionUtil.getErrorMessage(e));
         }
 
         return out.toByteArray();
@@ -92,13 +95,16 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
     public String getFormat() {
         byte[] imageBytes = this.getImageBytes();
 
-        if (imageBytes[1] == 'P' && imageBytes[2] == 'N' && imageBytes[3] == 'G') {
+        if (imageBytes.length == 0) {
+            this.getDocument().getErrors().add("Unexpected empty image");
+            throw new RuntimeException("Unexpected empty image");
+        } else if (imageBytes[1] == 'P' && imageBytes[2] == 'N' && imageBytes[3] == 'G') {
             return  "png";
         } else if (imageBytes[0] == 0xFFFFFFFF && imageBytes[1] == 0xFFFFFFD8 && imageBytes[2] == 0xFFFFFFFF && imageBytes[3] == 0xFFFFFFE0) {
             return  "jpeg";
         } else {
-            // TODO: Better errors
-            throw new RuntimeException("Unexpected file type!");
+            this.getDocument().getErrors().add("Unexpected file type");
+            throw new RuntimeException("Unexpected file type");
         }
     }
 
@@ -114,14 +120,17 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
             int width;
             int height;
 
-            if (imageBytes[1] == 'P' && imageBytes[2] == 'N' && imageBytes[3] == 'G') {
+            if (imageBytes.length == 0) {
+                this.getDocument().getErrors().add("Unexpected empty image");
+                throw new RuntimeException("Unexpected empty image");
+            } else if (imageBytes[1] == 'P' && imageBytes[2] == 'N' && imageBytes[3] == 'G') {
                 // PNG
                 if (imageBytes[12] == 'I' && imageBytes[13] == 'H' && imageBytes[14] == 'D' && imageBytes[15] == 'R') {
                     width = readInt(imageBytes, 16);
                     height = readInt(imageBytes, 20);
                 } else {
-                    // TODO: Better errors
-                    throw new RuntimeException("Invalid PNG header!");
+                    this.getDocument().getErrors().add("Invalid PNG header");
+                    throw new RuntimeException("Invalid PNG header");
                 }
             } else if (imageBytes[0] == 0xFFFFFFFF && imageBytes[1] == 0xFFFFFFD8 && imageBytes[2] == 0xFFFFFFFF && imageBytes[3] == 0xFFFFFFE0) {
                 // JPEG
@@ -133,8 +142,8 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
                     throw new RuntimeException(e);
                 }
             } else {
-                // TODO: Better errors
-                throw new RuntimeException("Unexpected file type!");
+                this.getDocument().getErrors().add("Unexpected file type");
+                throw new RuntimeException("Unexpected file type");
             }
 
             this.dimensions = new Rect(width, height);

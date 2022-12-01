@@ -2,9 +2,9 @@ package dev.hephaestus.proximity.app.api;
 
 import dev.hephaestus.proximity.app.api.exceptions.ResourceNotFoundException;
 
-import java.net.URL;
+import java.io.InputStream;
 
 public interface ResourceProvider {
     boolean hasResource(String name);
-    URL getResource(String name) throws ResourceNotFoundException;
+    InputStream getResource(String name) throws ResourceNotFoundException;
 }

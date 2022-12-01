@@ -4,10 +4,10 @@ import dev.hephaestus.proximity.app.api.rendering.elements.Element;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
 
-import java.net.URL;
+import java.io.InputStream;
 
 public interface Document<D extends RenderJob> extends Iterable<Element<D>> {
-    URL getResourceLocation(String src, String... alternateFileExtensions);
+    InputStream getResource(String src, String... alternateFileExtensions);
 
     Template<D> getTemplate();
 }

@@ -8,10 +8,12 @@ import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 import dev.hephaestus.proximity.app.api.text.TextStyle;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
+import org.jetbrains.annotations.NotNull;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -19,8 +21,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements ParentImpl<D>, Selector<D> {
-    private final List<ElementImpl<D>> children = new ArrayList<>(3);
+    private final List<Element<D>> children = new ArrayList<>(3);
     private final VisibilityProperty<Selector<D>> visibility;
+
+    private Option<ElementImpl<D>, ?, D> option;
 
     public SelectorImpl(DocumentImpl<D> document, String id, ElementImpl<D> parent) {
         super(document, id, parent);
@@ -29,18 +33,8 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     }
 
     @Override
-    public Image<D> image(ThrowingFunction<D, URL, MalformedURLException> srcGetter) {
-        return this.image(null, srcGetter);
-    }
-
-    @Override
     public Image<D> image(String id, Predicate<D> visibilityPredicate) {
         return this.image(id).visibility().set(visibilityPredicate);
-    }
-
-    @Override
-    public Image<D> image(ThrowingFunction<D, URL, MalformedURLException> srcGetter, Predicate<D> visibilityPredicate) {
-        return this.image(null, srcGetter).visibility().set(visibilityPredicate);
     }
 
     @Override
@@ -65,9 +59,11 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
 
     @Override
     protected BoundingBoxes getDimensions() {
-        for (ElementImpl<D> element : this.children) {
-            if (element.visibility().get()) {
-                return element.getDimensions();
+        for (Element<D> element : this.children) {
+            ElementImpl<D> e = (ElementImpl<D>) element;
+
+            if (e.visibility().get()) {
+                return e.getDimensions();
             }
         }
 
@@ -165,7 +161,12 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     }
 
     @Override
-    public Image<D> image(String id, ThrowingFunction<D, URL, MalformedURLException> srcGetter) {
+    public Image<D> image(ThrowingFunction<D, InputStream, IOException> srcGetter) {
+        return this.image(null, srcGetter);
+    }
+
+    @Override
+    public Image<D> image(String id, ThrowingFunction<D, InputStream, IOException> srcGetter) {
         return ParentImpl.super.image(id, srcGetter);
     }
 
@@ -200,6 +201,10 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     }
 
     @Override
+    public Optional<Element<D>> getSelected() {
+        return Optional.ofNullable(this.option.getValue(this.getDocument().getData()));
+    }
+
     public Optional<Element<D>> getFirstVisible() {
         for (Element<D> node : this.children) {
             if (node instanceof Child<D> child && child.visibility().get() || node instanceof Parent<?> parent && parent.isVisible()) {
@@ -213,5 +218,15 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     @Override
     public boolean isVisible() {
         return this.visibility.get();
+    }
+
+    @NotNull
+    @Override
+    public Iterator<Element<D>> iterator() {
+        return this.children.iterator();
+    }
+
+    public void setOption(Option<ElementImpl<D>, ?, D> option) {
+        this.option = option;
     }
 }

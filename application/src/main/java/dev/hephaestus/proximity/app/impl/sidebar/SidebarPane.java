@@ -8,26 +8,23 @@ import javafx.scene.layout.VBox;
 import java.util.Locale;
 
 public class SidebarPane extends VBox implements Initializable {
-    protected final VBox container;
     private final Label label = new Label();
 
     private Category button;
 
     public SidebarPane() {
         super();
-        this.setPrefWidth(270);
+        this.setPrefWidth(350);
 
         this.label.getStyleClass().add("sidebar-text");
         this.label.getStyleClass().add("sidebar-header");
-
-        this.container = new VBox(label);
 
         this.getStyleClass().add("sidebar-pane");
 
         this.setVisible(false);
         this.setManaged(false);
 
-        this.getChildren().addAll(label, this.container);
+        this.getChildren().addAll(label);
     }
 
     public Category getButton() {

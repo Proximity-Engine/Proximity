@@ -1,6 +1,7 @@
 package dev.hephaestus.proximity.app.impl.rendering;
 
 
+import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.rendering.Canvas;
 import dev.hephaestus.proximity.app.api.rendering.ImageRenderer;
 import dev.hephaestus.proximity.app.api.rendering.elements.Image;
@@ -12,8 +13,6 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -38,36 +37,21 @@ public class PreviewImageRenderer extends ImageRenderer {
     }
 
     private URL downscale(Image<?> node, int n) throws IOException {
-        URL url = node.src().get();
-
         Path path = Path.of(".tmp", "downscaled", "" + this.width, "" + this.height);
 
-        path = path.resolve(URLEncoder.encode(url.getHost(), StandardCharsets.US_ASCII));
+        Template<?> template = node.getDocument().getTemplate();
 
-        if (url.getQuery() == null) {
-            for (String s : url.getPath().substring(1).split("/")) {
-                path = path.resolve(URLEncoder.encode(s, StandardCharsets.US_ASCII));
-            }
+        path = path.resolve(template.getClass().getModule().getName());
+        path = path.resolve(template.getName());
+        path = path.resolve(node.getId());
 
-            path = path.resolveSibling(path.getFileName().toString() + ".png");
-
-            Files.createDirectories(path.getParent());
-        } else {
-            for (String s : url.getPath().substring(1).split("/")) {
-                path = path.resolve(URLEncoder.encode(s, StandardCharsets.US_ASCII));
-            }
-
-            Files.createDirectories(path);
-
-            path = path.resolve(URLEncoder.encode(url.getQuery(), StandardCharsets.US_ASCII) + ".png");
-        }
-
+        Files.createDirectories(path.getParent());
 
         if (!Files.exists(path)) {
             BoundingBoxes boxes = node.getBounds();
             Rect destinationDimensions = new Rect((int) (boxes.getWidth() / n), (int) (boxes.getHeight() / n));
 
-            BufferedImage image = ImageIO.read(url);
+            BufferedImage image = ImageIO.read(node.src().get());
 
             BufferedImage out = new BufferedImage(destinationDimensions.width(), destinationDimensions.height(), BufferedImage.TYPE_INT_ARGB);
             out.getGraphics().drawImage(image.getScaledInstance(destinationDimensions.width(), destinationDimensions.height(), java.awt.Image.SCALE_SMOOTH), 0, 0, null);

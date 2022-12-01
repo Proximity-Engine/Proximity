@@ -1,39 +1,76 @@
 package dev.hephaestus.proximity.app.api.options;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import javafx.beans.property.Property;
-import javafx.scene.Node;
-import javafx.util.Pair;
+import javafx.scene.control.ComboBox;
+import javafx.util.StringConverter;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
 public abstract class DropdownOption<T, D extends RenderJob> extends Option<T, DropdownOption<T, D>.Widget, D> {
-    public DropdownOption(String id, T defaultValue) {
-        super(id, defaultValue);
-    }
+    private final List<Entry<T, D>> entries;
+    private final BiMap<Entry<T, D>, T> producedValues;
+    private final Map<String, T> producedValuesByName;
+    private final Map<T, D> valuesToData;
 
-    public DropdownOption(String id, Function<D, T> defaultValue) {
+    private DropdownOption(String id, Function<D, T> defaultValue, List<Entry<T, D>> entries) {
         super(id, defaultValue);
+        this.entries = entries;
+        this.producedValues = HashBiMap.create(entries.size());
+        this.producedValuesByName = new HashMap<>(entries.size());
+        this.valuesToData = new HashMap<>(entries.size());
     }
 
     @Override
     public Widget createControl(D renderJob) {
-        return new Widget();
+        Widget widget = new Widget();
+
+        T defaultValue = this.getDefaultValue(renderJob);
+
+        for (var entry : this.entries) {
+            T value = entry.value.apply(renderJob);
+
+            this.producedValues.put(entry, value);
+            this.producedValuesByName.put(entry.getName(renderJob), value);
+            this.valuesToData.put(value, renderJob);
+
+            widget.getItems().add(value);
+
+            if (value == null && defaultValue == null || value != null && value.equals(defaultValue)) {
+                widget.setValue(value);
+            }
+        }
+
+        widget.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(T t) {
+                return DropdownOption.this.producedValues.inverse().get(t).getName(
+                        DropdownOption.this.valuesToData.get(t)
+                );
+            }
+
+            @Override
+            public T fromString(String string) {
+                return DropdownOption.this.producedValuesByName.get(string);
+            }
+        });
+
+        return widget;
     }
 
     public abstract String toString(T t);
 
-    public class Widget extends Node implements Option.Widget<T> {
+    public class Widget extends ComboBox<T> implements Option.Widget<T> {
         @Override
         public Property<T> getValueProperty() {
-            return null;
+            return this.valueProperty();
         }
     }
 
@@ -51,7 +88,7 @@ public abstract class DropdownOption<T, D extends RenderJob> extends Option<T, D
         private final Function<T, JsonElement> toJson;
         private final Function<JsonElement, T> fromJson;
 
-        private final List<Pair<Function<D, T>, Predicate<D>>> values = new LinkedList<>();
+        private final List<Entry<T, D>> values = new LinkedList<>();
 
         private Builder(String id, Function<T, String> stringFunction, Function<T, JsonElement> toJson, Function<JsonElement, T> fromJson) {
             this.id = id;
@@ -62,7 +99,7 @@ public abstract class DropdownOption<T, D extends RenderJob> extends Option<T, D
         }
 
         public Builder<T, D> add(Function<D, T> value, Predicate<D> predicate) {
-            this.values.add(new Pair<>(value, predicate));
+            this.values.add(new Entry<>(value, predicate, data -> this.stringFunction.apply(value.apply(data))));
 
             return this;
         }
@@ -75,20 +112,33 @@ public abstract class DropdownOption<T, D extends RenderJob> extends Option<T, D
             return this.add(value, d -> false);
         }
 
+        public Builder<T, D> add(String name, T value) {
+            this.values.add(new Entry<>(name, d -> value, d -> false));
+
+            return this;
+        }
+
+        public Builder<T, D> add(String name, T value, Predicate<D> predicate) {
+            this.values.add(new Entry<>(name, d -> value, predicate));
+
+            return this;
+        }
+
         public DropdownOption<T, D> build() {
-            List<Pair<Function<D, T>, Predicate<D>>> values = new ArrayList<>(this.values);
+            List<Entry<T, D>> entries = new ArrayList<>(this.values);
 
             Function<D, T> defaultFunction = data -> {
-                for (var pair : values) {
-                    if (pair.getValue().test(data)) {
-                        return pair.getKey().apply(data);
+                for (var entry : entries) {
+                    if (entry.predicate.test(data)) {
+                        return entry.value.apply(data);
                     }
                 }
 
                 return null;
             };
 
-            return new DropdownOption<>(this.id, defaultFunction) {
+
+            return new DropdownOption<>(this.id, defaultFunction, entries) {
                 @Override
                 public String toString(T t) {
                     return t == null ? "" : Builder.this.stringFunction.apply(t);
@@ -104,6 +154,20 @@ public abstract class DropdownOption<T, D extends RenderJob> extends Option<T, D
                     return Builder.this.fromJson.apply(json);
                 }
             };
+        }
+    }
+
+    private record Entry<T, D extends RenderJob>(String name, Function<D, T> value, Predicate<D> predicate, Function<D, String> stringFunction) {
+        public Entry(Function<D, T> value, Predicate<D> predicate, Function<D, String> stringFunction) {
+            this(null, value, predicate, stringFunction);
+        }
+
+        public Entry(String name, Function<D, T> value, Predicate<D> predicate) {
+            this(name, value, predicate, null);
+        }
+
+        public String getName(D data) {
+            return this.name == null ? this.stringFunction.apply(data) : this.name;
         }
     }
 }

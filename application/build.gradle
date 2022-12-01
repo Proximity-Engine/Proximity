@@ -32,6 +32,7 @@ dependencies {
 
     implementation 'dev.hephaestus.proximity:mtg:1.0.0-SNAPSHOT'
     implementation 'dev.hephaestus.proximity:scryfall:1.0.0-SNAPSHOT'
+    implementation 'dev.hephaestus.proximity:m15-ultimate:1.0.0-SNAPSHOT'
 }
 
 application {

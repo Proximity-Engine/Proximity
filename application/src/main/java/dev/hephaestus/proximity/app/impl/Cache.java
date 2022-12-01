@@ -50,7 +50,7 @@ public final class Cache {
         } catch (IOException e) {
             json = JsonObject.create();
 
-            this.log.print(e);
+            this.log.write("Failed to load cache", e);
         }
 
         this.json = json;

@@ -1,28 +1,86 @@
 package dev.hephaestus.proximity.app.impl.rendering;
 
+import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
+import dev.hephaestus.proximity.app.api.options.DropdownOption;
 import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.api.rendering.elements.Element;
 import dev.hephaestus.proximity.app.impl.rendering.elements.ElementImpl;
+import dev.hephaestus.proximity.app.impl.rendering.elements.GroupImpl;
 import dev.hephaestus.proximity.app.impl.rendering.elements.ParentImpl;
+import dev.hephaestus.proximity.app.impl.rendering.elements.SelectorImpl;
+import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.utils.UnmodifiableIterator;
+import javafx.collections.ObservableList;
 import org.jetbrains.annotations.NotNull;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.io.InputStream;
+import java.util.*;
 
 public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Document<D> {
     private final D data;
     private final Template<D> template;
     private final List<ElementImpl<D>> children = new ArrayList<>(5);
+    private final List<Option<ElementImpl<D>, ?, D>> selectorOverrides = new ArrayList<>();
+    private final ObservableList<String> errors;
 
-    public DocumentImpl(D data, Template<D> template) {
+    public DocumentImpl(D data, Template<D> template, ObservableList<String> errors) {
         this.data = data;
         this.template = template;
         this.template.createLayers(this);
+
+        for (ElementImpl<D> element : this.children) {
+            this.initialize(element);
+        }
+
+        this.errors = errors;
+    }
+
+    public ObservableList<String> getErrors() {
+        return this.errors;
+    }
+
+    private void initialize(ElementImpl<D> element) {
+        if (element instanceof GroupImpl<D> group) {
+            for (Element<D> e : group) {
+                this.initialize((ElementImpl<D>) e);
+            }
+        } else if (element instanceof SelectorImpl<D> selector) {
+            String[] path = element.getPath().split("/");
+            DropdownOption.Builder<ElementImpl<D>, D> builder = DropdownOption.builder(path[path.length - 1], ElementImpl::getPath, e -> Json.create(e.getPath()), json -> null /* TODO */);
+            Optional<Element<D>> firstVisible = selector.getFirstVisible();
+            int rootOffset = selector.getPath().length() + 1;
+
+            boolean hasDefault = false;
+
+            for (Element<D> e : selector) {
+                this.addChildren(rootOffset, (ElementImpl<D>) e, builder, firstVisible.isPresent() && e == firstVisible.get());
+
+                if (((ElementImpl<D>) e).isAlwaysVisible()) {
+                    hasDefault = true;
+                }
+            }
+
+            if (!hasDefault) {
+                builder.add("None", null, d -> true);
+            }
+
+            selector.setOption(builder.build());
+            this.selectorOverrides.add(builder.build());
+        }
+    }
+
+    private void addChildren(int rootOffset, ElementImpl<D> element, DropdownOption.Builder<ElementImpl<D>, ?> builder, boolean isFirstVisible) {
+        if (element instanceof SelectorImpl<D> selector) {
+            Optional<Element<D>> firstVisible = selector.getFirstVisible();
+
+            for (Element<D> e : selector) {
+                this.addChildren(rootOffset, (ElementImpl<D>) e, builder, isFirstVisible && firstVisible.isPresent() && e == firstVisible.get());
+            }
+        } else {
+            builder.add(element.getPath().substring(rootOffset), element, d -> isFirstVisible);
+        }
     }
 
     @Override
@@ -50,7 +108,7 @@ public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Documen
     }
 
     @Override
-    public URL getResourceLocation(String src, String... alternateFileExtensions) {
+    public InputStream getResource(String src, String... alternateFileExtensions) {
         String path = src;
 
         // Check for files when the file extension is not specified
@@ -68,5 +126,9 @@ public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Documen
     @Override
     public boolean isVisible() {
         return true;
+    }
+
+    public Iterable<Option<ElementImpl<D>, ?, D>> getSelectorOverrides() {
+        return this.selectorOverrides;
     }
 }

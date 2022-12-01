@@ -1,0 +1,41 @@
+pane {
+-fx-skin: "com.sun.javafx.scene.control.skin.TitledPaneSkin";
+    -fx-text-fill: "#FFFFFFD0";
+}
+
+.titled-pane {
+    -fx-text-fill: "#FFFFFFD0";
+}
+
+.titled-pane > .title {
+    -fx-background-color: "#313131";
+    -fx-background-radius: 0;
+}
+
+.titled-pane:focused > .title {
+    -fx-color: -fx-focus-color;
+}
+
+.titled-pane > .title > .arrow-button {
+    -fx-background-color: none;
+    -fx-padding: 0.0em 0.25em 0.0em 0.0em; /* 0 3 0 0 */
+}
+
+.titled-pane > .title > .arrow-button .arrow {
+    -fx-background-color: white;
+    -fx-background-insets: 1 0 -1 0, 0;
+    -fx-padding: 0.25em 0.3125em 0.25em 0.3125em; /* 3 3.75 3 3.75 */
+}
+
+.titled-pane:collapsed > .title > .arrow-button .arrow {
+    -fx-rotate: -90;
+}
+
+.titled-pane > *.content {
+    -fx-background-color: none;
+    -fx-box-border: "#313131";
+ }
+
+ .titled-pane > *.content > * > * {
+    -fx-insets: 5 5 5 5;
+ }

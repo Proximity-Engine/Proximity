@@ -56,7 +56,12 @@ public final class DataRow<D extends RenderJob> extends HBox implements Iterable
         this.status = new StackPane(new Rectangle(25, 25, Color.TRANSPARENT), rect);
 
         try {
-            rect.setClip(new ImageView(new Image(this.getClass().getModule().getResourceAsStream("icons/alert.png"))));
+            ImageView view = new ImageView(new Image(this.getClass().getModule().getResourceAsStream("icons/alert.png")));
+
+            view.setFitWidth(25);
+            view.setFitHeight(25);
+
+            rect.setClip(view);
         } catch (IOException e) {
             Proximity.print(e);
         }

@@ -3,28 +3,37 @@ package dev.hephaestus.proximity.app.impl.rendering;
 import dev.hephaestus.proximity.app.api.ResourceProvider;
 import dev.hephaestus.proximity.app.api.exceptions.ResourceNotFoundException;
 
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class DefaultResourceProvider implements ResourceProvider {
-    private final ClassLoader classLoader;
+    private final Module module;
 
-    public DefaultResourceProvider(ClassLoader classLoader) {
-        this.classLoader = classLoader;
+    public DefaultResourceProvider(Module module) {
+        this.module = module;
     }
 
     @Override
     public boolean hasResource(String name) {
-        return this.classLoader.getResource(name) != null;
+        try {
+            return this.module.getResourceAsStream(name) != null;
+        } catch (IOException ignored) {
+            return false;
+        }
     }
 
     @Override
-    public URL getResource(String name) throws ResourceNotFoundException {
-        URL url = this.classLoader.getResource(name);
+    public InputStream getResource(String name) throws ResourceNotFoundException {
+        try {
+            var is = this.module.getResourceAsStream(name);
 
-        if (url == null) {
-            throw new ResourceNotFoundException(name);
+            if (is == null) {
+                throw new ResourceNotFoundException(name);
+            }
+
+            return is;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-
-        return url;
     }
 }

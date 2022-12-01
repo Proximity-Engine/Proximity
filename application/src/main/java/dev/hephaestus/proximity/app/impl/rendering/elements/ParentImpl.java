@@ -11,13 +11,13 @@ import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 import dev.hephaestus.proximity.app.api.text.TextStyle;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface ParentImpl<D extends RenderJob> extends Parent<D> {
+public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Element<D>> {
     void addChild(ElementImpl<D> child);
     DocumentImpl<D> getDocument();
 
@@ -58,9 +58,9 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D> {
 
         result.visibility().set(visibilityPredicate);
 
-        if (result.visibility().get()) {
+//        if (result.visibility().get()) {
             selectorBuilder.accept(result);
-        }
+//        }
 
         return result;
     }
@@ -114,7 +114,7 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D> {
     @Override
     default Image<D> image(String id, String src) {
         return this.createElement(id, ImageImpl<D>::new).src()
-                .set(this.getDocument().getResourceLocation(src, ImageImpl.IMAGE_FILE_TYPES));
+                .set(this.getDocument().getResource(src, ImageImpl.IMAGE_FILE_TYPES));
     }
 
     @Override
@@ -125,7 +125,7 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D> {
     @Override
     default Image<D> image(String id, String src, Predicate<D> visibilityPredicate) {
         return this.createElement(id, ImageImpl<D>::new).visibility().set(visibilityPredicate).src()
-                .set(this.getDocument().getResourceLocation(src, ImageImpl.IMAGE_FILE_TYPES));
+                .set(this.getDocument().getResource(src, ImageImpl.IMAGE_FILE_TYPES));
     }
 
     @Override
@@ -134,7 +134,7 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D> {
     }
 
     @Override
-    default Image<D> image(String id, ThrowingFunction<D, URL, MalformedURLException> srcGetter) {
+    default Image<D> image(String id, ThrowingFunction<D, InputStream, IOException> srcGetter) {
         return this.createElement(id, ImageImpl<D>::new).src().set(srcGetter);
     }
 

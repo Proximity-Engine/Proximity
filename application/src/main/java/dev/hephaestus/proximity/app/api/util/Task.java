@@ -28,6 +28,8 @@ public abstract class Task {
     protected final <T> T interrupt() {
         if (this.currentExecution != null) {
             this.currentExecution.interrupt();
+
+            this.doFinally();
         }
 
         return null;
@@ -37,6 +39,8 @@ public abstract class Task {
         if (this.currentExecution != null) {
             this.currentExecution.interrupt();
             this.log.print(message, args);
+
+            this.doFinally();
         }
 
         return null;
@@ -45,7 +49,12 @@ public abstract class Task {
     protected final <T> T interrupt(Throwable throwable) {
         if (this.currentExecution != null) {
             this.currentExecution.interrupt();
-            this.log.print(throwable);
+
+            if (!(throwable instanceof RuntimeException)) {
+                this.log.print(throwable);
+            }
+
+            this.doFinally();
         }
 
         return null;
@@ -55,6 +64,10 @@ public abstract class Task {
      * Can be used by tasks to do any cleanup necessary.
      */
     protected void beforeInterrupt() {
+
+    }
+
+    protected void doFinally() {
 
     }
 
@@ -70,6 +83,10 @@ public abstract class Task {
 
             while (itr.hasNext() && !thread.isInterrupted()) {
                 value = run(itr.next(), value);
+            }
+
+            if (!thread.isInterrupted()) {
+                this.doFinally();
             }
         });
 

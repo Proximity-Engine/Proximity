@@ -73,6 +73,10 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
     protected abstract BoundingBoxes getDimensions();
     public abstract VisibilityProperty<?> visibility();
 
+    public boolean isAlwaysVisible() {
+        return this.visibility().isAlwaysVisible();
+    }
+
     public interface Constructor<D extends RenderJob, E extends ElementImpl<D>> {
         E construct(DocumentImpl<D> document, String id, ElementImpl<D> parent);
     }
@@ -81,6 +85,7 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
         private final D data;
         private final R result;
 
+        private boolean always = false;
         private boolean value = true;
 
         public VisibilityProperty(R result, D data) {
@@ -103,8 +108,13 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
         @Override
         public R set(Predicate<D> getter) {
             this.value = getter.test(this.data);
+            this.always = false;
 
             return this.result;
+        }
+
+        private boolean isAlwaysVisible() {
+            return this.always;
         }
     }
 }

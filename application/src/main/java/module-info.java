@@ -1,5 +1,6 @@
 module dev.hephaestus.proximity.app {
     uses dev.hephaestus.proximity.app.api.plugins.DataProvider;
+    uses dev.hephaestus.proximity.app.api.Template;
 
     exports dev.hephaestus.proximity.app.api;
     exports dev.hephaestus.proximity.app.api.controls;

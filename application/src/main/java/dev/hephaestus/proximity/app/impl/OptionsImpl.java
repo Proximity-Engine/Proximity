@@ -4,10 +4,14 @@ import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TitledPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -39,30 +43,67 @@ public class OptionsImpl<D extends RenderJob> implements Template.Options<D> {
         category.accept(this.categories.computeIfAbsent(id, c -> new Category(id, expandedByDefault)));
     }
 
-    public void createWidgets(DataWidget.Entry<D> entry, ObservableList<Node> pane) {
-        List<Node> optionControls = new ArrayList<>();
+    public void createWidgets(DataWidget.Entry<D> entry, ObservableList<Node> options, ObservableList<Node> categories) {
+        List<Node> optionControls = new ArrayList<>(this.options.size());
 
         for (Option<?, ?, ? super D> option : this.options) {
             optionControls.add(this.createWidget(entry, option));
         }
 
+        Node spacer = new AnchorPane();
+
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        optionControls.add(spacer);
+
+        options.setAll(optionControls);
+
+        List<Node> categoryPanes = new ArrayList<>(this.categories.size());
+
         for (Category category : this.categories.values()) {
-            VBox box = new VBox();
-            TitledPane categoryPane = new TitledPane(category.id, box);
+            GridPane grid = new GridPane();
+            TitledPane categoryPane = new TitledPane(category.id, grid);
+
+            grid.setVgap(5);
+            grid.setHgap(5);
+
+            List<Region> widgets = new ArrayList<>(category.options.size());
 
             for (Option<?, ?, ? super D> option : category.options) {
-                box.getChildren().add(this.createWidget(entry, option));
+                Label label = new Label(option.getId());
+
+                label.getStyleClass().add("sidebar-text");
+
+                Node node = this.createWidget(entry, option);
+
+                GridPane.setHgrow(label, Priority.ALWAYS);
+
+                grid.addRow(grid.getRowCount(), label, node);
+
+                if (node instanceof Region region) {
+                    widgets.add(region);
+                }
             }
 
-            pane.add(categoryPane);
+            DoubleBinding maxWidthBinding = Bindings.createDoubleBinding(() -> {
+                return widgets.stream().map(Region::widthProperty).map(ReadOnlyDoubleProperty::get).max(Double::compareTo).orElse(0D);
+            }, widgets.stream().map(Region::widthProperty).toList().toArray(new ReadOnlyDoubleProperty[widgets.size()]));
 
-            categoryPane.setExpanded(!category.expandedByDefault);
+            for (Region widget : widgets) {
+                widget.minWidthProperty().bind(maxWidthBinding);
+            }
+
+            categoryPane.setAnimated(false);
+
+            categoryPanes.add(categoryPane);
+
+            categoryPane.setExpanded(category.expandedByDefault);
         }
 
-        pane.setAll(optionControls);
+        categories.setAll(categoryPanes);
     }
 
-    private <T, W extends Node & Option.Widget<T>, D extends RenderJob> W createWidget(DataWidget.Entry<D> entry, Option<T, W, ? super D> option) {
+    private <T, W extends Node & Option.Widget<T>> W createWidget(DataWidget.Entry<D> entry, Option<T, W, ? super D> option) {
         D job = entry.getValue();
         W control = option.createControl(job);
 

@@ -1,17 +1,15 @@
 package dev.hephaestus.proximity.app.impl;
 
 import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.util.Task;
 import dev.hephaestus.proximity.app.api.Template;
+import dev.hephaestus.proximity.app.api.logging.ExceptionUtil;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
 import dev.hephaestus.proximity.app.api.rendering.Canvas;
 import dev.hephaestus.proximity.app.api.rendering.ImageRenderer;
+import dev.hephaestus.proximity.app.api.util.Task;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import dev.hephaestus.proximity.app.impl.rendering.PreviewImageRenderer;
-import javafx.animation.Interpolator;
-import javafx.animation.RotateTransition;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -28,7 +26,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.util.Duration;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -115,11 +112,11 @@ public class PreviewPane extends VBox {
 
         private <D extends RenderJob> DocumentImpl<D> startCopy() {
             //noinspection unchecked
-            DataWidget.Entry<D> widget = (DataWidget.Entry<D>) PreviewPane.this.mostRecentlyDrawn;
-            D job = widget.getValue();
-            Template<D> template = widget.template().getValue();
+            DataWidget.Entry<D> entry = (DataWidget.Entry<D>) PreviewPane.this.mostRecentlyDrawn;
+            D job = entry.getValue();
+            Template<D> template = entry.template().getValue();
 
-            return new DocumentImpl<>(job, template);
+            return new DocumentImpl<>(job, template, entry.getWidget().getErrorProperty());
         }
 
         private Canvas doRender(DocumentImpl<?> document) {
@@ -213,11 +210,11 @@ public class PreviewPane extends VBox {
                 Platform.runLater(() -> PreviewPane.this.isRendering.set(true));
 
                 //noinspection unchecked
-                DataWidget.Entry<D> widget = (DataWidget.Entry<D>) this.widget.get();
-                D job = widget.getValue();
-                Template<D> template = widget.template().getValue();
+                DataWidget.Entry<D> entry = (DataWidget.Entry<D>) this.widget.get();
+                D job = entry.getValue();
+                Template<D> template = entry.template().getValue();
 
-                this.document.set(new DocumentImpl<>(job, template));
+                this.document.set(new DocumentImpl<>(job, template, entry.getWidget().getErrorProperty()));
             }
 
             return result;
@@ -258,7 +255,11 @@ public class PreviewPane extends VBox {
                     result.original = new Image(new ByteArrayInputStream(stream.toByteArray()));
                 }
 
-            } catch (IOException e) {
+            } catch (Exception e) {
+                if (!(e instanceof RuntimeException)) {
+                    this.widget.get().getWidget().getErrorProperty().add(ExceptionUtil.getErrorMessage(e));
+                }
+
                 this.interrupt(e);
             }
 
@@ -286,6 +287,11 @@ public class PreviewPane extends VBox {
 
                 PreviewPane.this.isRendering.set(false);
             });
+        }
+
+        @Override
+        protected void doFinally() {
+            PreviewPane.this.isRendering.set(false);
         }
     }
 

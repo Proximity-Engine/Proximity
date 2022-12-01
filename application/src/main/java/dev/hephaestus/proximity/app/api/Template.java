@@ -3,11 +3,9 @@ package dev.hephaestus.proximity.app.api;
 import dev.hephaestus.proximity.app.api.exceptions.ResourceNotFoundException;
 import dev.hephaestus.proximity.app.impl.rendering.DefaultResourceProvider;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +25,7 @@ public abstract class Template<D extends RenderJob> {
         this.height = height;
 
         if (addDefaultResourceProvider) {
-            this.addResourceProvider(new DefaultResourceProvider(this.getClass().getClassLoader()));
+            this.addResourceProvider(new DefaultResourceProvider(this.getClass().getModule()));
         }
     }
 
@@ -57,7 +55,7 @@ public abstract class Template<D extends RenderJob> {
         return false;
     }
 
-    public final URL getResource(String name) {
+    public final InputStream getResource(String name) {
         for (ResourceProvider resourceProvider : this.resourceProviders) {
             if (resourceProvider.hasResource(name)) {
                 return resourceProvider.getResource(name);
@@ -67,14 +65,6 @@ public abstract class Template<D extends RenderJob> {
         throw new ResourceNotFoundException(name);
     }
 
-    public final InputStream getResourceAsStream(String name) {
-        try {
-            return this.getResource(name).openStream();
-        } catch (IOException e) {
-            throw new ResourceNotFoundException(e);
-        }
-    }
-
     public final Font getFont(String fontName, float size) {
         Font font = this.fonts.get(fontName);
 
@@ -82,9 +72,9 @@ public abstract class Template<D extends RenderJob> {
             InputStream stream;
 
             if (this.hasResource("fonts/" + fontName + ".otf")) {
-                stream = this.getResourceAsStream("fonts/" + fontName + ".otf");
+                stream = this.getResource("fonts/" + fontName + ".otf");
             } else {
-                stream = this.getResourceAsStream("fonts/" + fontName + ".ttf");
+                stream = this.getResource("fonts/" + fontName + ".ttf");
             }
 
             if (stream != null) {
