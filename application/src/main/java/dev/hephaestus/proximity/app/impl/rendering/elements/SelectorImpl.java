@@ -11,7 +11,7 @@ import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -101,28 +101,28 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     }
 
     @Override
-    public Element<D> branch(String id, Function<D, String> branch, Predicate<D> visibilityPredicate, Consumer<Selector<D>> treeBuilder) {
-        return ParentImpl.super.branch(id, branch, visibilityPredicate, treeBuilder);
-    }
-
-    @Override
-    public Element<D> branch(String id, Function<D, String> branch, Consumer<Selector<D>> treeBuilder) {
-        return ParentImpl.super.branch(id, branch, treeBuilder);
-    }
-
-    @Override
     public Element<D> select(String id, Consumer<Selector<D>> selectorBuilder) {
         return ParentImpl.super.select(id, selectorBuilder);
     }
 
     @Override
-    public Element<D> branch(Function<D, String> id, Predicate<D> visibilityPredicate, Consumer<Selector<D>> treeBuilder) {
-        return ParentImpl.super.branch(id, visibilityPredicate, treeBuilder);
+    public Element<D> tree(Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder) {
+        return ParentImpl.super.tree(treeBuilder, elementBuilder);
     }
 
     @Override
-    public Element<D> branch(Function<D, String> id, Consumer<Selector<D>> treeBuilder) {
-        return ParentImpl.super.branch(id, treeBuilder);
+    public Element<D> tree(Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder, Predicate<D> visibilityPredicate) {
+        return ParentImpl.super.tree(treeBuilder, elementBuilder, visibilityPredicate);
+    }
+
+    @Override
+    public Element<D> tree(String id, Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder) {
+        return ParentImpl.super.tree(id, treeBuilder, elementBuilder);
+    }
+
+    @Override
+    public Element<D> tree(String id, Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder, Predicate<D> visibilityPredicate) {
+        return ParentImpl.super.tree(id, treeBuilder, elementBuilder, visibilityPredicate);
     }
 
     @Override
@@ -137,7 +137,7 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
 
     @Override
     public Element<D> select(Consumer<Selector<D>> selectorBuilder) {
-        return ParentImpl.super.select(null, selectorBuilder);
+        return ParentImpl.super.select(null, d -> true, selectorBuilder);
     }
 
     @Override
@@ -161,12 +161,12 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     }
 
     @Override
-    public Image<D> image(ThrowingFunction<D, InputStream, IOException> srcGetter) {
+    public Image<D> image(ThrowingFunction<D, URL, IOException> srcGetter) {
         return this.image(null, srcGetter);
     }
 
     @Override
-    public Image<D> image(String id, ThrowingFunction<D, InputStream, IOException> srcGetter) {
+    public Image<D> image(String id, ThrowingFunction<D, URL, IOException> srcGetter) {
         return ParentImpl.super.image(id, srcGetter);
     }
 

@@ -18,8 +18,8 @@ import java.io.OutputStream;
 
 public class ImageRenderer extends Renderer<Canvas> {
     @Override
-    public Canvas createCanvas(int width, int height) {
-        return new Canvas(width, height);
+    public Canvas createCanvas(int width, int height, int dpi) {
+        return new Canvas(width, height, dpi);
     }
 
     @Override

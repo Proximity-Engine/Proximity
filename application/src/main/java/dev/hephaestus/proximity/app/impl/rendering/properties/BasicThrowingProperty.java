@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 public class BasicThrowingProperty<D, V, R, E extends Exception> implements ThrowingProperty<D, V, R, E> {
     private final D data;
     private final R result;
+
     private ThrowingFunction<D, V, E> getter;
 
     public BasicThrowingProperty(R result, D data) {

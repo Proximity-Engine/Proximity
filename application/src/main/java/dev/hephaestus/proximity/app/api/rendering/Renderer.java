@@ -11,7 +11,7 @@ import java.io.OutputStream;
 import java.util.Optional;
 
 public abstract class Renderer<CANVAS> {
-    public abstract CANVAS createCanvas(int width, int height);
+    public abstract CANVAS createCanvas(int width, int height, int dpi);
     protected abstract void render(Image<?> image, CANVAS canvas) throws IOException;
     protected abstract void render(Document<?> document, CANVAS canvas, TextComponent component, int x, int y, BoundingBox bounds);
     public abstract void write(CANVAS canvas, OutputStream out) throws IOException;

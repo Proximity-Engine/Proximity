@@ -19,10 +19,10 @@ public interface Selector<D extends RenderJob> extends Element<D> {
     Element<D> group(String id, Predicate<D> visibilityPredicate, Consumer<Group<D>> groupBuilder);
     Element<D> group(String id, Consumer<Group<D>> groupBuilder);
 
-    Element<D> branch(String id, Function<D, String> branch, Predicate<D> visibilityPredicate, Consumer<Selector<D>> treeBuilder);
-    Element<D> branch(String id, Function<D, String> branch, Consumer<Selector<D>> treeBuilder);
-    Element<D> branch(Function<D, String> branch, Predicate<D> visibilityPredicate, Consumer<Selector<D>> treeBuilder);
-    Element<D> branch(Function<D, String> branch, Consumer<Selector<D>> treeBuilder);
+    Element<D> tree(Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder);
+    Element<D> tree(Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder, Predicate<D> visibilityPredicate);
+    Element<D> tree(String id, Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder);
+    Element<D> tree(String id, Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder, Predicate<D> visibilityPredicate);
 
     Element<D> select(String id, Predicate<D> visibilityPredicate, Consumer<Selector<D>> selectorBuilder);
     Element<D> select(String id, Consumer<Selector<D>> selectorBuilder);
@@ -35,7 +35,7 @@ public interface Selector<D extends RenderJob> extends Element<D> {
     Image<D> image(String id, Option<String, ?, ? super D> src);
     Image<D> image(String id, String src, Predicate<D> visibilityPredicate);
     Image<D> image(Function<D, String> id, Predicate<D> visibilityPredicate);
-    Image<D> image(ThrowingFunction<D, InputStream, IOException> srcGetter);
+    Image<D> image(ThrowingFunction<D, URL, IOException> srcGetter);
 
     Text<D> text(Function<D, String> textGetter);
     Text<D> text();

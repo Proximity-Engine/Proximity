@@ -13,6 +13,7 @@ import org.jetbrains.annotations.ApiStatus;
  */
 @ApiStatus.NonExtendable
 public interface Element<D extends RenderJob> extends Stateful {
+    String getPath();
     Document<D> getDocument();
     String getId();
     BoundingBoxes getBounds();

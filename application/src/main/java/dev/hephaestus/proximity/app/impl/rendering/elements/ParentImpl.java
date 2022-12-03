@@ -4,15 +4,13 @@ package dev.hephaestus.proximity.app.impl.rendering.elements;
 import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.Parent;
 import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.api.rendering.elements.*;
-import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 import dev.hephaestus.proximity.app.api.text.TextStyle;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -58,52 +56,48 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Ele
 
         result.visibility().set(visibilityPredicate);
 
-//        if (result.visibility().get()) {
-            selectorBuilder.accept(result);
-//        }
-
-        return result;
-    }
-
-    @Override
-    default Element<D> branch(String id, Function<D, String> branch, Predicate<D> visibilityPredicate, Consumer<Selector<D>> treeBuilder) {
-        if (visibilityPredicate.test(this.getDocument().getData())) {
-            return this.select(id, select -> {
-                select.select(branch.apply(this.getDocument().getData()), treeBuilder);
-            });
-        }
-
-        return new Empty<>(id, this.getDocument());
-    }
-
-    @Override
-    default Element<D> branch(String id, Function<D, String> branch, Consumer<Selector<D>> treeBuilder) {
-        return this.select(id, select -> {
-            select.select(branch.apply(this.getDocument().getData()), treeBuilder);
-        });
-    }
-
-    @Override
-    default Element<D> select(String id, Consumer<Selector<D>> selectorBuilder) {
-        SelectorImpl<D> result = this.createElement(id, SelectorImpl::new);
-
         selectorBuilder.accept(result);
 
         return result;
     }
 
     @Override
-    default Element<D> branch(Function<D, String> id, Predicate<D> visibilityPredicate, Consumer<Selector<D>> treeBuilder) {
-        if (visibilityPredicate.test(this.getDocument().getData())) {
-            return this.select(id.apply(this.getDocument().getData()), treeBuilder);
-        }
-
-        return new Empty<>(id.apply(this.getDocument().getData()), this.getDocument());
+    default Element<D> select(String id, Consumer<Selector<D>> selectorBuilder) {
+        return this.select(id, d -> true, selectorBuilder);
     }
 
     @Override
-    default Element<D> branch(Function<D, String> id, Consumer<Selector<D>> treeBuilder) {
-        return this.select(id.apply(this.getDocument().getData()), treeBuilder);
+    default Element<D> tree(Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder) {
+        return this.tree(null, treeBuilder, elementBuilder);
+    }
+
+    @Override
+    default Element<D> tree(Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder, Predicate<D> visibilityPredicate) {
+        return this.tree(null, treeBuilder, elementBuilder, visibilityPredicate);
+    }
+
+    @Override
+    default Element<D> tree(String id, Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder) {
+        return this.tree(id, treeBuilder, elementBuilder, d -> true);
+    }
+
+    @Override
+    default Element<D> tree(String id, Consumer<Tree<D>> treeBuilder, Consumer<Selector<D>> elementBuilder, Predicate<D> visibilityPredicate) {
+        TreeImpl<D> tree = new TreeImpl<>(this.getDocument());
+        SelectorImpl<D> result = this.createElement(id, SelectorImpl::new);
+
+        result.visibility().set(visibilityPredicate);
+
+        treeBuilder.accept(tree);
+
+        for (var branch : tree) {
+            SelectorImpl<D> branchSelector = result.createElement(branch.getKey(), SelectorImpl::new);
+
+            branchSelector.visibility().set(branch.getValue());
+            elementBuilder.accept(branchSelector);
+        }
+
+        return result;
     }
 
     @Override
@@ -114,7 +108,7 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Ele
     @Override
     default Image<D> image(String id, String src) {
         return this.createElement(id, ImageImpl<D>::new).src()
-                .set(this.getDocument().getResource(src, ImageImpl.IMAGE_FILE_TYPES));
+                .set(src);
     }
 
     @Override
@@ -125,7 +119,7 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Ele
     @Override
     default Image<D> image(String id, String src, Predicate<D> visibilityPredicate) {
         return this.createElement(id, ImageImpl<D>::new).visibility().set(visibilityPredicate).src()
-                .set(this.getDocument().getResource(src, ImageImpl.IMAGE_FILE_TYPES));
+                .set(src);
     }
 
     @Override
@@ -134,7 +128,7 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Ele
     }
 
     @Override
-    default Image<D> image(String id, ThrowingFunction<D, InputStream, IOException> srcGetter) {
+    default Image<D> image(String id, ThrowingFunction<D, URL, IOException> srcGetter) {
         return this.createElement(id, ImageImpl<D>::new).src().set(srcGetter);
     }
 
@@ -170,27 +164,5 @@ public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Ele
                 .y().set(y)
                 .width().set(width)
                 .height().set(height);
-    }
-
-    record Empty<D extends RenderJob>(String id, Document<D> document) implements Element<D> {
-        @Override
-        public Document<D> getDocument() {
-            return this.document;
-        }
-
-        @Override
-        public String getId() {
-            return id;
-        }
-
-        @Override
-        public BoundingBoxes getBounds() {
-            return new BoundingBoxes();
-        }
-
-        @Override
-        public void invalidate() {
-
-        }
     }
 }

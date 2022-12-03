@@ -29,6 +29,12 @@
     -fx-border-radius: 1;
 }
 
+.text-field {
+    -fx-text-fill: "#FFFFFFD0";
+    -fx-prompt-text-fill: "#FFFFFFA0";
+    -fx-background: transparent;
+}
+
 .menu-button {
     -fx-padding: 0 0 0 30px;
 }

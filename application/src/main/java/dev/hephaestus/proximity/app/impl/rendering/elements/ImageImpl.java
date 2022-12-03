@@ -3,15 +3,15 @@ package dev.hephaestus.proximity.app.impl.rendering.elements;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.logging.ExceptionUtil;
 import dev.hephaestus.proximity.app.api.rendering.elements.Image;
+import dev.hephaestus.proximity.app.api.rendering.properties.ImageProperty;
 import dev.hephaestus.proximity.app.api.rendering.properties.Property;
-import dev.hephaestus.proximity.app.api.rendering.properties.ThrowingProperty;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.ImagePosition;
 import dev.hephaestus.proximity.app.api.rendering.util.Rect;
 import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import dev.hephaestus.proximity.app.impl.rendering.properties.BasicProperty;
-import dev.hephaestus.proximity.app.impl.rendering.properties.BasicThrowingProperty;
+import dev.hephaestus.proximity.app.impl.rendering.properties.ImagePropertyImpl;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
+import java.util.function.Supplier;
 
 public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> implements Image<D> {
     public static final String[] IMAGE_FILE_TYPES = {
@@ -28,8 +29,9 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
 
     private final VisibilityProperty<Image<D>> visibility;
     private final BasicProperty<D, ImagePosition, Image<D>> position;
-    private final ThrowingProperty<D, InputStream, Image<D>, IOException> src;
+    private final ImageProperty<D> src;
 
+    private Supplier<InputStream> rendered = null;
     private Rect dimensions;
 
     public ImageImpl(DocumentImpl<D> document, String id, ElementImpl<D> parent) {
@@ -39,13 +41,13 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
 
         this.visibility = new VisibilityProperty<Image<D>>(this, data);
         this.position = new BasicProperty<>(this, data, new ImagePosition.Direct(0, 0));
-        this.src = new BasicThrowingProperty<>(this, data);
+        this.src = new ImagePropertyImpl<>(this, data);
 
-        this.src.set(d -> document.getResource(this.getPath(), IMAGE_FILE_TYPES));
+        this.src.set(this.getPath());
     }
 
     @Override
-    public ThrowingProperty<D, InputStream, Image<D>, IOException> src() {
+    public ImageProperty<D> src() {
         return this.src;
     }
 
@@ -57,6 +59,15 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
     @Override
     public VisibilityProperty<Image<D>> visibility() {
         return this.visibility;
+    }
+
+    @Override
+    public BoundingBoxes getBounds() {
+        if (((ImagePropertyImpl<D>) this.src).getter() != this.rendered) {
+            this.invalidate();
+        }
+
+        return super.getBounds();
     }
 
     @Override
@@ -114,6 +125,8 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
     }
 
     private Rect calculateDimensions() {
+        this.rendered = ((ImagePropertyImpl<D>) this.src).getter();
+
         if (this.dimensions == null) {
             byte[] imageBytes = this.getImageBytes();
 

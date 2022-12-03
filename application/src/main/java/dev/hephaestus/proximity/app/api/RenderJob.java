@@ -2,13 +2,15 @@ package dev.hephaestus.proximity.app.api;
 
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonObject;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class RenderJob {
     private final String plugin, name;
-    private final Map<Option<?, ?, ?>, Object> options = new LinkedHashMap<>();
+    private final Map<Option<?, ?, ?>, Property<?>> options = new LinkedHashMap<>();
 
     protected RenderJob(String plugin, String name) {
         this.plugin = plugin;
@@ -19,13 +21,17 @@ public abstract class RenderJob {
         return this.name;
     }
 
-    @SuppressWarnings("unchecked")
     public final <T, D extends RenderJob> T getOption(Option<T, ?, D> option) {
+        return this.getOptionProperty(option).getValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    public final <T, D extends RenderJob> Property<T> getOptionProperty(Option<T, ?, D> option) {
         if (!this.options.containsKey(option)) {
-            this.options.put(option, option.getDefaultValue((D) this));
+            this.options.put(option, new SimpleObjectProperty<>(option.getDefaultValue((D) this)));
         }
 
-        return (T) this.options.get(option);
+        return (Property<T>) this.options.get(option);
     }
 
     public abstract JsonElement toJson();

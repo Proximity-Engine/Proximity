@@ -5,14 +5,18 @@ import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.rendering.Canvas;
 import dev.hephaestus.proximity.app.api.rendering.ImageRenderer;
 import dev.hephaestus.proximity.app.api.rendering.elements.Image;
+import dev.hephaestus.proximity.app.api.rendering.properties.ImageProperty;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBox;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.Rect;
+import dev.hephaestus.proximity.app.impl.rendering.properties.ImagePropertyImpl;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -25,8 +29,8 @@ public class PreviewImageRenderer extends ImageRenderer {
     }
 
     @Override
-    public Canvas createCanvas(int width, int height) {
-        Canvas canvas = new Canvas(this.width, this.height);
+    public Canvas createCanvas(int width, int height, int dpi) {
+        Canvas canvas = new Canvas(this.width, this.height, dpi);
 
         float rW = ((float) this.width) / width;
         float rH = ((float) this.height) / height;
@@ -37,13 +41,42 @@ public class PreviewImageRenderer extends ImageRenderer {
     }
 
     private URL downscale(Image<?> node, int n) throws IOException {
-        Path path = Path.of(".tmp", "downscaled", "" + this.width, "" + this.height);
-
+        Path path = Path.of(".tmp", "downscaled", this.width + "x" + this.height);
         Template<?> template = node.getDocument().getTemplate();
+        ImagePropertyImpl<?> src = (ImagePropertyImpl<?>) node.src();
 
-        path = path.resolve(template.getClass().getModule().getName());
-        path = path.resolve(template.getName());
-        path = path.resolve(node.getId());
+        switch (src.getType()) {
+            case UNSET -> throw new UnsupportedOperationException();
+            case TEMPLATE_RESOURCE -> {
+                path = path.resolve(template.getClass().getModule().getName());
+                path = path.resolve(template.getName());
+                path = path.resolve(node.getPath() + "." + node.getFormat());
+            }
+            case DYNAMIC -> {
+                URL url = src.getUrl();
+
+                path = path.resolve(URLEncoder.encode(url.getHost(), StandardCharsets.US_ASCII));
+
+                if (url.getQuery() == null) {
+                    for (String s : url.getPath().substring(1).split("/")) {
+                        path = path.resolve(URLEncoder.encode(s, StandardCharsets.US_ASCII));
+                    }
+
+                    path = path.resolveSibling(path.getFileName().toString() + ".png");
+
+                    Files.createDirectories(path.getParent());
+                } else {
+                    for (String s : url.getPath().substring(1).split("/")) {
+                        path = path.resolve(URLEncoder.encode(s, StandardCharsets.US_ASCII));
+                    }
+
+                    Files.createDirectories(path);
+
+                    path = path.resolve(URLEncoder.encode(url.getQuery(), StandardCharsets.US_ASCII) + node.getFormat());
+                }
+
+            }
+        }
 
         Files.createDirectories(path.getParent());
 

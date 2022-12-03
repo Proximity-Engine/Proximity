@@ -33,14 +33,21 @@ public class Canvas extends Graphics2D {
     private final BufferedImage image;
     private final Graphics2D wrapped;
     private final Deque<Frame> frames = new ArrayDeque<>();
+    private final int dpi;
 
-    public Canvas(int width, int height) {
-        this(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
+    public Canvas(int width, int height, int dpi) {
+        this(new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB), dpi);
     }
 
-    public Canvas(BufferedImage image) {
+    public Canvas(BufferedImage image, int dpi) {
         this.image = image;
         this.wrapped = image.createGraphics();
+        this.dpi = dpi;
+
+        final AffineTransform trans = this.wrapped.getDeviceConfiguration().getNormalizingTransform();
+        System.out.println(trans.getScaleX()*72+" DPI horizontally");
+        System.out.println(trans.getScaleY()*72+" DPI vertically");
+
     }
 
     public BufferedImage getImage() {

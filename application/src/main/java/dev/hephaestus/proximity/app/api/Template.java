@@ -17,12 +17,13 @@ public abstract class Template<D extends RenderJob> {
     private final List<ResourceProvider> resourceProviders = new ArrayList<>(1);
 
     protected final String name;
-    protected final int width, height;
+    protected final int width, height, dpi;
 
-    protected Template(String name, int width, int height, boolean addDefaultResourceProvider) {
+    protected Template(String name, int width, int height, int dpi, boolean addDefaultResourceProvider) {
         this.name = name;
         this.width = width;
         this.height = height;
+        this.dpi = dpi;
 
         if (addDefaultResourceProvider) {
             this.addResourceProvider(new DefaultResourceProvider(this.getClass().getModule()));
@@ -39,6 +40,10 @@ public abstract class Template<D extends RenderJob> {
 
     public final int getHeight() {
         return this.height;
+    }
+
+    public final int getDPI() {
+        return this.dpi;
     }
 
     public final void addResourceProvider(ResourceProvider resourceProvider) {

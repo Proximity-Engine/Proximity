@@ -103,26 +103,21 @@ public class PreviewPane extends VBox {
 
         @Override
         protected Builder<?> addSteps(Builder<Void> builder) {
-            return builder.then((Supplier<DocumentImpl<RenderJob>>) this::startCopy)
+            return builder.then((Supplier<DocumentImpl<?>>) this::startCopy)
                     .then(this::doRender)
                     .then(this::doCrop)
                     .then(this::toToolkitImage)
                     .then(this::copyToClipboard);
         }
 
-        private <D extends RenderJob> DocumentImpl<D> startCopy() {
-            //noinspection unchecked
-            DataWidget.Entry<D> entry = (DataWidget.Entry<D>) PreviewPane.this.mostRecentlyDrawn;
-            D job = entry.getValue();
-            Template<D> template = entry.template().getValue();
-
-            return new DocumentImpl<>(job, template, entry.getWidget().getErrorProperty());
+        private <D extends RenderJob> DocumentImpl<?> startCopy() {
+            return PreviewPane.this.mostRecentlyDrawn.document().getValue();
         }
 
         private Canvas doRender(DocumentImpl<?> document) {
             Template<?> template = document.getTemplate();
             ImageRenderer renderer = new ImageRenderer();
-            Canvas canvas = renderer.createCanvas(template.getWidth(), template.getHeight());
+            Canvas canvas = renderer.createCanvas(template.getWidth(), template.getHeight(), template.getDPI());
 
             try {
                 renderer.render(document, canvas);
@@ -214,7 +209,7 @@ public class PreviewPane extends VBox {
                 D job = entry.getValue();
                 Template<D> template = entry.template().getValue();
 
-                this.document.set(new DocumentImpl<>(job, template, entry.getWidget().getErrorProperty()));
+                this.document.set(entry.document().getValue());
             }
 
             return result;
@@ -232,7 +227,7 @@ public class PreviewPane extends VBox {
             int height = (int) (template.getHeight() * r);
 
             PreviewImageRenderer renderer = new PreviewImageRenderer(width, height);
-            Canvas canvas = renderer.createCanvas(template.getWidth(), template.getHeight());
+            Canvas canvas = renderer.createCanvas(template.getWidth(), template.getHeight(), template.getDPI());
 
             try {
                 renderer.render(document, canvas);
@@ -291,7 +286,9 @@ public class PreviewPane extends VBox {
 
         @Override
         protected void doFinally() {
-            PreviewPane.this.isRendering.set(false);
+            if (Thread.currentThread().isInterrupted()) {
+                PreviewPane.this.isRendering.set(false);
+            }
         }
     }
 

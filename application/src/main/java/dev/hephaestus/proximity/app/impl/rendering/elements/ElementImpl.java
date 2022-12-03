@@ -44,6 +44,7 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
         return this.id;
     }
 
+    @Override
     public final String getPath() {
         return this.path;
     }
@@ -53,7 +54,7 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
     }
 
     @Override
-    public final BoundingBoxes getBounds() {
+    public BoundingBoxes getBounds() {
         if (!this.visibility().get()) {
             return BoundingBoxes.EMPTY;
         }
@@ -86,7 +87,7 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
         private final R result;
 
         private boolean always = false;
-        private boolean value = true;
+        private Predicate<D> value = d -> true;
 
         public VisibilityProperty(R result, D data) {
             this.data = data;
@@ -95,19 +96,19 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
 
         @Override
         public boolean get() {
-            return this.value;
+            return this.value.test(this.data);
         }
 
         @Override
         public R set(boolean value) {
-            this.value = value;
+            this.value = d -> value;
 
             return this.result;
         }
 
         @Override
         public R set(Predicate<D> getter) {
-            this.value = getter.test(this.data);
+            this.value = getter;
             this.always = false;
 
             return this.result;

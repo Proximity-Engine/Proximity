@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.options.DropdownOption;
 import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.api.rendering.elements.Element;
+import dev.hephaestus.proximity.app.api.rendering.properties.VisibilityProperty;
 import dev.hephaestus.proximity.app.impl.rendering.elements.ElementImpl;
 import dev.hephaestus.proximity.app.impl.rendering.elements.GroupImpl;
 import dev.hephaestus.proximity.app.impl.rendering.elements.ParentImpl;
@@ -16,7 +17,10 @@ import javafx.collections.ObservableList;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 
 public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Document<D> {
     private final D data;
@@ -55,9 +59,9 @@ public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Documen
             boolean hasDefault = false;
 
             for (Element<D> e : selector) {
-                this.addChildren(rootOffset, (ElementImpl<D>) e, builder, firstVisible.isPresent() && e == firstVisible.get());
+                this.addChildren(rootOffset, (ElementImpl<D>) e, builder, selector.isVisible() && firstVisible.isPresent() && e == firstVisible.get());
 
-                if (((ElementImpl<D>) e).isAlwaysVisible()) {
+                if (selector.isVisible() && ((ElementImpl<D>) e).isAlwaysVisible()) {
                     hasDefault = true;
                 }
             }
@@ -66,8 +70,9 @@ public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Documen
                 builder.add("None", null, d -> true);
             }
 
-            selector.setOption(builder.build());
-            this.selectorOverrides.add(builder.build());
+            Option<ElementImpl<D>, ?, D> option = builder.build();
+            selector.setOption(option);
+            this.selectorOverrides.add(option);
         }
     }
 
@@ -76,9 +81,11 @@ public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Documen
             Optional<Element<D>> firstVisible = selector.getFirstVisible();
 
             for (Element<D> e : selector) {
-                this.addChildren(rootOffset, (ElementImpl<D>) e, builder, isFirstVisible && firstVisible.isPresent() && e == firstVisible.get());
+                this.addChildren(rootOffset, (ElementImpl<D>) e, builder, selector.isVisible() && isFirstVisible && firstVisible.isPresent() && e == firstVisible.get());
             }
         } else {
+            ((VisibilityProperty<D, ?>) element.visibility()).set(true);
+
             builder.add(element.getPath().substring(rootOffset), element, d -> isFirstVisible);
         }
     }
