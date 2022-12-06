@@ -32,7 +32,12 @@
 .text-field {
     -fx-text-fill: "#FFFFFFD0";
     -fx-prompt-text-fill: "#FFFFFFA0";
-    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+
+.string-entry {
+    -fx-border-color: "#FFFFFF40";
+    -fx-border-radius: 3;
 }
 
 .menu-button {

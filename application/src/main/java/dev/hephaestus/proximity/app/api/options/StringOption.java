@@ -50,6 +50,8 @@ public class StringOption<D extends RenderJob> extends Option<String, StringOpti
 
             this.getChildren().addAll(label, spacer, this.field);
 
+            this.field.getStyleClass().add("string-entry");
+
             HBox.setHgrow(spacer, Priority.ALWAYS);
         }
 
