@@ -19,7 +19,6 @@ public class TextPropertyImpl<D, R extends Stateful> implements TextProperty<D, 
     private final R result;
 
     private final List<BiConsumer<D, Consumer<Word>>> wordGetters = new ArrayList<>();
-    private final List<Word> words = new ArrayList<>();
 
     public TextPropertyImpl(R result, D data) {
         this.data = data;
@@ -79,30 +78,29 @@ public class TextPropertyImpl<D, R extends Stateful> implements TextProperty<D, 
 
     @Override
     public int wordCount() {
-        if (this.words.isEmpty() && !this.wordGetters.isEmpty()) {
-            for (var getter : this.wordGetters) {
-                getter.accept(this.data, this.words::add);
-            }
+        List<Word> words = new ArrayList<>();
+
+        for (var getter : this.wordGetters) {
+            getter.accept(this.data, words::add);
         }
 
-        return this.words.size();
+        return words.size();
     }
 
     @NotNull
     @Override
     public Iterator<Word> iterator() {
-        if (this.words.isEmpty() && !this.wordGetters.isEmpty()) {
-            for (var getter : this.wordGetters) {
-                getter.accept(this.data, this.words::add);
-            }
+        List<Word> words = new ArrayList<>();
+
+        for (var getter : this.wordGetters) {
+            getter.accept(this.data, words::add);
         }
 
-        return new UnmodifiableIterator<>(this.words);
+        return new UnmodifiableIterator<>(words);
     }
 
     @Override
     public void invalidate() {
-        this.words.clear();
         this.result.invalidate();
     }
 }
