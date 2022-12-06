@@ -75,15 +75,21 @@ public class FileOption<D extends RenderJob> extends Option<Path, FileOption<D>.
 
             button.setOnAction(event -> {
                 FileChooser fileChooser = new FileChooser();
+                Path lastOpenedDirectory = Proximity.getLastOpenedDirectory();
 
                 fileChooser.setTitle("Open File");
                 fileChooser.getExtensionFilters().addAll(FileOption.this.filters);
+
+                if (lastOpenedDirectory != null) {
+                    fileChooser.setInitialDirectory(lastOpenedDirectory.toFile());
+                }
 
                 File file = fileChooser.showOpenDialog(Proximity.getWindow());
 
                 if (file == null) {
                     this.value.setValue(null);
                 } else {
+                    Proximity.setLastOpenedDirectory(file.getParentFile().toPath());
                     this.value.setValue(file.toPath());
                     renderJob.getOptionProperty(FileOption.this).bind(this.value);
                 }

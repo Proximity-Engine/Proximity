@@ -12,12 +12,20 @@ import java.nio.file.Path;
 public abstract class AbstractJsonElement implements JsonElement {
     @Override
     public void write(Path path) throws IOException {
-        this.write(JsonWriter.json5(path));
+        JsonWriter writer = JsonWriter.json5(path);
+
+        this.write(writer);
+        writer.flush();
+        writer.close();
     }
 
     @Override
     public void write(OutputStream stream) throws IOException {
-        this.write(JsonWriter.json5(new BufferedWriter(new OutputStreamWriter(stream))));
+        JsonWriter writer = JsonWriter.json5(new BufferedWriter(new OutputStreamWriter(stream)));
+
+        this.write(writer);
+        writer.flush();
+        writer.close();
     }
 
     protected abstract void write(JsonWriter writer) throws IOException;

@@ -21,13 +21,19 @@ public class SaveButton extends MenuItem implements Initializable {
 
             if (path == null) {
                 FileChooser fileChooser = new FileChooser();
+                Path lastSavedDirectory = Proximity.getLastSavedDirectory();
 
                 fileChooser.setTitle("Save Project");
                 fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Proximity Project", "*.pxproject"));
 
+                if (lastSavedDirectory != null) {
+                    fileChooser.setInitialDirectory(lastSavedDirectory.toFile());
+                }
+
                 File file = fileChooser.showSaveDialog(Proximity.getWindow());
 
                 if (file != null) {
+                    Proximity.setLastSavedDirectory(file.getParentFile().toPath());
                     path = file.toPath();
                 }
             }

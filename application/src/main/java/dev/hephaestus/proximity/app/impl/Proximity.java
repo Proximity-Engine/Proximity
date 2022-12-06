@@ -10,6 +10,8 @@ import dev.hephaestus.proximity.app.impl.exceptions.PluginInstantiationException
 import dev.hephaestus.proximity.app.impl.plugins.Plugin;
 import dev.hephaestus.proximity.app.impl.sidebar.OptionsPane;
 import dev.hephaestus.proximity.app.impl.sidebar.SidebarPane;
+import dev.hephaestus.proximity.json.api.Json;
+import dev.hephaestus.proximity.json.api.JsonObject;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -44,6 +46,7 @@ public class Proximity {
     private static Plugin DATA_PROVIDER_PLUGIN;
     private static Path WORKING_DIRECTORY;
     private static Path PLUGIN_DIRECTORY;
+    private static Path WORKING_DATA;
     private static Log LOG;
     private static Cache CACHE;
     private static DataProvider<?> DATA_PROVIDER;
@@ -51,6 +54,9 @@ public class Proximity {
     private static Project CURRENT_PROJECT;
     private static Locale LOCALE;
     private static Proximity INSTANCE;
+
+    private static Path LAST_OPENED_DIRECTORY;
+    private static Path LAST_SAVED_DIRECTORY;
 
     @FXML private HBox sidebarPanes;
     @FXML private VBox root;
@@ -70,12 +76,29 @@ public class Proximity {
     public static void init(Path workingDirectory, Path pluginDirectory) throws InitializationException {
         WORKING_DIRECTORY = workingDirectory;
         PLUGIN_DIRECTORY = pluginDirectory;
+        WORKING_DATA = workingDirectory.resolve("data.json5");
 
         Path logs = WORKING_DIRECTORY.resolve("logs");
         LOG = Log.create("Proximity", logs);
 
         Path cacheDirectory = WORKING_DIRECTORY.resolve(".tmp").resolve("cache");
         CACHE = new Cache(LOG, cacheDirectory);
+
+        if (Files.exists(WORKING_DATA)) {
+            try {
+                JsonObject data = Json.parseObject(WORKING_DATA);
+
+                if (data.has("last_opened_directory")) {
+                    LAST_OPENED_DIRECTORY = Path.of(data.getString("last_opened_directory"));
+                }
+
+                if (data.has("last_saved_directory")) {
+                    LAST_SAVED_DIRECTORY = Path.of(data.getString("last_saved_directory"));
+                }
+            } catch (IOException e) {
+                throw new InitializationException(e);
+            }
+        }
 
         // Iterate over plugin files
         if (Files.exists(PLUGIN_DIRECTORY)) {
@@ -106,9 +129,62 @@ public class Proximity {
         }
     }
 
+    private static void saveData() {
+        JsonObject.Mutable json = JsonObject.create();
+
+        if (LAST_OPENED_DIRECTORY != null) {
+            json.put("last_opened_directory", LAST_OPENED_DIRECTORY.toString());
+        }
+
+        if (LAST_SAVED_DIRECTORY != null) {
+            json.put("last_saved_directory", LAST_SAVED_DIRECTORY.toString());
+        }
+
+        try {
+            json.write(WORKING_DATA);
+        } catch (IOException e) {
+            LOG.print(e);
+        }
+    }
+
     public static Window getWindow() {
         return INSTANCE.root.getScene().getWindow();
     }
+
+    public static Path getLastOpenedDirectory() {
+        Project project = getCurrentProject();
+        Path lastOpenedDirectory = project.getLastOpenedDirectory();
+
+        if (lastOpenedDirectory == null && LAST_OPENED_DIRECTORY != null) {
+            return LAST_OPENED_DIRECTORY;
+        }
+
+        return lastOpenedDirectory;
+    }
+
+    public static Path getLastSavedDirectory() {
+        Project project = getCurrentProject();
+        Path lastSavedDirectory = project.getLastSavedDirectory();
+
+        if (lastSavedDirectory == null && LAST_SAVED_DIRECTORY != null) {
+            return LAST_SAVED_DIRECTORY;
+        }
+
+        return lastSavedDirectory;
+    }
+
+    public static void setLastOpenedDirectory(Path path) {
+        LAST_OPENED_DIRECTORY = path;
+        getCurrentProject().setLastOpenedDirectory(path);
+        saveData();
+    }
+
+    public static void setLastSavedDirectory(Path path) {
+        LAST_SAVED_DIRECTORY = path;
+        getCurrentProject().setLastSavedDirectory(path);
+        saveData();
+    }
+
 
     @FXML public void initialize() {
         initialize(this.root);
