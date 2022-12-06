@@ -57,7 +57,7 @@ public class TextBoxImpl<D extends RenderJob> extends ElementImpl<D> implements 
 
     protected final BoundingBox measure(TextComponent component, AffineTransform transform, boolean strip) {
         Font font = this.getDocument().getTemplate().getFont(
-                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), component.style.getSize());
+                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), (float) (component.style.getSize() / 72F * getDocument().getTemplate().getDPI()));
 
         if (component.style.getSize() <= 0 || font == null || component.text.isEmpty() || (strip && component.text.isBlank())) {
             return new BoundingBox(transform.getTranslateX(), transform.getTranslateY(), 0, 0, false);
@@ -211,10 +211,10 @@ public class TextBoxImpl<D extends RenderJob> extends ElementImpl<D> implements 
                 String text = word.iterator().next().text;
 
                 if (text.equalsIgnoreCase("\n\n")) {
-                    transform = AffineTransform.getTranslateInstance(this.x.get() + padding.left(), transform.getTranslateY() + this.style.get().getSize() * this.spaceAfterParagraph.get());
+                    transform = AffineTransform.getTranslateInstance(this.x.get() + padding.left(), transform.getTranslateY() + (float) (this.style.get().getSize() / 72F * getDocument().getTemplate().getDPI()) * this.spaceAfterParagraph.get());
                     continue;
                 } else if (text.equalsIgnoreCase("\n")) {
-                    transform = AffineTransform.getTranslateInstance(this.x.get() + padding.left(), transform.getTranslateY() + this.style.get().getSize() * this.lineSpacing.get());
+                    transform = AffineTransform.getTranslateInstance(this.x.get() + padding.left(), transform.getTranslateY() + (float) (this.style.get().getSize() / 72F * getDocument().getTemplate().getDPI()) * this.lineSpacing.get());
                     continue;
                 }
             }
@@ -233,7 +233,7 @@ public class TextBoxImpl<D extends RenderJob> extends ElementImpl<D> implements 
                 // Advance to the next line
                 words.addFirst(word);
 
-                transform = AffineTransform.getTranslateInstance(this.x.get() + padding.left(), transform.getTranslateY() + this.style.get().getSize() * this.lineSpacing.get());
+                transform = AffineTransform.getTranslateInstance(this.x.get() + padding.left(), transform.getTranslateY() + (float) (this.style.get().getSize() / 72F * getDocument().getTemplate().getDPI()) * this.lineSpacing.get());
             } else {
                 // Add the word and move on
                 this.layout(word, (AffineTransform) transform.clone(), false, consumer);

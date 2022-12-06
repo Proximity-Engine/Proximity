@@ -50,6 +50,10 @@ public class Canvas extends Graphics2D {
 
     }
 
+    public int getDPI() {
+        return this.dpi;
+    }
+
     public BufferedImage getImage() {
         return this.image;
     }

@@ -72,7 +72,7 @@ public class TextImpl<D extends RenderJob> extends ElementImpl<D> implements Tex
 
     protected final BoundingBox measure(TextComponent component, AffineTransform transform) {
         Font font = this.getDocument().getTemplate().getFont(
-                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), component.style.getSize());
+                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), (float) (component.style.getSize() / 72F * getDocument().getTemplate().getDPI()));
 
         if (component.style.getSize() <= 0 || font == null) {
             return new BoundingBox(transform.getTranslateX(), transform.getTranslateY(), 0, 0, false);

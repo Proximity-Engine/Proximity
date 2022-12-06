@@ -7,7 +7,7 @@ public final class TextStyle {
     private final TextStyle parent;
 
     private final Value<String> fontName, italicFontName;
-    private final Value<Integer> size;
+    private final Value<Double> size;
     private final Value<Shadow> shadow;
     private final Value<Outline> outline;
     private final Value<Capitalization> capitalization;
@@ -47,7 +47,7 @@ public final class TextStyle {
         return this.italicFontName.isSet() ? this.italicFontName.getValue() : this.parent == null ? null : this.parent.getItalicFontName();
     }
 
-    public Integer getSize() {
+    public Double getSize() {
         return this.size.isSet() ? this.size.getValue() : this.parent == null ? null : this.parent.getSize();
     }
 
@@ -87,7 +87,7 @@ public final class TextStyle {
         return this;
     }
 
-    public TextStyle setSize(Integer size) {
+    public TextStyle setSize(Double size) {
         this.size.setValue(size);
 
         return this;

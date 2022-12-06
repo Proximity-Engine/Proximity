@@ -38,7 +38,7 @@ public class ImageRenderer extends Renderer<Canvas> {
     @Override
     protected void render(Document<?> document, Canvas canvas, TextComponent component, int x, int y, BoundingBox bounds) {
         Font font = document.getTemplate().getFont(
-                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), component.style.getSize());
+                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), (float) (component.style.getSize() / 72F * canvas.getDPI()));
 
         if (component.style.getSize() <= 0 || font == null) {
             return;
