@@ -57,7 +57,6 @@ public abstract class RenderJob {
     private <T, D extends RenderJob> void put(Map.Entry<Option<T, ?, D>, Object> entry, JsonObject.Mutable json) {
         var option = entry.getKey();
 
-        //noinspection unchecked
-        json.put(option.getId(), option.toJson(option.getValue((D) this)));
+        json.put(option.getId(), option.toJson(this.getOption(option)));
     }
 }

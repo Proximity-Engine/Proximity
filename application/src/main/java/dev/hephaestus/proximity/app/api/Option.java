@@ -11,7 +11,6 @@ import java.util.function.Function;
 public abstract class Option<T, W extends Node & Option.Widget<T>, D extends RenderJob> implements Function<D, T> {
     private final String id;
     private final Function<D, T> defaultValue;
-    private final Map<RenderJob, T> values = new HashMap<>();
 
     protected Option(String id, T defaultValue) {
         this.id = id;
@@ -47,14 +46,6 @@ public abstract class Option<T, W extends Node & Option.Widget<T>, D extends Ren
      * @return some widget that allows configuration of the option
      */
     public abstract W createControl(D renderJob);
-
-    public final void setValue(D renderJob, T value) {
-        this.values.put(renderJob, value);
-    }
-
-    public final T getValue(D renderJob) {
-        return this.values.computeIfAbsent(renderJob, job -> this.defaultValue.apply(renderJob));
-    }
 
     public interface Widget<T> {
         Property<T> getValueProperty();

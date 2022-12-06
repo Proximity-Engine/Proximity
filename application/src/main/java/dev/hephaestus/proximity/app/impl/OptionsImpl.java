@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -106,11 +107,14 @@ public class OptionsImpl<D extends RenderJob> implements Template.Options<D> {
     private <T, W extends Node & Option.Widget<T>> W createWidget(DataWidget.Entry<D> entry, Option<T, W, ? super D> option) {
         D job = entry.getValue();
         W control = option.createControl(job);
+        Property<T> property = job.getOptionProperty(option);
 
-        control.getValueProperty().addListener((observable, oldValue, newValue) -> {
-            option.setValue(job, newValue);
+        control.getValueProperty().setValue(property.getValue());
+
+        control.getValueProperty().addListener(((observable, oldValue, newValue) -> {
+            property.setValue(newValue);
             Proximity.rerender(entry);
-        });
+        }));
 
         return control;
     }

@@ -202,7 +202,7 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
 
     @Override
     public Optional<Element<D>> getSelected() {
-        return Optional.ofNullable(this.option.getValue(this.getDocument().getData()));
+        return Optional.ofNullable(this.getDocument().getData().getOption(this.option));
     }
 
     public Optional<Element<D>> getFirstVisible() {
