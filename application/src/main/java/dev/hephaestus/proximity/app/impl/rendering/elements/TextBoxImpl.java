@@ -99,7 +99,7 @@ public class TextBoxImpl<D extends RenderJob> extends ElementImpl<D> implements 
     }
 
     @Override
-    protected BoundingBoxes getDimensions() {
+    public BoundingBoxes getBounds() {
         List<BoundingBox> boxes = new ArrayList<>(this.text.wordCount());
 
         this.layout((component, bounds, x, y) -> {
@@ -168,7 +168,7 @@ public class TextBoxImpl<D extends RenderJob> extends ElementImpl<D> implements 
 
     @Override
     public boolean isOutOfBounds() {
-        this.getDimensions();
+        this.getBounds();
 
         return this.isOutOfBounds;
     }

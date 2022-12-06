@@ -49,8 +49,4 @@ public class ListPropertyImpl<D, V, R extends Stateful> implements ListProperty<
         return this.result;
     }
 
-    @Override
-    public void invalidate() {
-        this.values = null;
-    }
 }

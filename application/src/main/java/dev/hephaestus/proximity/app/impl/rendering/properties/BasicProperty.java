@@ -54,9 +54,7 @@ public class BasicProperty<D, V, R extends Stateful> implements Property<D, V, R
         return this.result;
     }
 
-    @Override
-    public void invalidate() {
+    private void invalidate() {
         this.isSet = false;
-        this.result.invalidate();
     }
 }

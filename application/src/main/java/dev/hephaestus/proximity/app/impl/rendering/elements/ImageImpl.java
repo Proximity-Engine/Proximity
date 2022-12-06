@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
-import java.util.function.Supplier;
 
 public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> implements Image<D> {
     public static final String[] IMAGE_FILE_TYPES = {
@@ -30,9 +29,6 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
     private final VisibilityProperty<Image<D>> visibility;
     private final BasicProperty<D, ImagePosition, Image<D>> position;
     private final ImageProperty<D> src;
-
-    private Supplier<InputStream> rendered = null;
-    private Rect dimensions;
 
     public ImageImpl(DocumentImpl<D> document, String id, ElementImpl<D> parent) {
         super(document, id, parent);
@@ -63,15 +59,6 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
 
     @Override
     public BoundingBoxes getBounds() {
-        if (((ImagePropertyImpl<D>) this.src).getter() != this.rendered) {
-            this.invalidate();
-        }
-
-        return super.getBounds();
-    }
-
-    @Override
-    public BoundingBoxes getDimensions() {
         return new BoundingBoxes(this.position.get().getBounds(this.calculateDimensions()));
     }
 
@@ -125,44 +112,38 @@ public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> impleme
     }
 
     private Rect calculateDimensions() {
-        this.rendered = ((ImagePropertyImpl<D>) this.src).getter();
+        byte[] imageBytes = this.getImageBytes();
 
-        if (this.dimensions == null) {
-            byte[] imageBytes = this.getImageBytes();
+        int width;
+        int height;
 
-            int width;
-            int height;
-
-            if (imageBytes.length == 0) {
-                this.getDocument().getErrors().add("Unexpected empty image");
-                throw new RuntimeException("Unexpected empty image");
-            } else if (imageBytes[1] == 'P' && imageBytes[2] == 'N' && imageBytes[3] == 'G') {
-                // PNG
-                if (imageBytes[12] == 'I' && imageBytes[13] == 'H' && imageBytes[14] == 'D' && imageBytes[15] == 'R') {
-                    width = readInt(imageBytes, 16);
-                    height = readInt(imageBytes, 20);
-                } else {
-                    this.getDocument().getErrors().add("Invalid PNG header");
-                    throw new RuntimeException("Invalid PNG header");
-                }
-            } else if (imageBytes[0] == 0xFFFFFFFF && imageBytes[1] == 0xFFFFFFD8 && imageBytes[2] == 0xFFFFFFFF && imageBytes[3] == 0xFFFFFFE0) {
-                // JPEG
-                try {
-                    BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
-                    width = image.getWidth();
-                    height = image.getHeight();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+        if (imageBytes.length == 0) {
+            this.getDocument().getErrors().add("Unexpected empty image");
+            throw new RuntimeException("Unexpected empty image");
+        } else if (imageBytes[1] == 'P' && imageBytes[2] == 'N' && imageBytes[3] == 'G') {
+            // PNG
+            if (imageBytes[12] == 'I' && imageBytes[13] == 'H' && imageBytes[14] == 'D' && imageBytes[15] == 'R') {
+                width = readInt(imageBytes, 16);
+                height = readInt(imageBytes, 20);
             } else {
-                this.getDocument().getErrors().add("Unexpected file type");
-                throw new RuntimeException("Unexpected file type");
+                this.getDocument().getErrors().add("Invalid PNG header");
+                throw new RuntimeException("Invalid PNG header");
             }
-
-            this.dimensions = new Rect(width, height);
+        } else if (imageBytes[0] == 0xFFFFFFFF && imageBytes[1] == 0xFFFFFFD8 && imageBytes[2] == 0xFFFFFFFF && imageBytes[3] == 0xFFFFFFE0) {
+            // JPEG
+            try {
+                BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
+                width = image.getWidth();
+                height = image.getHeight();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            this.getDocument().getErrors().add("Unexpected file type");
+            throw new RuntimeException("Unexpected file type");
         }
 
-        return this.dimensions;
+        return new Rect(width, height);
     }
 
     private static int readInt(byte[] bytes, int start) {

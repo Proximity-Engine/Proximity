@@ -58,12 +58,12 @@ public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements
     }
 
     @Override
-    protected BoundingBoxes getDimensions() {
+    public BoundingBoxes getBounds() {
         for (Element<D> element : this.children) {
             ElementImpl<D> e = (ElementImpl<D>) element;
 
             if (e.visibility().get()) {
-                return e.getDimensions();
+                return e.getBounds();
             }
         }
 

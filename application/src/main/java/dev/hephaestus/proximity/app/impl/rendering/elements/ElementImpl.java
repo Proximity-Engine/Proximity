@@ -2,7 +2,6 @@ package dev.hephaestus.proximity.app.impl.rendering.elements;
 
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.rendering.elements.Element;
-import dev.hephaestus.proximity.app.api.rendering.properties.VisibilityProperty;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.Stateful;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
@@ -15,8 +14,6 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
     private final String id;
     private final String path;
     private final ElementImpl<D> parent;
-
-    private BoundingBoxes rendered = BoundingBoxes.EMPTY;
 
     public ElementImpl(DocumentImpl<D> document, String id, ElementImpl<D> parent) {
         this.document = document;
@@ -53,25 +50,7 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
         return this.document;
     }
 
-    @Override
-    public BoundingBoxes getBounds() {
-        if (!this.visibility().get()) {
-            return BoundingBoxes.EMPTY;
-        }
-
-        if (this.rendered == BoundingBoxes.EMPTY) {
-            this.rendered = this.getDimensions();
-        }
-
-        return this.rendered;
-    }
-
-    @Override
-    public final void invalidate() {
-        this.rendered = BoundingBoxes.EMPTY;
-    }
-
-    protected abstract BoundingBoxes getDimensions();
+    public abstract BoundingBoxes getBounds();
     public abstract VisibilityProperty<?> visibility();
 
     public boolean isAlwaysVisible() {

@@ -94,7 +94,7 @@ public class TextImpl<D extends RenderJob> extends ElementImpl<D> implements Tex
     }
 
     @Override
-    protected BoundingBoxes getDimensions() {
+    public BoundingBoxes getBounds() {
         List<BoundingBox> boxes = new ArrayList<>(this.text.wordCount());
 
         this.layout((component, bounds, x, y) -> {

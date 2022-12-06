@@ -24,12 +24,12 @@ public class GroupImpl<D extends RenderJob> extends ElementImpl<D> implements Pa
     }
 
     @Override
-    protected BoundingBoxes getDimensions() {
+    public BoundingBoxes getBounds() {
         ArrayList<BoundingBox> list = new ArrayList<>(this.children.size());
 
         for (ElementImpl<D> element : this.children) {
             if (element.visibility().get()) {
-                for (BoundingBox box : element.getDimensions()) {
+                for (BoundingBox box : element.getBounds()) {
                     if (!box.isEmpty()) {
                         list.add(box);
                     }

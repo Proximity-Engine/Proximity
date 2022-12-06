@@ -31,8 +31,6 @@ public class TextPropertyImpl<D, R extends Stateful> implements TextProperty<D, 
 
         this.wordGetters.add((data, consumer) -> consumer.accept(word));
 
-        this.invalidate();
-
         return this.result;
     }
 
@@ -44,16 +42,12 @@ public class TextPropertyImpl<D, R extends Stateful> implements TextProperty<D, 
             }
         });
 
-        this.invalidate();
-
         return this.result;
     }
 
     @Override
     public R add(Word word) {
         this.wordGetters.add((data, consumer) -> consumer.accept(word));
-
-        this.invalidate();
 
         return this.result;
     }
@@ -62,16 +56,12 @@ public class TextPropertyImpl<D, R extends Stateful> implements TextProperty<D, 
     public R add(Function<D, String> wordGetter) {
         this.wordGetters.add((data, consumer) -> consumer.accept(new Word(new TextComponent(wordGetter.apply(data)))));
 
-        this.invalidate();
-
         return this.result;
     }
 
     @Override
     public R add(BiConsumer<D, Consumer<Word>> wordConsumer) {
         this.wordGetters.add(wordConsumer);
-
-        this.invalidate();
 
         return this.result;
     }
@@ -97,10 +87,5 @@ public class TextPropertyImpl<D, R extends Stateful> implements TextProperty<D, 
         }
 
         return new UnmodifiableIterator<>(words);
-    }
-
-    @Override
-    public void invalidate() {
-        this.result.invalidate();
     }
 }
