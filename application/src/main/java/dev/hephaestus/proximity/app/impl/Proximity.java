@@ -142,6 +142,12 @@ public class Proximity {
 
     public static void setActiveSidebarPane(SidebarPane sidebarPane) {
         activeCategory.setValue(sidebarPane);
+
+        if (sidebarPane != null) {
+            sidebarPane.setVisible(true);
+            sidebarPane.setManaged(true);
+            sidebarPane.getButton().setOpacity(1);
+        }
     }
 
     public static OptionsPane getOptionsCategory() {
@@ -301,6 +307,10 @@ public class Proximity {
 
     public static void add(SidebarPane sidebarPane) {
         INSTANCE.sidebarPanes.getChildren().add(sidebarPane);
+
+        if (INSTANCE.sidebarPanes.getChildren().size() == 1) {
+            setActiveSidebarPane(sidebarPane);
+        }
     }
 
     public static void add(List<DataWidget<?>> rows) {

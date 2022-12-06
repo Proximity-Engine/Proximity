@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 public class OptionsImpl<D extends RenderJob> implements Template.Options<D> {
     protected final List<Option<?, ?, ? super D>> options = new ArrayList<>();
-    protected final Map<String, Category> categories = new LinkedHashMap<>();
+    private final Map<String, Category> categories = new LinkedHashMap<>();
 
     @Override
     public void add(Option<?, ?, ? super D> option) {

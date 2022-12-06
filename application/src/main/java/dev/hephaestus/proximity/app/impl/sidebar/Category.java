@@ -22,6 +22,7 @@ public class Category extends Button implements Initializable {
         this.setSkin(new SidebarButtonSkin(this));
     }
 
+    @Override
     public void initialize() {
         Tooltip.install(this, this.tooltip);
         this.tooltip.setSkin(new TooltipSkin(this.tooltip));
@@ -51,9 +52,6 @@ public class Category extends Button implements Initializable {
                     Proximity.getActiveSidebarPane().setManaged(false);
                     Proximity.setActiveSidebarPane(this.pane);
                     this.getProperties().put(ACTIVE, true);
-
-                    this.pane.setVisible(true);
-                    this.pane.setManaged(true);
                 } else if (Proximity.isSidebarExpanded()) {
                     Proximity.setActiveSidebarPane(null);
                     this.getProperties().put(ACTIVE, false);
@@ -64,9 +62,6 @@ public class Category extends Button implements Initializable {
                     Proximity.setActiveSidebarPane(this.pane);
                     this.getProperties().put(ACTIVE, true);
                     this.setOpacity(1);
-
-                    this.pane.setManaged(true);
-                    this.pane.setVisible(true);
                 }
             }
         });
