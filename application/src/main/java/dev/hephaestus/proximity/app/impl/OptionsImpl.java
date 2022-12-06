@@ -109,12 +109,9 @@ public class OptionsImpl<D extends RenderJob> implements Template.Options<D> {
         W control = option.createControl(job);
         Property<T> property = job.getOptionProperty(option);
 
-        control.getValueProperty().setValue(property.getValue());
+        control.getValueProperty().bindBidirectional(property);
 
-        control.getValueProperty().addListener(((observable, oldValue, newValue) -> {
-            property.setValue(newValue);
-            Proximity.rerender(entry);
-        }));
+        property.addListener(observable -> Proximity.rerender(entry));
 
         return control;
     }
