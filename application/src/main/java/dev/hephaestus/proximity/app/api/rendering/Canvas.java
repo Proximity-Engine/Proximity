@@ -43,11 +43,6 @@ public class Canvas extends Graphics2D {
         this.image = image;
         this.wrapped = image.createGraphics();
         this.dpi = dpi;
-
-        final AffineTransform trans = this.wrapped.getDeviceConfiguration().getNormalizingTransform();
-        System.out.println(trans.getScaleX()*72+" DPI horizontally");
-        System.out.println(trans.getScaleY()*72+" DPI vertically");
-
     }
 
     public int getDPI() {
