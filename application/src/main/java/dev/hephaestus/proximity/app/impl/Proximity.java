@@ -343,7 +343,6 @@ public class Proximity {
     }
 
     public static <D extends RenderJob> void select(DataWidget.Entry<D> entry) {
-        INSTANCE.previewPane.render(entry);
         INSTANCE.options.select(entry);
         SELECTION_MANAGER.select(entry);
     }

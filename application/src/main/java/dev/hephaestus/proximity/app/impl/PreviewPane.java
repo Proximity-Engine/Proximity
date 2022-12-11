@@ -262,8 +262,10 @@ public class PreviewPane extends VBox {
         }
 
         private void setPreview(RenderResult result) {
+            DataWidget.Entry<?> widget = this.widget.get();
+
             Platform.runLater(() -> {
-                if (Proximity.isSelected(this.widget.get())) {
+                if (Proximity.isSelected(widget)) {
                     Image image = PreviewPane.this.cropPreview ? result.cropped : result.original;
                     ImageView imageView = new ImageView(image);
                     ObservableList<Node> children = PreviewPane.this.preview.getChildren();

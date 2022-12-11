@@ -1,6 +1,5 @@
 package dev.hephaestus.proximity.app.impl;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
 import javafx.scene.Parent;
 import javafx.scene.layout.Background;
