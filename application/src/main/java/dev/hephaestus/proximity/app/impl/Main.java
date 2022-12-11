@@ -23,29 +23,6 @@ public class Main extends Application {
 
 
         Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("index.fxml"));
-//
-//        this.menuBar = new MenuBar(root, stage.getOwner());
-//
-//        root.getChildren().addAll(
-//                this.menuBar,
-//                this.content
-//        );
-//
-//        this.content.getChildren().add(0, this.sidebar = new Sidebar());
-//
-//        this.content.getChildren().addAll(
-//                this.dataEntryArea = new DataEntryArea(),
-//                this.previewPane = new PreviewPane()
-//        );
-//
-//        if (DATA_PROVIDER != null) {
-//            this.menuBar.init(DATA_PROVIDER);
-//        }
-//
-//        this.content.requestFocus();
-//        VBox.setVgrow(this.content, Priority.ALWAYS);
-//        HBox.setHgrow(this.dataEntryArea, Priority.ALWAYS);
-
         Scene scene = new Scene(root, 800, 480);
 
         scene.getStylesheets().add("style.css");
