@@ -36,10 +36,6 @@ dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
     api project(':utilities')
     api project(':json')
-
-    implementation 'dev.hephaestus.proximity:mtg:1.0.0-SNAPSHOT'
-    implementation 'dev.hephaestus.proximity:scryfall:1.0.0-SNAPSHOT'
-    implementation 'dev.hephaestus.proximity:m15-ultimate:1.0.0-SNAPSHOT'
 }
 
 application {
