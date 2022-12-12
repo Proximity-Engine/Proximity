@@ -16,6 +16,10 @@ version = '1.0.0-SNAPSHOT'
 dependencies {
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -23,6 +27,11 @@ publishing {
         }
     }
     repositories {
-        mavenLocal()
+        maven {
+            url 's3://hephaestus.dev/snapshot'
+            authentication {
+                awsIm(AwsImAuthentication)
+            }
+        }
     }
 }

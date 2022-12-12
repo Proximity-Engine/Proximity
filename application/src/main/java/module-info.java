@@ -20,6 +20,8 @@ module dev.hephaestus.proximity.app {
     exports dev.hephaestus.proximity.app.impl.skins to javafx.graphics, javafx.controls, javafx.fxml;
     exports dev.hephaestus.proximity.app.api.util;
 
+    requires java.base;
+    requires jdk.crypto.ec;
     requires java.net.http;
     requires dev.hephaestus.proximity.utils;
     requires javafx.graphics;

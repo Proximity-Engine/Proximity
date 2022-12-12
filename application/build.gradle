@@ -5,11 +5,18 @@ plugins {
     id 'org.openjfx.javafxplugin' version '0.0.13'
     id 'maven-publish'
     id 'java-library'
+    id 'org.beryx.jlink' version '2.25.0'
 }
 
 javafx {
     version = "19"
     modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+jlink {
+    launcher {
+        name = 'proximity'
+    }
 }
 
 group = 'dev.hephaestus.proximity'
@@ -56,6 +63,10 @@ extraJavaModuleInfo {
     }
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -63,6 +74,11 @@ publishing {
         }
     }
     repositories {
-        mavenLocal()
+        maven {
+            url 's3://hephaestus.dev/snapshot'
+            authentication {
+                awsIm(AwsImAuthentication)
+            }
+        }
     }
 }

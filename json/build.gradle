@@ -37,6 +37,10 @@ extraJavaModuleInfo {
     }
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -44,6 +48,11 @@ publishing {
         }
     }
     repositories {
-        mavenLocal()
+        maven {
+            url 's3://hephaestus.dev/snapshot'
+            authentication {
+                awsIm(AwsImAuthentication)
+            }
+        }
     }
 }
