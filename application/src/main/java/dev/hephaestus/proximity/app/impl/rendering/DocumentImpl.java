@@ -22,7 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-public class DocumentImpl<D extends RenderJob> implements ParentImpl<D>, Document<D> {
+public class DocumentImpl<D extends RenderJob<?>> implements ParentImpl<D>, Document<D> {
     private final D data;
     private final Template<D> template;
     private final List<ElementImpl<D>> children = new ArrayList<>(5);

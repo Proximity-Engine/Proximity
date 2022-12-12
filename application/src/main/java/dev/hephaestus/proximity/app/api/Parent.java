@@ -5,13 +5,12 @@ import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 import dev.hephaestus.proximity.app.api.text.TextStyle;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface Parent<D extends RenderJob> {
+public interface Parent<D extends RenderJob<?>> {
     Element<D> group(String id, Predicate<D> visibilityPredicate, Consumer<Group<D>> groupBuilder);
     Element<D>  group(String id, Consumer<Group<D>> groupBuilder);
 

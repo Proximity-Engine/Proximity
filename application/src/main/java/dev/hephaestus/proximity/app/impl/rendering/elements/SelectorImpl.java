@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class SelectorImpl<D extends RenderJob> extends ElementImpl<D> implements ParentImpl<D>, Selector<D> {
+public class SelectorImpl<D extends RenderJob<?>> extends ElementImpl<D> implements ParentImpl<D>, Selector<D> {
     private final List<Element<D>> children = new ArrayList<>(3);
     private final VisibilityProperty<Selector<D>> visibility;
 

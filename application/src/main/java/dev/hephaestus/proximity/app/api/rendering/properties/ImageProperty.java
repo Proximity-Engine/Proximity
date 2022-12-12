@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public interface ImageProperty<D extends RenderJob> {
+public interface ImageProperty<D extends RenderJob<?>> {
     InputStream get() throws IOException;
 
     /**

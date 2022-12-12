@@ -12,7 +12,7 @@ import org.jetbrains.annotations.ApiStatus;
  * @param <D> the type of data this element operates off of
  */
 @ApiStatus.NonExtendable
-public interface Element<D extends RenderJob> extends Stateful {
+public interface Element<D extends RenderJob<?>> extends Stateful {
     String getPath();
     Document<D> getDocument();
     String getId();

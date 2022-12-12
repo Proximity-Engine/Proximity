@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class TextImpl<D extends RenderJob> extends ElementImpl<D> implements Text<D> {
+public class TextImpl<D extends RenderJob<?>> extends ElementImpl<D> implements Text<D> {
     private final VisibilityProperty<Text<D>> visibility;
     protected final BasicProperty<D, Integer, Text<D>> x, y;
     protected final BasicProperty<D, TextStyle, Text<D>> style;

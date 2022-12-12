@@ -33,7 +33,7 @@ public class OptionsPane extends SidebarPane {
         this.updateDocument(newValue);
     });
 
-    private <D extends RenderJob> void updateDocument(DocumentImpl<D> document) {
+    private <D extends RenderJob<?>> void updateDocument(DocumentImpl<D> document) {
         //noinspection unchecked
         DataWidget.Entry<D> entry = (DataWidget.Entry<D>) this.selected;
 
@@ -87,12 +87,12 @@ public class OptionsPane extends SidebarPane {
         this.templateSelector.valueProperty().addListener(this.templateChangeListener);
     }
 
-    private <D extends RenderJob> void setTemplate(Template<D> template) {
+    private <D extends RenderJob<?>> void setTemplate(Template<D> template) {
         //noinspection unchecked
         ((DataWidget.Entry<D>) this.selected).template().setValue(template);
     }
 
-    public <D extends RenderJob> void select(DataWidget.Entry<D> entry) {
+    public <D extends RenderJob<?>> void select(DataWidget.Entry<D> entry) {
         this.selected = entry;
 
         // Remove any existing listeners to prevent duplicates

@@ -6,7 +6,7 @@ import dev.hephaestus.proximity.app.api.Template;
 
 import java.io.InputStream;
 
-public interface Document<D extends RenderJob> extends Iterable<Element<D>> {
+public interface Document<D extends RenderJob<?>> extends Iterable<Element<D>> {
     InputStream getResource(String src, String... alternateFileExtensions);
 
     Template<D> getTemplate();

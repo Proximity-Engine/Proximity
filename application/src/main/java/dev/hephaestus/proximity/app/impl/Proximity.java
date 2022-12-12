@@ -261,7 +261,7 @@ public class Proximity {
         return CACHE.cache(url);
     }
 
-    public static <D extends RenderJob> DataProvider<D> getDataProvider() {
+    public static <D extends RenderJob<?>> DataProvider<D> getDataProvider() {
         //noinspection unchecked
         return (DataProvider<D>) DATA_PROVIDER;
     }
@@ -342,7 +342,7 @@ public class Proximity {
         return null;
     }
 
-    public static <D extends RenderJob> void select(DataWidget.Entry<D> entry) {
+    public static <D extends RenderJob<?>> void select(DataWidget.Entry<D> entry) {
         INSTANCE.options.select(entry);
         SELECTION_MANAGER.select(entry);
     }
@@ -357,7 +357,7 @@ public class Proximity {
     }
 
     public static String getDataProviderPluginID() {
-        return DATA_PROVIDER.getId();
+        return DATA_PROVIDER.getClass().getName();
     }
 
     public static void clearPreview() {
@@ -368,7 +368,7 @@ public class Proximity {
         return PAUSED;
     }
 
-    public static <D extends RenderJob> void select(DataRow<D> row) {
+    public static <D extends RenderJob<?>> void select(DataRow<D> row) {
         SELECTION_MANAGER.select(row);
     }
 

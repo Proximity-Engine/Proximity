@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class OptionsImpl<D extends RenderJob> implements Template.Options<D> {
+public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> {
     protected final List<Option<?, ?, ? super D>> options = new ArrayList<>();
     private final Map<String, Category> categories = new LinkedHashMap<>();
 

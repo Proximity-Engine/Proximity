@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class TreeImpl<D extends RenderJob> implements Tree<D>, Iterable<Pair<String, Predicate<D>>> {
+public class TreeImpl<D extends RenderJob<?>> implements Tree<D>, Iterable<Pair<String, Predicate<D>>> {
     private final DocumentImpl<D> document;
     private final List<Pair<String, Predicate<D>>> branches = new ArrayList<>();
 

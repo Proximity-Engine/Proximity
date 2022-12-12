@@ -81,7 +81,7 @@ public final class DataEntryArea extends StackPane {
         return this.rows.size();
     }
 
-    public <D extends RenderJob> void add(DataWidget<D> widget) {
+    public <D extends RenderJob<?>> void add(DataWidget<D> widget) {
         this.add(Collections.singletonList(widget), false);
     }
 
@@ -108,7 +108,7 @@ public final class DataEntryArea extends StackPane {
         }
     }
 
-    private <D extends RenderJob> void add(DataWidget<D> widget, Collection<DataRow<?>> rows) {
+    private <D extends RenderJob<?>> void add(DataWidget<D> widget, Collection<DataRow<?>> rows) {
         DataRow<D> row = new DataRow<>(this, widget);
 
         this.rows.add(row);

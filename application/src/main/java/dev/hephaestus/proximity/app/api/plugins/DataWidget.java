@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 
-public abstract class DataWidget<D extends RenderJob> implements Iterable<DataWidget.Entry<D>> {
+public abstract class DataWidget<D extends RenderJob<?>> implements Iterable<DataWidget.Entry<D>> {
     protected final ObservableList<String> errors = FXCollections.observableArrayList();
     protected final DataProvider.Context context;
     protected final SimpleListProperty<Entry<D>> entries = new SimpleListProperty<>(FXCollections.observableArrayList());
@@ -60,7 +60,7 @@ public abstract class DataWidget<D extends RenderJob> implements Iterable<DataWi
         return this.entries.get(i);
     }
 
-    public static abstract class Entry<D extends RenderJob> extends SimpleObjectProperty<D> {
+    public static abstract class Entry<D extends RenderJob<?>> extends SimpleObjectProperty<D> {
         private final ObjectProperty<Template<D>> template = new SimpleObjectProperty<>();
         private final ObjectProperty<DocumentImpl<D>> document = new SimpleObjectProperty<>();
 
@@ -71,9 +71,7 @@ public abstract class DataWidget<D extends RenderJob> implements Iterable<DataWi
         public abstract Pane getRootPane();
         public abstract DataWidget<D> getWidget();
 
-        public JsonElement toJson() {
-            return null;
-        }
+        public abstract JsonElement toJson();
 
         @ApiStatus.Internal
         public final JsonObject toJsonImpl() {

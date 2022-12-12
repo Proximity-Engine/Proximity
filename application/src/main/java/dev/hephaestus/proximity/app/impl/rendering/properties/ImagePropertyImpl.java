@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.function.Supplier;
 
-public class ImagePropertyImpl<D extends RenderJob> implements ImageProperty<D> {
+public class ImagePropertyImpl<D extends RenderJob<?>> implements ImageProperty<D> {
     private final D data;
     private final Image<D> result;
 
@@ -64,7 +64,7 @@ public class ImagePropertyImpl<D extends RenderJob> implements ImageProperty<D> 
         return this.value;
     }
 
-    private static class UrlGetter<D extends RenderJob> implements Supplier<InputStream> {
+    private static class UrlGetter<D extends RenderJob<?>> implements Supplier<InputStream> {
         private final D data;
         private final ThrowingFunction<D, URL, IOException> getter;
 

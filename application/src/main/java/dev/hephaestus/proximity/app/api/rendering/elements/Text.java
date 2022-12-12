@@ -12,7 +12,7 @@ import dev.hephaestus.proximity.app.api.text.Word;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.NonExtendable
-public interface Text<D extends RenderJob> extends Child<D>, Iterable<Word> {
+public interface Text<D extends RenderJob<?>> extends Child<D>, Iterable<Word> {
     Property<D, Integer, Text<D>> x();
     Property<D, Integer, Text<D>> y();
     Property<D, TextStyle, Text<D>> style();

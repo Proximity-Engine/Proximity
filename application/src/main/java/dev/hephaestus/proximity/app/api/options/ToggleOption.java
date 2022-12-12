@@ -13,7 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 
-public class ToggleOption<D extends RenderJob> extends Option<Boolean, ToggleOption<D>.Widget, D> {
+public class ToggleOption<D extends RenderJob<?>> extends Option<Boolean, ToggleOption<D>.Widget, D> {
     public ToggleOption(String id, Boolean defaultValue) {
         super(id, defaultValue);
     }
@@ -29,14 +29,14 @@ public class ToggleOption<D extends RenderJob> extends Option<Boolean, ToggleOpt
     }
 
     @Override
-    public Widget createControl(RenderJob renderJob) {
+    public Widget createControl(D renderJob) {
         return new Widget(renderJob);
     }
 
     public class Widget extends HBox implements Option.Widget<Boolean> {
         private final SwitchButton switchButton;
 
-        private Widget(RenderJob renderJob) {
+        private Widget(RenderJob<?> renderJob) {
             Label label = new Label(ToggleOption.this.getId());
             Pane spacer = new Pane();
             this.switchButton = new SwitchButton(8, 40, 20, Color.GREEN, Appearance.BASE.brighter().brighter().brighter(), renderJob.getOption(ToggleOption.this));

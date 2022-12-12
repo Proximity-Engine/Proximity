@@ -13,7 +13,7 @@ import javafx.scene.layout.Priority;
 
 import java.util.function.Function;
 
-public class StringOption<D extends RenderJob> extends Option<String, StringOption<D>.Widget, D> {
+public class StringOption<D extends RenderJob<?>> extends Option<String, StringOption<D>.Widget, D> {
     public StringOption(String id, String defaultValue) {
         super(id, defaultValue);
     }

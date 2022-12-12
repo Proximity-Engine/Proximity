@@ -3,11 +3,9 @@ package dev.hephaestus.proximity.app.impl.sidebar;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
-import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.api.rendering.ImageRenderer;
 import dev.hephaestus.proximity.app.api.rendering.Renderer;
 import dev.hephaestus.proximity.app.impl.DataRow;
-import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import javafx.beans.Observable;
 import javafx.scene.control.Button;
 
@@ -31,7 +29,7 @@ public class ExportPane extends SidebarPane {
 //        }
     }
 
-    private <D extends RenderJob, CANVAS> void export(Renderer<CANVAS> renderer, DataRow<D> row) {
+    private <D extends RenderJob<?>, CANVAS> void export(Renderer<CANVAS> renderer, DataRow<D> row) {
         for (DataWidget.Entry<D> entry : row) {
             Template<D> template = entry.template().getValue();
             CANVAS canvas = renderer.createCanvas(template.getWidth(), template.getHeight(), template.getDPI());

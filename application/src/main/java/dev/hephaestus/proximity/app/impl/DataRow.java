@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Iterator;
 
-public final class DataRow<D extends RenderJob> extends HBox implements Iterable<DataWidget.Entry<D>> {
+public final class DataRow<D extends RenderJob<?>> extends HBox implements Iterable<DataWidget.Entry<D>> {
     private final StackPane status;
     private final DataEntryArea dataEntryArea;
 

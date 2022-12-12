@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface ParentImpl<D extends RenderJob> extends Parent<D>, Iterable<Element<D>> {
+public interface ParentImpl<D extends RenderJob<?>> extends Parent<D>, Iterable<Element<D>> {
     void addChild(ElementImpl<D> child);
     DocumentImpl<D> getDocument();
 

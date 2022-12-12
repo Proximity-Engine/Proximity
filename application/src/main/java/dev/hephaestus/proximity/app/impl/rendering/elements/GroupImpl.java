@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class GroupImpl<D extends RenderJob> extends ElementImpl<D> implements ParentImpl<D>, Group<D> {
+public class GroupImpl<D extends RenderJob<?>> extends ElementImpl<D> implements ParentImpl<D>, Group<D> {
     private final List<ElementImpl<D>> children = new ArrayList<>(3);
     private final VisibilityProperty<Group<D>> visibility;
 

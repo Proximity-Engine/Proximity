@@ -25,7 +25,7 @@ import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.util.*;
 
-public class TextBoxImpl<D extends RenderJob> extends ElementImpl<D> implements TextBox<D> {
+public class TextBoxImpl<D extends RenderJob<?>> extends ElementImpl<D> implements TextBox<D> {
     private final VisibilityProperty<TextBox<D>> visibility;
     private final BasicProperty<D, Integer, TextBox<D>> x, y, width, height;
     private final BasicProperty<D, TextStyle, TextBox<D>> style;

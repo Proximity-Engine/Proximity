@@ -9,9 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public interface DataProvider<D extends RenderJob> {
-    String getId();
-
+public interface DataProvider<D extends RenderJob<?>> {
     Class<D> getDataClass();
 
     Pane createHeaderElement();

@@ -9,7 +9,7 @@ import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import java.util.ArrayDeque;
 import java.util.function.Predicate;
 
-public abstract class ElementImpl<D extends RenderJob> implements Element<D>, Stateful {
+public abstract class ElementImpl<D extends RenderJob<?>> implements Element<D>, Stateful {
     private final DocumentImpl<D> document;
     private final String id;
     private final String path;
@@ -57,7 +57,7 @@ public abstract class ElementImpl<D extends RenderJob> implements Element<D>, St
         return this.visibility().isAlwaysVisible();
     }
 
-    public interface Constructor<D extends RenderJob, E extends ElementImpl<D>> {
+    public interface Constructor<D extends RenderJob<?>, E extends ElementImpl<D>> {
         E construct(DocumentImpl<D> document, String id, ElementImpl<D> parent);
     }
 

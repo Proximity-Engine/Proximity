@@ -10,7 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
-public class ColorOption<D extends RenderJob> extends Option<Color, ColorOption<D>.Widget, D> {
+public class ColorOption<D extends RenderJob<?>> extends Option<Color, ColorOption<D>.Widget, D> {
     public ColorOption(String id, Color defaultValue) {
         super(id, defaultValue);
     }
@@ -29,14 +29,14 @@ public class ColorOption<D extends RenderJob> extends Option<Color, ColorOption<
     }
 
     @Override
-    public Widget createControl(RenderJob renderJob) {
+    public Widget createControl(D renderJob) {
         return new Widget(renderJob);
     }
 
     public class Widget extends VBox implements Option.Widget<Color> {
         private final ColorPicker picker;
 
-        private Widget(RenderJob renderJob) {
+        private Widget(RenderJob<?> renderJob) {
             Label label = new Label(ColorOption.this.getId());
 
             label.getStyleClass().add("sidebar-text");

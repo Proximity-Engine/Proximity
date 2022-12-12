@@ -110,7 +110,7 @@ public class PreviewPane extends VBox {
                     .then(this::copyToClipboard);
         }
 
-        private <D extends RenderJob> DocumentImpl<?> startCopy() {
+        private <D extends RenderJob<?>> DocumentImpl<?> startCopy() {
             return PreviewPane.this.mostRecentlyDrawn.document().getValue();
         }
 
@@ -178,7 +178,7 @@ public class PreviewPane extends VBox {
                     .then(this::setPreview);
         }
 
-        private <D extends RenderJob> RenderResult clearPreviewPane() {
+        private <D extends RenderJob<?>> RenderResult clearPreviewPane() {
             //noinspection unchecked
             var widget = (DataWidget.Entry<D>) this.widget.get();
             Template<D> template = widget.template().getValue();
@@ -200,7 +200,7 @@ public class PreviewPane extends VBox {
             return PreviewPane.this.cache.get(widget);
         }
 
-        private <D extends RenderJob> RenderResult assemble(RenderResult result) {
+        private <D extends RenderJob<?>> RenderResult assemble(RenderResult result) {
             if (result.original == null && !PreviewPane.this.cropPreview || result.cropped == null && PreviewPane.this.cropPreview) {
                 Platform.runLater(() -> PreviewPane.this.isRendering.set(true));
 
@@ -216,7 +216,7 @@ public class PreviewPane extends VBox {
         }
 
 
-        private <D extends RenderJob> RenderResult render(RenderResult result) {
+        private <D extends RenderJob<?>> RenderResult render(RenderResult result) {
             DocumentImpl<?> document = this.document.get();
             Template<?> template = document.getTemplate();
             double rW = PreviewPane.this.getWidth() / template.getWidth();
@@ -294,7 +294,7 @@ public class PreviewPane extends VBox {
         }
     }
 
-    public <D extends RenderJob> void render(DataWidget.Entry<D> widget) {
+    public <D extends RenderJob<?>> void render(DataWidget.Entry<D> widget) {
         if (!Proximity.isPaused() && this.mostRecentlyDrawn == null || this.mostRecentlyDrawn != widget) {
             this.mostRecentlyDrawn = widget;
             this.render.run();

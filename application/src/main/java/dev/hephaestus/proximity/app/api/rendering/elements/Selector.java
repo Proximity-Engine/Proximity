@@ -6,8 +6,6 @@ import dev.hephaestus.proximity.app.api.rendering.util.ThrowingFunction;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -15,7 +13,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 @ApiStatus.NonExtendable
-public interface Selector<D extends RenderJob> extends Element<D> {
+public interface Selector<D extends RenderJob<?>> extends Element<D> {
     Element<D> group(String id, Predicate<D> visibilityPredicate, Consumer<Group<D>> groupBuilder);
     Element<D> group(String id, Consumer<Group<D>> groupBuilder);
 

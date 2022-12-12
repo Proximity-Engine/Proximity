@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.UnknownHostException;
 
-public final class ImageImpl<D extends RenderJob> extends ElementImpl<D> implements Image<D> {
+public final class ImageImpl<D extends RenderJob<?>> extends ElementImpl<D> implements Image<D> {
     public static final String[] IMAGE_FILE_TYPES = {
             "png", "jpg", "jpeg", "jif", "jfif", "jfi"
     };

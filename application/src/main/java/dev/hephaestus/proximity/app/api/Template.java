@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public abstract class Template<D extends RenderJob> {
+public abstract class Template<D extends RenderJob<?>> {
     private final Map<String, Font> fonts = new HashMap<>();
     private final List<ResourceProvider> resourceProviders = new ArrayList<>(1);
 
@@ -103,7 +103,7 @@ public abstract class Template<D extends RenderJob> {
 
     }
 
-    public interface Options<D extends RenderJob> {
+    public interface Options<D extends RenderJob<?>> {
         void add(Option<?, ?, ? super D> option);
         void add(Option<?, ?, ? super D> option, String category);
         void category(String id, Consumer<Options<D>> category);

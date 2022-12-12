@@ -10,7 +10,7 @@ import dev.hephaestus.proximity.app.api.rendering.util.Padding;
 
 import java.awt.Shape;
 
-public interface TextBox<D extends RenderJob> extends Child<D> {
+public interface TextBox<D extends RenderJob<?>> extends Child<D> {
     Property<D, Integer, TextBox<D>> x();
     Property<D, Integer, TextBox<D>> y();
     Property<D, Integer, TextBox<D>> width();

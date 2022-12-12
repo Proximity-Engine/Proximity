@@ -4,11 +4,9 @@ import dev.hephaestus.proximity.json.api.JsonElement;
 import javafx.beans.property.Property;
 import javafx.scene.Node;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
-public abstract class Option<T, W extends Node & Option.Widget<T>, D extends RenderJob> implements Function<D, T> {
+public abstract class Option<T, W extends Node & Option.Widget<T>, D extends RenderJob<?>> implements Function<D, T> {
     private final String id;
     private final Function<D, T> defaultValue;
 

@@ -2,31 +2,29 @@ package dev.hephaestus.proximity.app.api;
 
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.utils.UnmodifiableIterator;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public abstract class RenderJob {
-    private final String plugin, name;
+public abstract class RenderJob<E extends JsonElement> {
+    protected final E json;
     private final Map<Option<?, ?, ?>, Property<?>> options = new LinkedHashMap<>();
 
-    protected RenderJob(String plugin, String name) {
-        this.plugin = plugin;
-        this.name = name;
+    protected RenderJob(E json) {
+        this.json = json;
     }
 
-    public final String getName() {
-        return this.name;
-    }
+    public abstract String getName();
 
-    public final <T, D extends RenderJob> T getOption(Option<T, ?, D> option) {
+    public final <T, D extends RenderJob<?>> T getOption(Option<T, ?, D> option) {
         return this.getOptionProperty(option).getValue();
     }
 
     @SuppressWarnings("unchecked")
-    public final <T, D extends RenderJob> Property<T> getOptionProperty(Option<T, ?, D> option) {
+    public final <T, D extends RenderJob<?>> Property<T> getOptionProperty(Option<T, ?, D> option) {
         if (!this.options.containsKey(option)) {
             this.options.put(option, new SimpleObjectProperty<>(option.getDefaultValue((D) this)));
         }
@@ -37,10 +35,9 @@ public abstract class RenderJob {
     public abstract JsonElement toJson();
 
     public final JsonElement toJsonImpl() {
-        JsonObject.Mutable json = JsonObject.create();
+        var json = JsonObject.create();
 
-        json.put("plugin", this.plugin);
-        json.put("name", this.name);
+        json.put("class", this.getClass().getName());
 
         JsonObject.Mutable options = json.createObject("options");
 
@@ -54,7 +51,11 @@ public abstract class RenderJob {
         return json;
     }
 
-    private <T, D extends RenderJob> void put(Map.Entry<Option<T, ?, D>, Object> entry, JsonObject.Mutable json) {
+    public Iterable<Option<?, ?, ?>> options() {
+        return this.options.keySet();
+    }
+
+    private <T, D extends RenderJob<?>> void put(Map.Entry<Option<T, ?, D>, Object> entry, JsonObject.Mutable json) {
         var option = entry.getKey();
 
         json.put(option.getId(), option.toJson(this.getOption(option)));

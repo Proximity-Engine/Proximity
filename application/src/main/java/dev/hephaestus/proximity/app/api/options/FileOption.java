@@ -17,7 +17,7 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.file.Path;
 
-public class FileOption<D extends RenderJob> extends Option<Path, FileOption<D>.Widget, D> {
+public class FileOption<D extends RenderJob<?>> extends Option<Path, FileOption<D>.Widget, D> {
     private final FileChooser.ExtensionFilter[] filters;
 
     public FileOption(String id, Path defaultValue, FileChooser.ExtensionFilter... filters) {
