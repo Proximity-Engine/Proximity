@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
+import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.impl.OptionsImpl;
 import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
@@ -29,13 +30,13 @@ public class OptionsPane extends SidebarPane {
         }
     };
 
-    private final ChangeListener<DocumentImpl<?>> documentChangeListener = ((observable, oldValue, newValue) -> {
+    private final ChangeListener<Document<?>> documentChangeListener = ((observable, oldValue, newValue) -> {
         this.updateDocument(newValue);
     });
 
-    private <D extends RenderJob<?>> void updateDocument(DocumentImpl<D> document) {
+    private <D extends RenderJob<?>> void updateDocument(Document<D> document) {
         //noinspection unchecked
-        DataWidget.Entry<D> entry = (DataWidget.Entry<D>) this.selected;
+        DataWidget<D>.Entry entry = (DataWidget<D>.Entry) this.selected;
 
         Proximity.rerender(entry);
 
@@ -43,14 +44,14 @@ public class OptionsPane extends SidebarPane {
 
         document.getTemplate().createOptions(options);
 
-        for (Option<?, ?, D> option : document.getSelectorOverrides()) {
+        for (Option<?, ?, D> option : ((DocumentImpl<D>) document).getSelectorOverrides()) {
             options.add(option, "Advanced");
         }
 
         options.createWidgets(entry, this.options.getChildren(), this.categories.getChildren());
     }
 
-    private DataWidget.Entry<?> selected;
+    private DataWidget<?>.Entry selected;
 
     public OptionsPane() {
         super();
@@ -89,10 +90,10 @@ public class OptionsPane extends SidebarPane {
 
     private <D extends RenderJob<?>> void setTemplate(Template<D> template) {
         //noinspection unchecked
-        ((DataWidget.Entry<D>) this.selected).template().setValue(template);
+        ((DataWidget<D>.Entry) this.selected).template().setValue(template);
     }
 
-    public <D extends RenderJob<?>> void select(DataWidget.Entry<D> entry) {
+    public <D extends RenderJob<?>> void select(DataWidget<D>.Entry entry) {
         this.selected = entry;
 
         // Remove any existing listeners to prevent duplicates
@@ -111,7 +112,7 @@ public class OptionsPane extends SidebarPane {
             this.templateSelector.setValue(this.templateSelector.getItems().get(0));
         } else if (entry.template().getValue() != null) {
             Template<D> template = entry.template().getValue();
-            DocumentImpl<D> document = entry.document().getValue();
+            DocumentImpl<D> document = (DocumentImpl<D>) entry.document().getValue();
 
             this.templateSelector.valueProperty().removeListener(this.templateChangeListener);
             this.templateSelector.setValue(template);
@@ -129,7 +130,7 @@ public class OptionsPane extends SidebarPane {
         }
     }
 
-    public DataWidget.Entry<?> getSelected() {
+    public DataWidget<?>.Entry getSelected() {
         return this.selected;
     }
 }

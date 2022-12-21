@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Iterator;
 
-public final class DataRow<D extends RenderJob<?>> extends HBox implements Iterable<DataWidget.Entry<D>> {
+public final class DataRow<D extends RenderJob<?>> extends HBox implements Iterable<DataWidget<D>.Entry> {
     private final StackPane status;
     private final DataEntryArea dataEntryArea;
 
@@ -86,7 +86,7 @@ public final class DataRow<D extends RenderJob<?>> extends HBox implements Itera
         this.dataWidget.getEntries().addListener((observable, oldValue, newValue) -> {
             if (newValue == oldValue) return;
 
-            for (DataWidget.Entry<D> entry : this.dataWidget) {
+            for (DataWidget<D>.Entry entry : this.dataWidget) {
                 for (Template<?> template : Proximity.templates()) {
                     if (template.canHandle(entry.getValue())) {
                         //noinspection unchecked
@@ -139,7 +139,7 @@ public final class DataRow<D extends RenderJob<?>> extends HBox implements Itera
 
     @NotNull
     @Override
-    public Iterator<DataWidget.Entry<D>> iterator() {
+    public Iterator<DataWidget<D>.Entry> iterator() {
         return this.dataWidget.iterator();
     }
 

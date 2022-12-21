@@ -114,7 +114,7 @@ public final class DataEntryArea extends StackPane {
         this.rows.add(row);
         rows.add(row);
 
-        for (DataWidget.Entry<D> entry : widget) {
+        for (DataWidget<D>.Entry entry : widget) {
             for (Template<?> template : Proximity.templates()) {
                 if (template.canHandle(entry.getValue())) {
                     //noinspection unchecked

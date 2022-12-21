@@ -6,9 +6,9 @@ import dev.hephaestus.proximity.app.api.logging.ExceptionUtil;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
 import dev.hephaestus.proximity.app.api.rendering.Canvas;
+import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.api.rendering.ImageRenderer;
 import dev.hephaestus.proximity.app.api.util.Task;
-import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import dev.hephaestus.proximity.app.impl.rendering.PreviewImageRenderer;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
@@ -52,7 +52,7 @@ public class PreviewPane extends VBox {
     private final Task copyTask = new CopyTask("copy", Proximity.log(), false);
     private final Task render = new RenderTask("render", Proximity.log());
 
-    private DataWidget.Entry<?> mostRecentlyDrawn;
+    private DataWidget<?>.Entry mostRecentlyDrawn;
     private boolean cropPreview = true;
 
     public PreviewPane() {
@@ -103,18 +103,18 @@ public class PreviewPane extends VBox {
 
         @Override
         protected Builder<?> addSteps(Builder<Void> builder) {
-            return builder.then((Supplier<DocumentImpl<?>>) this::startCopy)
+            return builder.then((Supplier<Document<?>>) this::startCopy)
                     .then(this::doRender)
                     .then(this::doCrop)
                     .then(this::toToolkitImage)
                     .then(this::copyToClipboard);
         }
 
-        private <D extends RenderJob<?>> DocumentImpl<?> startCopy() {
+        private <D extends RenderJob<?>> Document<?> startCopy() {
             return PreviewPane.this.mostRecentlyDrawn.document().getValue();
         }
 
-        private Canvas doRender(DocumentImpl<?> document) {
+        private Canvas doRender(Document<?> document) {
             Template<?> template = document.getTemplate();
             ImageRenderer renderer = new ImageRenderer();
             Canvas canvas = renderer.createCanvas(template.getWidth(), template.getHeight(), template.getDPI());
@@ -164,8 +164,8 @@ public class PreviewPane extends VBox {
     }
 
     private class RenderTask extends Task {
-        private final ThreadLocal<DataWidget.Entry<?>> widget = ThreadLocal.withInitial(() -> PreviewPane.this.mostRecentlyDrawn);
-        private final ThreadLocal<DocumentImpl<?>> document = new ThreadLocal<>();
+        private final ThreadLocal<DataWidget<?>.Entry> widget = ThreadLocal.withInitial(() -> PreviewPane.this.mostRecentlyDrawn);
+        private final ThreadLocal<Document<?>> document = new ThreadLocal<>();
         public RenderTask(String name, Log log) {
             super(name, log);
         }
@@ -180,7 +180,7 @@ public class PreviewPane extends VBox {
 
         private <D extends RenderJob<?>> RenderResult clearPreviewPane() {
             //noinspection unchecked
-            var widget = (DataWidget.Entry<D>) this.widget.get();
+            var widget = (DataWidget<D>.Entry) this.widget.get();
             Template<D> template = widget.template().getValue();
 
             if (template == null) {
@@ -205,7 +205,7 @@ public class PreviewPane extends VBox {
                 Platform.runLater(() -> PreviewPane.this.isRendering.set(true));
 
                 //noinspection unchecked
-                DataWidget.Entry<D> entry = (DataWidget.Entry<D>) this.widget.get();
+                DataWidget<D>.Entry entry = (DataWidget<D>.Entry) this.widget.get();
                 D job = entry.getValue();
                 Template<D> template = entry.template().getValue();
 
@@ -217,7 +217,7 @@ public class PreviewPane extends VBox {
 
 
         private <D extends RenderJob<?>> RenderResult render(RenderResult result) {
-            DocumentImpl<?> document = this.document.get();
+            Document<?> document = this.document.get();
             Template<?> template = document.getTemplate();
             double rW = PreviewPane.this.getWidth() / template.getWidth();
             double rH = PreviewPane.this.getHeight() / template.getHeight();
@@ -262,7 +262,7 @@ public class PreviewPane extends VBox {
         }
 
         private void setPreview(RenderResult result) {
-            DataWidget.Entry<?> widget = this.widget.get();
+            DataWidget<?>.Entry widget = this.widget.get();
 
             Platform.runLater(() -> {
                 if (Proximity.isSelected(widget)) {
@@ -294,7 +294,7 @@ public class PreviewPane extends VBox {
         }
     }
 
-    public <D extends RenderJob<?>> void render(DataWidget.Entry<D> widget) {
+    public <D extends RenderJob<?>> void render(DataWidget<D>.Entry widget) {
         if (!Proximity.isPaused() && this.mostRecentlyDrawn == null || this.mostRecentlyDrawn != widget) {
             this.mostRecentlyDrawn = widget;
             this.render.run();
@@ -306,7 +306,7 @@ public class PreviewPane extends VBox {
         this.mostRecentlyDrawn = null;
     }
 
-    public void rerender(DataWidget.Entry<?> entry) {
+    public void rerender(DataWidget<?>.Entry entry) {
         if (entry == this.mostRecentlyDrawn) {
             this.cache.remove(entry);
             this.render.run();
@@ -319,7 +319,7 @@ public class PreviewPane extends VBox {
     }
 
     private static final class Cache {
-        private final DataWidget.Entry<?>[] entries;
+        private final DataWidget<?>.Entry[] entries;
         private final RenderResult[] results;
 
         private int p = 0;
@@ -329,7 +329,7 @@ public class PreviewPane extends VBox {
             this.results = new RenderResult[size];
         }
 
-        public RenderResult get(DataWidget.Entry<?> entry) {
+        public RenderResult get(DataWidget<?>.Entry entry) {
             for (int i = 0, cacheLength = this.entries.length; i < cacheLength; i++) {
                 if (this.entries[i] == entry) return results[i];
             }
@@ -337,7 +337,7 @@ public class PreviewPane extends VBox {
             return this.cache(entry, new RenderResult());
         }
 
-        public RenderResult cache(DataWidget.Entry<?> entry, RenderResult result) {
+        public RenderResult cache(DataWidget<?>.Entry entry, RenderResult result) {
             this.entries[this.p] = entry;
             this.results[this.p] = result;
 
@@ -346,7 +346,7 @@ public class PreviewPane extends VBox {
             return result;
         }
 
-        public void remove(DataWidget.Entry<?> entry) {
+        public void remove(DataWidget<?>.Entry entry) {
             for (int i = 0, cacheLength = this.entries.length; i < cacheLength; i++) {
                 if (this.entries[i] == entry) {
                     this.entries[i] = null;

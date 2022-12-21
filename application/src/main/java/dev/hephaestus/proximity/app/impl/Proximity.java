@@ -322,11 +322,11 @@ public class Proximity {
         return CURRENT_PROJECT;
     }
 
-    public static void render(DataWidget.Entry<?> entry) {
+    public static void render(DataWidget<?>.Entry entry) {
         INSTANCE.previewPane.render(entry);
     }
 
-    public static void rerender(DataWidget.Entry<?> entry) {
+    public static void rerender(DataWidget<?>.Entry entry) {
         INSTANCE.previewPane.rerender(entry);
     }
 
@@ -342,7 +342,7 @@ public class Proximity {
         return null;
     }
 
-    public static <D extends RenderJob<?>> void select(DataWidget.Entry<D> entry) {
+    public static <D extends RenderJob<?>> void select(DataWidget<D>.Entry entry) {
         INSTANCE.options.select(entry);
         SELECTION_MANAGER.select(entry);
     }
@@ -376,7 +376,7 @@ public class Proximity {
         return LOG;
     }
 
-    public static boolean isSelected(DataWidget.Entry<?> entry) {
+    public static boolean isSelected(DataWidget<?>.Entry entry) {
         return SELECTION_MANAGER.isSelected(entry);
     }
 

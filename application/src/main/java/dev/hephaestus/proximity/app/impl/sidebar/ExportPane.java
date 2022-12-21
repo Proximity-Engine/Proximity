@@ -30,7 +30,7 @@ public class ExportPane extends SidebarPane {
     }
 
     private <D extends RenderJob<?>, CANVAS> void export(Renderer<CANVAS> renderer, DataRow<D> row) {
-        for (DataWidget.Entry<D> entry : row) {
+        for (DataWidget<D>.Entry entry : row) {
             Template<D> template = entry.template().getValue();
             CANVAS canvas = renderer.createCanvas(template.getWidth(), template.getHeight(), template.getDPI());
 

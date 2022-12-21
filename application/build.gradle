@@ -34,8 +34,13 @@ repositories {
 dependencies {
     implementation 'com.google.guava:guava:31.0.1-jre'
     implementation 'org.jetbrains:annotations:23.0.0'
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
     api project(':utilities')
     api project(':json')
+
+    runtimeOnly 'dev.hephaestus.proximity:mtg:1.0.0-SNAPSHOT'
+    runtimeOnly 'dev.hephaestus.proximity:scryfall:1.0.0-SNAPSHOT'
+    runtimeOnly 'dev.hephaestus.proximity:m15-ultimate:1.0.0-SNAPSHOT'
 }
 
 application {

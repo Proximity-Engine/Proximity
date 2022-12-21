@@ -53,7 +53,7 @@ public class Proximity {
         dev.hephaestus.proximity.app.impl.Proximity.select(widget);
     }
 
-    public static void select(DataWidget.Entry<?> entry) {
+    public static void select(DataWidget<?>.Entry entry) {
         dev.hephaestus.proximity.app.impl.Proximity.select(entry);
     }
 

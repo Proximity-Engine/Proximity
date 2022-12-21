@@ -44,7 +44,7 @@ public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> 
         category.accept(this.categories.computeIfAbsent(id, c -> new Category(id, expandedByDefault)));
     }
 
-    public void createWidgets(DataWidget.Entry<D> entry, ObservableList<Node> options, ObservableList<Node> categories) {
+    public void createWidgets(DataWidget<D>.Entry entry, ObservableList<Node> options, ObservableList<Node> categories) {
         List<Node> optionControls = new ArrayList<>(this.options.size());
 
         for (Option<?, ?, ? super D> option : this.options) {
@@ -104,7 +104,7 @@ public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> 
         categories.setAll(categoryPanes);
     }
 
-    private <T, W extends Node & Option.Widget<T>> W createWidget(DataWidget.Entry<D> entry, Option<T, W, ? super D> option) {
+    private <T, W extends Node & Option.Widget<T>> W createWidget(DataWidget<D>.Entry entry, Option<T, W, ? super D> option) {
         D job = entry.getValue();
         W control = option.createControl(job);
         Property<T> property = job.getOptionProperty(option);
