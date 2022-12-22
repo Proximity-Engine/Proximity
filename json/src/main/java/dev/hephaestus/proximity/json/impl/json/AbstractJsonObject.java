@@ -1,90 +1,19 @@
 package dev.hephaestus.proximity.json.impl.json;
 
-import dev.hephaestus.proximity.json.api.JsonArray;
-import dev.hephaestus.proximity.json.api.JsonCollection;
-import dev.hephaestus.proximity.json.api.JsonElement;
-import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.json.api.*;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonWriter;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> extends AbstractJsonElement implements JsonObject {
+public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> implements AbstractJsonElement, JsonObject {
     protected final M values;
 
     protected AbstractJsonObject(M values) {
         this.values = values;
-    }
-
-    @Override
-    public boolean isObject() {
-        return true;
-    }
-
-    @Override
-    public boolean isArray() {
-        return false;
-    }
-
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return false;
-    }
-
-    @Override
-    public boolean isNumber() {
-        return false;
-    }
-
-    @Override
-    public boolean isString() {
-        return false;
-    }
-
-    @Override
-    public boolean asBoolean() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'boolean'");
-    }
-
-    @Override
-    public JsonObject asObject() {
-        return this;
-    }
-
-    @Override
-    public JsonArray asArray() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'JsonArray'");
-    }
-
-    @Override
-    public int asInt() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'int'");
-    }
-
-    @Override
-    public long asLong() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'long'");
-    }
-
-    @Override
-    public double asDouble() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'double'");    }
-
-    @Override
-    public float asFloat() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'float'");
-    }
-
-    @Override
-    public String asString() {
-        throw new RuntimeException("Cannot convert JsonObject to type 'String'");
     }
 
     @Override
@@ -100,8 +29,8 @@ public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> ext
                 String key = keys[i];
                 JsonElement element = this.get(key);
 
-                if (element.isObject()) {
-                    object = (JsonObject) element;
+                if (element instanceof JsonObject o) {
+                    object = o;
                 } else {
                     return false;
                 }
@@ -124,8 +53,8 @@ public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> ext
                 String key = keys[i];
                 JsonElement element = this.get(key);
 
-                if (element.isObject()) {
-                    object = (JsonObject) element;
+                if (element instanceof JsonObject o) {
+                    object = o;
                 } else {
                     return null;
                 }
@@ -137,42 +66,42 @@ public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> ext
 
     @Override
     public boolean getBoolean(String... keys) {
-        return this.get(keys).asBoolean();
+        return ((JsonBoolean) this.get(keys)).get();
     }
 
     @Override
     public JsonObject getObject(String... keys) {
-        return this.get(keys).asObject();
+        return (JsonObject) this.get(keys);
     }
 
     @Override
     public JsonArray getArray(String... keys) {
-        return this.get(keys).asArray();
+        return (JsonArray) this.get(keys);
     }
 
     @Override
     public int getInt(String... keys) {
-        return this.get(keys).asInt();
+        return ((JsonNumberImpl) this.get(keys)).get().intValue();
     }
 
     @Override
     public long getLong(String... keys) {
-        return this.get(keys).asLong();
+        return ((JsonNumberImpl) this.get(keys)).get().longValue();
     }
 
     @Override
     public double getDouble(String... keys) {
-        return this.get(keys).asDouble();
+        return ((JsonNumberImpl) this.get(keys)).get().doubleValue();
     }
 
     @Override
     public float getFloat(String... keys) {
-        return this.get(keys).asFloat();
+        return ((JsonNumberImpl) this.get(keys)).get().floatValue();
     }
 
     @Override
     public String getString(String... keys) {
-        return this.get(keys).asString();
+        return ((JsonString) this.get(keys)).get();
     }
 
     @NotNull
@@ -207,5 +136,19 @@ public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> ext
         }
 
         return result;
+    }
+
+    @Override
+    public String toString() {
+        StringWriter stringWriter = new StringWriter();
+        JsonWriter writer = JsonWriter.json(stringWriter);
+
+        try {
+            this.write(writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return stringWriter.toString();
     }
 }

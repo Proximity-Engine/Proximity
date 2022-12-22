@@ -5,6 +5,7 @@ import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.controls.SwitchButton;
 import dev.hephaestus.proximity.app.impl.Appearance;
 import dev.hephaestus.proximity.json.api.Json;
+import dev.hephaestus.proximity.json.api.JsonBoolean;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import javafx.beans.property.Property;
 import javafx.scene.control.Label;
@@ -25,7 +26,7 @@ public class ToggleOption<D extends RenderJob<?>> extends Option<Boolean, Toggle
 
     @Override
     public Boolean fromJson(JsonElement json) {
-        return json.asBoolean();
+        return ((JsonBoolean) json).get();
     }
 
     @Override

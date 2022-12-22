@@ -36,27 +36,27 @@ public class MutableJsonObject extends AbstractJsonObject<LinkedHashMap<String, 
 
     @Override
     public void put(String key, boolean value) {
-        this.values.put(key, new JsonPrimitive(value));
+        this.values.put(key, new JsonBooleanImpl(value));
     }
 
     @Override
     public void put(String key, int value) {
-        this.values.put(key, new JsonPrimitive(value));
+        this.values.put(key, new JsonNumberImpl(value));
     }
 
     @Override
     public void put(String key, float value) {
-        this.values.put(key, new JsonPrimitive(value));
+        this.values.put(key, new JsonNumberImpl(value));
     }
 
     @Override
     public void put(String key, double value) {
-        this.values.put(key, new JsonPrimitive(value));
+        this.values.put(key, new JsonNumberImpl(value));
     }
 
     @Override
     public void put(String key, String value) {
-        this.values.put(key, new JsonPrimitive(value));
+        this.values.put(key, new JsonStringImpl(value));
     }
 
     @Override

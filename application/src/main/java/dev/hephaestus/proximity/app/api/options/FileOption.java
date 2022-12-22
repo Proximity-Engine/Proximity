@@ -5,6 +5,7 @@ import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Button;
@@ -42,7 +43,7 @@ public class FileOption<D extends RenderJob<?>> extends Option<Path, FileOption<
 
     @Override
     public Path fromJson(JsonElement json) {
-        return Path.of(json.asString());
+        return Path.of(((JsonString) json).get());
     }
 
     @Override

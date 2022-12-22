@@ -9,8 +9,13 @@ import dev.hephaestus.proximity.app.impl.OptionsImpl;
 import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -36,7 +41,7 @@ public class OptionsPane extends SidebarPane {
 
     private <D extends RenderJob<?>> void updateDocument(Document<D> document) {
         //noinspection unchecked
-        DataWidget<D>.Entry entry = (DataWidget<D>.Entry) this.selected;
+        DataWidget<D>.Entry entry = (DataWidget<D>.Entry) this.selected.getValue();
 
         Proximity.rerender(entry);
 
@@ -51,7 +56,7 @@ public class OptionsPane extends SidebarPane {
         options.createWidgets(entry, this.options.getChildren(), this.categories.getChildren());
     }
 
-    private DataWidget<?>.Entry selected;
+    private final Property<DataWidget<?>.Entry> selected = new SimpleObjectProperty<>();
 
     public OptionsPane() {
         super();
@@ -79,8 +84,8 @@ public class OptionsPane extends SidebarPane {
         this.templateSelector.prefWidthProperty().bind(hBox.widthProperty());
 
         hBox.getStyleClass().add("sidebar-entry");
-
         VBox.setVgrow(this.options, Priority.ALWAYS);
+
 
         this.getChildren().add(0, hBox);
         this.getChildren().addAll(this.options, this.categories);
@@ -90,11 +95,11 @@ public class OptionsPane extends SidebarPane {
 
     private <D extends RenderJob<?>> void setTemplate(Template<D> template) {
         //noinspection unchecked
-        ((DataWidget<D>.Entry) this.selected).template().setValue(template);
+        ((DataWidget<D>.Entry) this.selected.getValue()).template().setValue(template);
     }
 
     public <D extends RenderJob<?>> void select(DataWidget<D>.Entry entry) {
-        this.selected = entry;
+        this.selected.setValue(entry);
 
         // Remove any existing listeners to prevent duplicates
         entry.document().removeListener(this.documentChangeListener);
@@ -108,29 +113,25 @@ public class OptionsPane extends SidebarPane {
             }
         }
 
-        if (this.templateSelector.getItems().size() > 0 && entry.template() == null) {
-            this.templateSelector.setValue(this.templateSelector.getItems().get(0));
-        } else if (entry.template().getValue() != null) {
-            Template<D> template = entry.template().getValue();
-            DocumentImpl<D> document = (DocumentImpl<D>) entry.document().getValue();
+        Template<D> template = entry.template().getValue();
+        DocumentImpl<D> document = (DocumentImpl<D>) entry.document().getValue();
 
-            this.templateSelector.valueProperty().removeListener(this.templateChangeListener);
-            this.templateSelector.setValue(template);
-            this.templateSelector.valueProperty().addListener(this.templateChangeListener);
+        this.templateSelector.valueProperty().removeListener(this.templateChangeListener);
+        this.templateSelector.setValue(template);
+        this.templateSelector.valueProperty().addListener(this.templateChangeListener);
 
-            OptionsImpl<D> options = new OptionsImpl<>();
+        OptionsImpl<D> options = new OptionsImpl<>();
 
-            document.getTemplate().createOptions(options);
+        document.getTemplate().createOptions(options);
 
-            for (Option<?, ?, D> option : document.getSelectorOverrides()) {
-                options.add(option, "Advanced");
-            }
-
-            options.createWidgets(entry, this.options.getChildren(), this.categories.getChildren());
+        for (Option<?, ?, D> option : document.getSelectorOverrides()) {
+            options.add(option, "Advanced");
         }
+
+        options.createWidgets(entry, this.options.getChildren(), this.categories.getChildren());
     }
 
     public DataWidget<?>.Entry getSelected() {
-        return this.selected;
+        return this.selected.getValue();
     }
 }

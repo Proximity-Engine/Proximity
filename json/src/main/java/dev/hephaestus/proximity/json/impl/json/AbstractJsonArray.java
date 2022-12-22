@@ -1,9 +1,6 @@
 package dev.hephaestus.proximity.json.impl.json;
 
-import dev.hephaestus.proximity.json.api.JsonArray;
-import dev.hephaestus.proximity.json.api.JsonCollection;
-import dev.hephaestus.proximity.json.api.JsonElement;
-import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.json.api.*;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonWriter;
 
@@ -11,7 +8,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class AbstractJsonArray<L extends List<JsonElement>> extends AbstractJsonElement implements JsonArray {
+public abstract class AbstractJsonArray<L extends List<JsonElement>> implements AbstractJsonElement, JsonArray {
     protected final L values;
 
     AbstractJsonArray(L values) {
@@ -33,76 +30,6 @@ public abstract class AbstractJsonArray<L extends List<JsonElement>> extends Abs
         return this.values.isEmpty();
     }
 
-    @Override
-    public boolean isObject() {
-        return false;
-    }
-
-    @Override
-    public boolean isArray() {
-        return true;
-    }
-
-    @Override
-    public boolean isNull() {
-        return false;
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return false;
-    }
-
-    @Override
-    public boolean isNumber() {
-        return false;
-    }
-
-    @Override
-    public boolean isString() {
-        return false;
-    }
-
-    @Override
-    public boolean asBoolean() {
-        return false;
-    }
-
-    @Override
-    public JsonObject asObject() {
-        throw new RuntimeException("Cannot convert JsonArray to type 'JsonObject'");
-}
-
-    @Override
-    public JsonArray asArray() {
-        return this;
-    }
-
-    @Override
-    public int asInt() {
-        throw new RuntimeException("Cannot convert JsonArray to type 'int'");
-    }
-
-    @Override
-    public long asLong() {
-        throw new RuntimeException("Cannot convert JsonArray to type 'long'");
-    }
-
-    @Override
-    public float asFloat() {
-        throw new RuntimeException("Cannot convert JsonArray to type 'float'");
-    }
-
-    @Override
-    public double asDouble() {
-        throw new RuntimeException("Cannot convert JsonArray to type 'double'");
-    }
-
-    @Override
-    public String asString() {
-        throw new RuntimeException("Cannot convert JsonArray to type 'String'");
-    }
-
     @NotNull
     @Override
     public Iterator<JsonElement> iterator() {
@@ -114,15 +41,15 @@ public abstract class AbstractJsonArray<L extends List<JsonElement>> extends Abs
         for (JsonElement element : this.values) {
             if (object instanceof JsonElement && element.equals(object)) {
                 return true;
-            } else if (object instanceof String && element.isString() && element.asString().equals(object)) {
+            } else if (object instanceof String && element instanceof JsonString s && s.get().equals(object)) {
                 return true;
-            } else if (object instanceof Integer && element.isNumber() && object.equals(element.asInt())) {
+            } else if (object instanceof Integer && element instanceof JsonNumberImpl n && n.get().equals(object)) {
                 return true;
-            } else if (object instanceof Double && element.isNumber() && object.equals(element.asDouble())) {
+            } else if (object instanceof Double && element instanceof JsonNumberImpl n && n.get().equals(object)) {
                 return true;
-            } else if (object instanceof Float && element.isNumber() && object.equals(element.asFloat())) {
+            } else if (object instanceof Float && element instanceof JsonNumberImpl n && n.get().equals(object)) {
                 return true;
-            } else if (object instanceof Long && element.isNumber() && object.equals(element.asLong())) {
+            } else if (object instanceof Long && element instanceof JsonNumberImpl n && n.get().equals(object)) {
                 return true;
             }
         }

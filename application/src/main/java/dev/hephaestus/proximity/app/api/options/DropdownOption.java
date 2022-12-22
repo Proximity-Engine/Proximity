@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.property.Property;
 import javafx.scene.control.ComboBox;
 import javafx.util.StringConverter;
@@ -79,7 +80,7 @@ public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T
     }
 
     public static <D extends RenderJob<?>> Builder<String, D> builder(String id) {
-        return new Builder<>(id, s -> s, Json::create, JsonElement::asString);
+        return new Builder<>(id, s -> s, Json::create, JsonString::get);
     }
 
     public static final class Builder<T, D extends RenderJob<?>> {

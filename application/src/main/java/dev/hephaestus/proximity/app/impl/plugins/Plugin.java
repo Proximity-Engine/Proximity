@@ -6,6 +6,7 @@ import dev.hephaestus.proximity.app.impl.exceptions.PluginInstantiationException
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonArray;
 import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.json.api.JsonString;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,10 +90,10 @@ public final class Plugin {
             for (var entry : manifest.getObject("entrypoints")) {
                 if (entry.getValue() instanceof JsonArray array) {
                     for (var entrypoint : array) {
-                        plugin.entrypoints.put(entry.getKey(), classLoader.loadClass(entrypoint.asString()).getConstructor().newInstance());
+                        plugin.entrypoints.put(entry.getKey(), classLoader.loadClass(((JsonString) entrypoint).get()).getConstructor().newInstance());
                     }
-                } else if (entry.getValue().isString()) {
-                    plugin.entrypoints.put(entry.getKey(), classLoader.loadClass(entry.getValue().asString()).getConstructor().newInstance());
+                } else if (entry.getValue() instanceof JsonString string) {
+                    plugin.entrypoints.put(entry.getKey(), classLoader.loadClass(string.get()).getConstructor().newInstance());
                 } else {
                     throw new PluginInstantiationException("Unexpected value for entrypoint '%s'. Entrypoint must be a string or array of strings.", entry.getKey());
                 }

@@ -5,6 +5,7 @@ import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.controls.ColorPicker;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.property.Property;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -25,7 +26,7 @@ public class ColorOption<D extends RenderJob<?>> extends Option<Color, ColorOpti
 
     @Override
     public Color fromJson(JsonElement json) {
-        return Color.web(json.asString());
+        return Color.web(((JsonString) json).get());
     }
 
     @Override

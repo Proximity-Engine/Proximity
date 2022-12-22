@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.app.impl;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonNumber;
 import dev.hephaestus.proximity.json.api.JsonObject;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -40,7 +41,7 @@ public final class Cache {
                 for (Iterator<Map.Entry<String, JsonElement>> iterator = json.iterator(); iterator.hasNext(); ) {
                     Map.Entry<String, JsonElement> entry = iterator.next();
 
-                    if (entry.getValue().asLong() < System.currentTimeMillis()) {
+                    if (((JsonNumber) entry.getValue()).get().longValue() < System.currentTimeMillis()) {
                         iterator.remove();
                     }
                 }

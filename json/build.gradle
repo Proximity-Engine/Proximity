@@ -3,6 +3,12 @@ plugins {
     id 'extra-java-module-info'
     id 'java-library'
     id 'maven-publish'
+    id 'org.openjfx.javafxplugin' version '0.0.13'
+}
+
+javafx {
+    version = "19"
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
 }
 
 group = 'dev.hephaestus.proximity'

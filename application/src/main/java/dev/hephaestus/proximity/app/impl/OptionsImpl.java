@@ -4,6 +4,9 @@ import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
+import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.Property;
@@ -11,6 +14,8 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.*;
 
@@ -44,7 +49,7 @@ public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> 
         category.accept(this.categories.computeIfAbsent(id, c -> new Category(id, expandedByDefault)));
     }
 
-    public void createWidgets(DataWidget<D>.Entry entry, ObservableList<Node> options, ObservableList<Node> categories) {
+    public void createWidgets(DataWidget<D>.Entry entry, ObservableList<Node> options, ObservableList<Node> nodes) {
         List<Node> optionControls = new ArrayList<>(this.options.size());
 
         for (Option<?, ?, ? super D> option : this.options) {
@@ -101,7 +106,48 @@ public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> 
             categoryPane.setExpanded(category.expandedByDefault);
         }
 
-        categories.setAll(categoryPanes);
+        JsonElement element = entry.getValue().toJson();
+
+        if (element instanceof JsonObject object) {
+            VBox parent = new VBox();
+            ScrollPane scrollPane = new ScrollPane(parent);
+            TitledPane categoryPane = new TitledPane("Data", scrollPane);
+
+            scrollPane.setFitToWidth(true);
+            scrollPane.prefWidthProperty().bind(categoryPane.widthProperty());
+
+            for (var e : object) {
+                var json = e.getValue();
+
+                if (json instanceof JsonString string) {
+                    HBox box = new HBox();
+                    TextField textField = new TextField(string.get());
+
+                    Label label = new Label(e.getKey());
+                    Pane s = new Pane();
+
+                    label.getStyleClass().add("sidebar-text");
+                    box.getStyleClass().add("sidebar-entry");
+
+                    box.getChildren().addAll(label, s, textField);
+
+                    textField.getStyleClass().add("string-entry");
+
+                    HBox.setHgrow(s, Priority.ALWAYS);
+
+                    parent.getChildren().add(box);
+
+                    textField.textProperty().bindBidirectional(string);
+                    textField.textProperty().addListener(observable -> Proximity.rerender(entry));
+                }
+            }
+
+            categoryPane.setAnimated(false);
+            categoryPane.setExpanded(false);
+            categoryPanes.add(categoryPane);
+        }
+
+        nodes.setAll(categoryPanes);
     }
 
     private <T, W extends Node & Option.Widget<T>> W createWidget(DataWidget<D>.Entry entry, Option<T, W, ? super D> option) {

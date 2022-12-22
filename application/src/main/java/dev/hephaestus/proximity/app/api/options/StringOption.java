@@ -4,6 +4,7 @@ import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.property.Property;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -29,7 +30,7 @@ public class StringOption<D extends RenderJob<?>> extends Option<String, StringO
 
     @Override
     public String fromJson(JsonElement json) {
-        return json.asString();
+        return ((JsonString) json).get();
     }
 
     @Override

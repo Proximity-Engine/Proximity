@@ -1,8 +1,6 @@
 package dev.hephaestus.proximity.json.api;
 
-import dev.hephaestus.proximity.json.impl.json.JsonPrimitive;
-import dev.hephaestus.proximity.json.impl.json.MutableJsonArray;
-import dev.hephaestus.proximity.json.impl.json.MutableJsonObject;
+import dev.hephaestus.proximity.json.impl.json.*;
 import org.quiltmc.json5.JsonReader;
 import org.quiltmc.json5.JsonToken;
 
@@ -22,12 +20,12 @@ public final class Json {
             case BEGIN_ARRAY -> parseArray(reader);
             case END_OBJECT -> throw new RuntimeException("Unexpected end of object");
             case NAME -> throw new RuntimeException("Unexpected name");
-            case STRING -> new JsonPrimitive(reader.nextString());
-            case NUMBER -> new JsonPrimitive(reader.nextNumber());
-            case BOOLEAN -> new JsonPrimitive(reader.nextBoolean());
+            case STRING -> new JsonStringImpl(reader.nextString());
+            case NUMBER -> new JsonNumberImpl(reader.nextNumber());
+            case BOOLEAN -> new JsonBooleanImpl(reader.nextBoolean());
             case NULL -> {
                 reader.nextNull();
-                yield new JsonPrimitive();
+                yield null;
             }
             case END_DOCUMENT -> throw new RuntimeException("Unexpected end of file");
         };
@@ -73,35 +71,27 @@ public final class Json {
         return array;
     }
 
-    public static JsonElement create() {
-        return new JsonPrimitive();
+    public static JsonBoolean create(boolean value) {
+        return new JsonBooleanImpl(value);
     }
 
-    public static JsonElement create(boolean value) {
-        return new JsonPrimitive(value);
+    public static JsonNumber create(int value) {
+        return new JsonNumberImpl(value);
     }
 
-    public static JsonElement create(int value) {
-        return new JsonPrimitive(value);
+    public static JsonNumber create(long value) {
+        return new JsonNumberImpl(value);
     }
 
-    public static JsonElement create(long value) {
-        return new JsonPrimitive(value);
+    public static JsonNumber create(double value) {
+        return new JsonNumberImpl(value);
     }
 
-    public static JsonElement create(double value) {
-        return new JsonPrimitive(value);
+    public static JsonNumber create(float value) {
+        return new JsonNumberImpl(value);
     }
 
-    public static JsonElement create(float value) {
-        return new JsonPrimitive(value);
-    }
-
-    public static JsonElement create(String value) {
-        return new JsonPrimitive(value);
-    }
-
-    public static JsonElement create(Number value) {
-        return new JsonPrimitive(value);
+    public static JsonString create(String value) {
+        return new JsonStringImpl(value);
     }
 }

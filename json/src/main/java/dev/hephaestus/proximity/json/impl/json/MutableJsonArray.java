@@ -53,27 +53,27 @@ public final class MutableJsonArray extends AbstractJsonArray<List<JsonElement>>
 
     @Override
     public void add(boolean value) {
-        this.values.add(new JsonPrimitive(value));
+        this.values.add(new JsonBooleanImpl(value));
     }
 
     @Override
     public void add(int value) {
-        this.values.add(new JsonPrimitive(value));
+        this.values.add(new JsonNumberImpl(value));
     }
 
     @Override
     public void add(float value) {
-        this.values.add(new JsonPrimitive(value));
+        this.values.add(new JsonNumberImpl(value));
     }
 
     @Override
     public void add(double value) {
-        this.values.add(new JsonPrimitive(value));
+        this.values.add(new JsonNumberImpl(value));
     }
 
     @Override
     public void add(String value) {
-        this.values.add(new JsonPrimitive(value));
+        this.values.add(new JsonStringImpl(value));
     }
 
     @Override
@@ -83,27 +83,27 @@ public final class MutableJsonArray extends AbstractJsonArray<List<JsonElement>>
 
     @Override
     public void add(int index, boolean value) {
-        this.values.add(index, new JsonPrimitive(value));
+        this.values.add(index, new JsonBooleanImpl(value));
     }
 
     @Override
     public void add(int index, int value) {
-        this.values.add(index, new JsonPrimitive(value));
+        this.values.add(index, new JsonNumberImpl(value));
     }
 
     @Override
     public void add(int index, float value) {
-        this.values.add(index, new JsonPrimitive(value));
+        this.values.add(index, new JsonNumberImpl(value));
     }
 
     @Override
     public void add(int index, double value) {
-        this.values.add(index, new JsonPrimitive(value));
+        this.values.add(index, new JsonNumberImpl(value));
     }
 
     @Override
     public void add(int index, String value) {
-        this.values.add(index, new JsonPrimitive(value));
+        this.values.add(index, new JsonStringImpl(value));
     }
 
     @Override
