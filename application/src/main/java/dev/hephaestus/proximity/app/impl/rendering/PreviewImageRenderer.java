@@ -15,6 +15,7 @@ import dev.hephaestus.proximity.app.api.rendering.util.BoundingBox;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
 import dev.hephaestus.proximity.app.api.rendering.util.Rect;
 import dev.hephaestus.proximity.app.api.text.TextComponent;
+import dev.hephaestus.proximity.app.api.text.TextStyle;
 import dev.hephaestus.proximity.app.impl.rendering.properties.ImagePropertyImpl;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -197,13 +198,31 @@ public class PreviewImageRenderer {
 
     private record Canvas(Document<?> document, float rW, float rH, ObservableList<Node> nodes) {
         public void drawText(TextComponent component, BoundingBox bounds, int x, int y) {
-            Label label = new Label(component.text);
-
             Font font = document.getTemplate().getFXFont(
                     component.italic ? component.style.getItalicFontName() : component.style.getFontName(), (float) (component.style.getSize() / 72F * document.getTemplate().getDPI() * rW));
 
+            TextStyle.Shadow shadow = component.style.getShadow();
+
+            if (shadow != null) {
+                Color color = shadow.color();
+                String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+                Label label = new Label(component.text);
+
+                label.setStyle("-fx-text-fill: " + hex);
+
+                label.setFont(font);
+
+                label.setTranslateX((x + shadow.dX()) * rW);
+                label.setTranslateY((y + shadow.dY()) * rH);
+
+                StackPane.setAlignment(label, Pos.BASELINE_LEFT);
+
+                nodes.add(label);
+            }
+
             Color color = component.style.getColor();
             String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+            Label label = new Label(component.text);
 
             label.setStyle("-fx-text-fill: " + hex);
 
@@ -214,7 +233,7 @@ public class PreviewImageRenderer {
 
             StackPane.setAlignment(label, Pos.BASELINE_LEFT);
 
-            nodes.addAll(label);
+            nodes.add(label);
         }
     }
 
