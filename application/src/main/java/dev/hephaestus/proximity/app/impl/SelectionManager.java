@@ -61,27 +61,31 @@ public final class SelectionManager {
     }
 
     public void select(DataRow<?> row) {
-        /* TODO if (!app.isShiftDown()) */
-        for (Iterator<DataWidget<?>.Entry> itr = this.selected.iterator(); itr.hasNext(); ) {
-            DataWidget<?>.Entry entry = itr.next();
+        if (row.getDataWidget().size() == 1) {
+            this.select(row.getDataWidget().get(0));
+        } else {
+            /* TODO if (!app.isShiftDown()) */
+            for (Iterator<DataWidget<?>.Entry> itr = this.selected.iterator(); itr.hasNext(); ) {
+                DataWidget<?>.Entry entry = itr.next();
 
-            if (entry.getWidget().size() == 1) {
-                (this.getRow(entry)).setBackground(Background.EMPTY);
-            } else {
-                entry.getRootPane().setBackground(Background.EMPTY);
+                if (entry.getWidget().size() == 1) {
+                    (this.getRow(entry)).setBackground(Background.EMPTY);
+                } else {
+                    entry.getRootPane().setBackground(Background.EMPTY);
+                }
+
+                itr.remove();
             }
 
-            itr.remove();
-        }
+            if (this.row != null) {
+                this.row.setBackground(Background.EMPTY);
+                this.row = null;
+            }
 
-        if (this.row != null) {
-            this.row.setBackground(Background.EMPTY);
-            this.row = null;
+            row.setBackground(Appearance.SELECTED_ROW);
+            this.row = row;
+            Proximity.clearPreview();
         }
-
-        row.setBackground(Appearance.SELECTED_ROW);
-        this.row = row;
-        Proximity.clearPreview();
     }
 
     private DataRow<?> getRow(DataWidget<?>.Entry entry) {
