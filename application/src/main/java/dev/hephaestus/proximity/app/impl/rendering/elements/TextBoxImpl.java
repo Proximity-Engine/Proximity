@@ -73,7 +73,7 @@ public class TextBoxImpl<D extends RenderJob<?>> extends ElementImpl<D> implemen
                 bounds.x,
                 bounds.y,
                 textLayout.getAdvance(),
-                bounds.height,
+                textLayout.getAscent(),
                 true
         );
     }

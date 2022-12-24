@@ -14,11 +14,11 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Background;
@@ -32,6 +32,8 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -166,6 +168,7 @@ public class PreviewPane extends VBox {
     private class RenderTask extends Task {
         private final ThreadLocal<DataWidget<?>.Entry> widget = ThreadLocal.withInitial(() -> PreviewPane.this.mostRecentlyDrawn);
         private final ThreadLocal<Document<?>> document = new ThreadLocal<>();
+        private final Map<Integer, Map<Integer, PreviewImageRenderer>> renderers = new HashMap<>(1);
         public RenderTask(String name, Log log) {
             super(name, log);
         }
@@ -174,7 +177,7 @@ public class PreviewPane extends VBox {
         protected Builder<?> addSteps(Builder<Void> builder) {
             return builder.then((Supplier<RenderResult>) this::clearPreviewPane)
                     .then((Function<RenderResult, RenderResult>) this::assemble)
-                    .then((Function<RenderResult, RenderResult>) this::render)
+                    .then(this::render)
                     .then(this::setPreview);
         }
 
@@ -216,7 +219,7 @@ public class PreviewPane extends VBox {
         }
 
 
-        private <D extends RenderJob<?>> RenderResult render(RenderResult result) {
+        private StackPane render(RenderResult result) {
             Document<?> document = this.document.get();
             Template<?> template = document.getTemplate();
             double rW = PreviewPane.this.getWidth() / template.getWidth();
@@ -226,56 +229,36 @@ public class PreviewPane extends VBox {
             int width = (int) (template.getWidth() * r);
             int height = (int) (template.getHeight() * r);
 
-            PreviewImageRenderer renderer = new PreviewImageRenderer(width, height);
-            Canvas canvas = renderer.createCanvas(template.getWidth(), template.getHeight(), template.getDPI());
+            PreviewImageRenderer renderer = this.renderers.computeIfAbsent(width, w -> new HashMap<>(1))
+                    .computeIfAbsent(height, h -> new PreviewImageRenderer(width, height));
+
+            StackPane preview = new StackPane();
 
             try {
-                renderer.render(document, canvas);
+                renderer.render(document, preview.getChildren());
 
-                BufferedImage bufferedImage = canvas.getImage();
-
-                if (PreviewPane.this.cropPreview) {
-                    bufferedImage = Proximity.getDataProvider().crop(bufferedImage);
-
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
-                    ImageIO.write(bufferedImage, "png", stream);
-
-                    result.cropped = new Image(new ByteArrayInputStream(stream.toByteArray()));
-                } else {
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
-                    ImageIO.write(bufferedImage, "png", stream);
-
-                    result.original = new Image(new ByteArrayInputStream(stream.toByteArray()));
-                }
-
+                return preview;
             } catch (Exception e) {
                 if (!(e instanceof RuntimeException)) {
                     this.widget.get().getWidget().getErrorProperty().add(ExceptionUtil.getErrorMessage(e));
                 }
 
-                this.interrupt(e);
+                return this.interrupt(e);
             }
-
-            return result;
         }
 
-        private void setPreview(RenderResult result) {
+        private void setPreview(StackPane stackPane) {
             DataWidget<?>.Entry widget = this.widget.get();
 
             Platform.runLater(() -> {
                 if (Proximity.isSelected(widget)) {
-                    Image image = PreviewPane.this.cropPreview ? result.cropped : result.original;
-                    ImageView imageView = new ImageView(image);
                     ObservableList<Node> children = PreviewPane.this.preview.getChildren();
-                    StackPane stackPane = new StackPane(imageView);
 
                     if (!PreviewPane.this.cropPreview) {
-                        stackPane.getChildren().add(0, new Rectangle(image.getWidth(), image.getHeight(), Color.GREY));
+//                        stackPane.getChildren().add(0, new Rectangle(image.getWidth(), image.getHeight(), Color.GREY));
                     }
 
-                    children.addAll(stackPane);
+                    children.add(stackPane);
 
                     if (children.size() > 1) {
                         children.remove(0, children.size() - 1);

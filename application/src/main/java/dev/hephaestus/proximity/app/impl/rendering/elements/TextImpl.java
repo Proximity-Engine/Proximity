@@ -88,7 +88,7 @@ public class TextImpl<D extends RenderJob<?>> extends ElementImpl<D> implements 
                 bounds.x,
                 bounds.y,
                 textLayout.getAdvance(),
-                bounds.height,
+                textLayout.getAscent(),
                 true
         );
     }

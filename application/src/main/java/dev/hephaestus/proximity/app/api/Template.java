@@ -3,7 +3,8 @@ package dev.hephaestus.proximity.app.api;
 import dev.hephaestus.proximity.app.api.exceptions.ResourceNotFoundException;
 import dev.hephaestus.proximity.app.impl.rendering.DefaultResourceProvider;
 
-import java.awt.*;
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.function.Consumer;
 
 public abstract class Template<D extends RenderJob<?>> {
     private final Map<String, Font> fonts = new HashMap<>();
+    private final Map<String, javafx.scene.text.Font> fxFonts = new HashMap<>();
     private final List<ResourceProvider> resourceProviders = new ArrayList<>(1);
 
     protected final String name;
@@ -93,6 +95,30 @@ public abstract class Template<D extends RenderJob<?>> {
         }
 
         return font == null ? null : font.deriveFont(size);
+    }
+
+    public final javafx.scene.text.Font getFXFont(String fontName, float size) {
+        javafx.scene.text.Font font = this.fxFonts.get(fontName);
+
+        if (font == null) {
+            InputStream stream;
+
+            if (this.hasResource("fonts/" + fontName + ".otf")) {
+                stream = this.getResource("fonts/" + fontName + ".otf");
+            } else {
+                stream = this.getResource("fonts/" + fontName + ".ttf");
+            }
+
+            if (stream != null) {
+                font = javafx.scene.text.Font.loadFont(stream, size);
+                this.fxFonts.put(fontName, font);
+                return font;
+            } else {
+                throw new RuntimeException("Font not found \"" + fontName + "\"");
+            }
+        } else {
+            return new javafx.scene.text.Font(font.getName(), size);
+        }
     }
 
     public abstract boolean canHandle(Object data);
