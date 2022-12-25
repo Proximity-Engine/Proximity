@@ -25,4 +25,20 @@ public abstract class JsonNumber extends SimpleObjectProperty<Number> implements
     public JsonNumber(Number initialValue) {
         super(initialValue);
     }
+
+    public int asInt() {
+        return this.get().intValue();
+    }
+
+    public long asLong() {
+        return this.get().longValue();
+    }
+
+    public float asFloat() {
+        return this.get().floatValue();
+    }
+
+    public double asDouble() {
+        return this.get().doubleValue();
+    }
 }

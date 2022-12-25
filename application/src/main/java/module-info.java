@@ -31,8 +31,8 @@ module dev.hephaestus.proximity.app {
     requires java.desktop;
     requires javafx.controls;
     requires javafx.fxml;
-    requires com.google.common;
 
     opens dev.hephaestus.proximity.app.impl to javafx.fxml;
     opens dev.hephaestus.proximity.app.impl.sidebar to javafx.fxml;
+    exports dev.hephaestus.proximity.app.api.v2;
 }

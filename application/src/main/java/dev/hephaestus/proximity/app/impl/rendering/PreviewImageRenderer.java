@@ -221,10 +221,12 @@ public class PreviewImageRenderer {
             }
 
             Color color = component.style.getColor();
-            String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
             Label label = new Label(component.text);
 
-            label.setStyle("-fx-text-fill: " + hex);
+            if (color != null) {
+                String hex = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+                label.setStyle("-fx-text-fill: " + hex);
+            }
 
             label.setFont(font);
 

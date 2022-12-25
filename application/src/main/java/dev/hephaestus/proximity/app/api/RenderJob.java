@@ -39,7 +39,7 @@ public abstract class RenderJob<E extends JsonElement> {
 
         json.put("class", this.getClass().getName());
 
-        JsonObject.Mutable options = json.createObject("options");
+        JsonObject options = json.createObject("options");
 
         for (var entry : this.options.entrySet()) {
             //noinspection unchecked,rawtypes
@@ -55,7 +55,7 @@ public abstract class RenderJob<E extends JsonElement> {
         return this.options.keySet();
     }
 
-    private <T, D extends RenderJob<?>> void put(Map.Entry<Option<T, ?, D>, Object> entry, JsonObject.Mutable json) {
+    private <T, D extends RenderJob<?>> void put(Map.Entry<Option<T, ?, D>, Object> entry, JsonObject json) {
         var option = entry.getKey();
 
         json.put(option.getId(), option.toJson(this.getOption(option)));

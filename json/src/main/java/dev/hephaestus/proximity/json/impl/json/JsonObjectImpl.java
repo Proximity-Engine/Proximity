@@ -1,19 +1,127 @@
 package dev.hephaestus.proximity.json.impl.json;
 
-import dev.hephaestus.proximity.json.api.*;
+import dev.hephaestus.proximity.json.api.JsonArray;
+import dev.hephaestus.proximity.json.api.JsonBoolean;
+import dev.hephaestus.proximity.json.api.JsonElement;
+import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.json.api.JsonString;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonWriter;
 
 import java.io.IOException;
-import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
-public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> implements AbstractJsonElement, JsonObject {
-    protected final M values;
+public class JsonObjectImpl implements JsonObject, Observable, AbstractJsonElement {
+    protected final LinkedHashMap<String, JsonElement> values = new LinkedHashMap<>();
+    private final List<InvalidationListener> listeners = new ArrayList<>();
+    private boolean frozen = false;
 
-    protected AbstractJsonObject(M values) {
-        this.values = values;
+    public JsonObjectImpl() {
+    }
+
+    @Override
+    public void put(String key, JsonElement value) {
+        this.values.put(key, value);
+
+        if (value != null) {
+            value.addListener(o -> this.invalidate());
+        }
+
+        this.invalidate();
+    }
+
+    @Override
+    public void put(String key, boolean value) {
+        this.put(key, new JsonBooleanImpl(value));
+    }
+
+    @Override
+    public void put(String key, int value) {
+        this.put(key, new JsonNumberImpl(value));
+    }
+
+    @Override
+    public void put(String key, float value) {
+        this.put(key, new JsonNumberImpl(value));
+    }
+
+    @Override
+    public void put(String key, double value) {
+        this.put(key, new JsonNumberImpl(value));
+    }
+
+    @Override
+    public void put(String key, String value) {
+        this.put(key, new JsonStringImpl(value));
+    }
+
+    @Override
+    public void copyAll(JsonObject other) {
+        this.freeze();
+
+        for (var entry : other) {
+            JsonElement value = entry.getValue();
+
+            this.put(entry.getKey(), value.copy());
+        }
+
+        this.unfreeze();
+
+        this.invalidate();
+    }
+
+    private void freeze() {
+        this.frozen = true;
+    }
+
+    private void unfreeze() {
+        this.frozen = false;
+    }
+
+    private boolean isFrozen() {
+        return this.frozen;
+    }
+
+    @Override
+    public JsonObject createObject(String key) {
+        var object = new JsonObjectImpl();
+
+        this.put(key, object);
+
+        return object;
+    }
+
+    @Override
+    public JsonArray createArray(String key) {
+        var array = new JsonArrayImpl();
+
+        this.put(key, array);
+
+        return array;
+    }
+
+    @Override
+    public void addListener(InvalidationListener listener) {
+        this.listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(InvalidationListener listener) {
+        this.listeners.remove(listener);
+    }
+
+    private void invalidate() {
+        if (!this.isFrozen()) {
+            for (InvalidationListener listener : this.listeners) {
+                listener.invalidated(this);
+            }
+        }
     }
 
     @Override
@@ -123,32 +231,15 @@ public abstract class AbstractJsonObject<M extends Map<String, JsonElement>> imp
     }
 
     @Override
-    public Mutable mutableCopy() {
-        MutableJsonObject result = new MutableJsonObject();
+    public JsonObject copy() {
+        JsonObjectImpl result = new JsonObjectImpl();
 
         for (var entry : this) {
             JsonElement value = entry.getValue();
 
-            result.put(entry.getKey(), value instanceof JsonCollection<?> collection
-                    ? collection.mutableCopy()
-                    : value
-            );
+            result.put(entry.getKey(), value.copy());
         }
 
         return result;
-    }
-
-    @Override
-    public String toString() {
-        StringWriter stringWriter = new StringWriter();
-        JsonWriter writer = JsonWriter.json(stringWriter);
-
-        try {
-            this.write(writer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return stringWriter.toString();
     }
 }

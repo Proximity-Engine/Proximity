@@ -17,4 +17,9 @@ public class JsonStringImpl extends JsonString implements AbstractJsonElement {
     public void write(JsonWriter writer) throws IOException {
         writer.value(this.getValue());
     }
+
+    @Override
+    public JsonString copy() {
+        return new JsonStringImpl(this.getValue());
+    }
 }

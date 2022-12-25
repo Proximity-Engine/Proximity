@@ -20,14 +20,14 @@ public final class Cache {
     private final Log log;
     private final Path dir;
     private final Path path;
-    private final JsonObject.Mutable json;
+    private final JsonObject json;
     private int saveCount = 0;
 
     @ApiStatus.Internal
     public Cache(Log log, Path dir) {
         this.log = log;
 
-        JsonObject.Mutable json;
+        JsonObject json;
 
         this.dir = dir;
         this.path = this.dir.resolve("cache.json");

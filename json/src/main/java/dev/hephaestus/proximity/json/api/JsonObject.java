@@ -1,11 +1,11 @@
 package dev.hephaestus.proximity.json.api;
 
-import dev.hephaestus.proximity.json.impl.json.MutableJsonObject;
+import dev.hephaestus.proximity.json.impl.json.JsonObjectImpl;
 
 import java.util.Map;
 
-public interface JsonObject extends JsonElement, Iterable<Map.Entry<String, JsonElement>>, JsonCollection<JsonObject.Mutable> {
-    boolean has(String... keyss);
+public interface JsonObject extends JsonElement, Iterable<Map.Entry<String, JsonElement>> {
+    boolean has(String... keys);
 
     JsonElement get(String... keys);
 
@@ -25,41 +25,36 @@ public interface JsonObject extends JsonElement, Iterable<Map.Entry<String, Json
 
     String getString(String... keys);
 
-    Mutable mutableCopy();
-
-    static Mutable create() {
-        return new MutableJsonObject();
+    static JsonObject create() {
+        return new JsonObjectImpl();
     }
 
-    interface Mutable extends JsonObject, dev.hephaestus.proximity.json.api.Mutable {
-        void put(String key, JsonElement value);
+    void put(String key, JsonElement value);
 
-        void put(String key, boolean value);
+    void put(String key, boolean value);
 
-        void put(String key, int value);
+    void put(String key, int value);
 
-        void put(String key, float value);
+    void put(String key, float value);
 
-        void put(String key, double value);
+    void put(String key, double value);
 
-        void put(String key, String value);
+    void put(String key, String value);
 
-        /**
-         * Copies all members from another JsonObject to this one, overriding existing members if present.
-         */
-        void copyAll(JsonObject other);
+    /**
+     * Copies all members from another JsonObject to this one, overriding existing members if present.
+     */
+    void copyAll(JsonObject other);
 
-        /**
-         * Creates {@link JsonObject}, inserts it into this {@link JsonObject} with the given key, then returns it.
-         */
-        Mutable createObject(String key);
+    /**
+     * Creates {@link JsonObject}, inserts it into this {@link JsonObject} with the given key, then returns it.
+     */
+    JsonObject createObject(String key);
 
-        /**
-         * Creates {@link JsonArray}, inserts it into this {@link JsonArray} with the given key, then returns it.
-         */
-        JsonArray.Mutable createArray(String key);
+    /**
+     * Creates {@link JsonArray}, inserts it into this {@link JsonArray} with the given key, then returns it.
+     */
+    JsonArray createArray(String key);
 
-        @Override
-        JsonObject toImmutable();
-    }
+    JsonObject copy();
 }

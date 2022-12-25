@@ -17,4 +17,9 @@ public class JsonBooleanImpl extends JsonBoolean implements AbstractJsonElement 
     public void write(JsonWriter writer) throws IOException {
         writer.value(this.getValue());
     }
+
+    @Override
+    public JsonBoolean copy() {
+        return new JsonBooleanImpl(this.getValue());
+    }
 }

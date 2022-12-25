@@ -31,22 +31,22 @@ public final class Json {
         };
     }
 
-    public static JsonObject.Mutable parseObject(InputStream inputStream) throws IOException {
+    public static JsonObject parseObject(InputStream inputStream) throws IOException {
         return parseObject(JsonReader.json5(new InputStreamReader(inputStream)));
     }
 
-    public static JsonObject.Mutable parseObject(Reader reader) throws IOException {
+    public static JsonObject parseObject(Reader reader) throws IOException {
         return parseObject(JsonReader.json5(reader));
     }
 
-    public static JsonObject.Mutable parseObject(Path path) throws IOException {
+    public static JsonObject parseObject(Path path) throws IOException {
         return parseObject(JsonReader.json5(path));
     }
 
-    private static JsonObject.Mutable parseObject(JsonReader reader) throws IOException {
+    private static JsonObject parseObject(JsonReader reader) throws IOException {
         reader.beginObject();
 
-        JsonObject.Mutable object = new MutableJsonObject();
+        JsonObject object = new JsonObjectImpl();
 
         while (reader.hasNext() && reader.peek() == JsonToken.NAME) {
             object.put(reader.nextName(), parseElement(reader));
@@ -57,10 +57,10 @@ public final class Json {
         return object;
     }
 
-    public static JsonArray.Mutable parseArray(JsonReader reader) throws IOException {
+    public static JsonArray parseArray(JsonReader reader) throws IOException {
         reader.beginArray();
 
-        JsonArray.Mutable array = new MutableJsonArray();
+        JsonArray array = new JsonArrayImpl();
 
         while (reader.hasNext() && reader.peek() != JsonToken.END_ARRAY) {
             array.add(parseElement(reader));

@@ -1,8 +1,8 @@
 package dev.hephaestus.proximity.app.api.util;
 
-import com.google.common.collect.ImmutableList;
-
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 public class Result<T> {
     private final boolean isError;
     private final T value;
-    private final ImmutableList<Error> errors;
+    private final List<Error> errors;
 
     protected Result(T value) {
         this.isError = false;
@@ -20,14 +20,19 @@ public class Result<T> {
         this.errors = null;
     }
 
-    protected Result(ImmutableList<Error> errors) {
+    protected Result(List<Error> errors) {
         this.isError = true;
         this.value = null;
         this.errors = errors;
     }
 
     protected Result(Error error1, Error... errors) {
-        this(ImmutableList.<Error>builder().add(error1).add(errors).build());
+        this.isError = true;
+        this.value = null;
+        this.errors = new ArrayList<>(errors.length + 1);
+
+        this.errors.add(error1);
+        this.errors.addAll(Arrays.asList(errors));
     }
 
     public boolean isError() {
@@ -46,7 +51,7 @@ public class Result<T> {
         return this.value;
     }
 
-    public ImmutableList<Error> getErrors() {
+    public List<Error> getErrors() {
         if (!this.isError()) {
             throw new UnsupportedOperationException("Cannot get error messages for Ok Result");
         }
@@ -85,7 +90,7 @@ public class Result<T> {
         return this;
     }
 
-    public void ifError(Consumer<ImmutableList<Error>> errorConsumer) {
+    public void ifError(Consumer<List<Error>> errorConsumer) {
         if (this.isError()) {
             errorConsumer.accept(this.errors);
         }
@@ -108,26 +113,28 @@ public class Result<T> {
      * Constructs a new error result with the given error message in addition to our existing errors
      */
     public <T2> Result<T2> error1(String message) {
-        return new Result<>(ImmutableList.<Error>builder()
-                .add(new Error(message, getStackTrace()))
-                .addAll(this.errors).build()
-        );
+        List<Error> errors = new ArrayList<>(this.errors);
+
+        errors.add(0, new Error(message, getStackTrace()));
+
+        return new Result<>(errors);
     }
 
     /**
      * Constructs a new error result with the given error message in addition to our existing errors
      */
     public <T2> Result<T2> error1(String message, Object... args) {
-        return new Result<>(ImmutableList.<Error>builder()
-                .add(new Error(String.format(message, args), getStackTrace()))
-                .addAll(this.errors).build()
-        );
+        List<Error> errors = new ArrayList<>(this.errors);
+
+        errors.add(0, new Error(String.format(message, args), getStackTrace()));
+
+        return new Result<>(errors);
     }
 
-    protected static ImmutableList<StackTraceElement> getStackTrace() {
+    protected static List<StackTraceElement> getStackTrace() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
 
-        ImmutableList.Builder<StackTraceElement> builder = ImmutableList.builder();
+        List<StackTraceElement> elements = new ArrayList<>();
 
         boolean escaped = false;
         boolean encounteredResult = false;
@@ -140,11 +147,11 @@ public class Result<T> {
             }
 
             if (escaped) {
-                builder.add(stackTraceElement);
+                elements.add(stackTraceElement);
             }
         }
 
-        return builder.build();
+        return elements;
     }
 
     public static <T> Result<T> error(String message, Object... args) {
@@ -156,24 +163,15 @@ public class Result<T> {
     public static <T> Result<T> error(Iterable<Error> cause, String message, Object... args) {
         Objects.requireNonNull(message);
 
-        return new Result<>(ImmutableList.<Error>builder()
-                .add(new Error(args.length == 0 ? message : String.format(message, args), getStackTrace()))
-                .addAll(() -> {
-                    var itr = cause.iterator();
+        List<Error> errors = new ArrayList<>();
 
-                    return new Iterator<>() {
-                        @Override
-                        public boolean hasNext() {
-                            return itr.hasNext();
-                        }
+        errors.add(new Error(args.length == 0 ? message : String.format(message, args), getStackTrace()));
 
-                        @Override
-                        public Error next() {
-                            return itr.next().indent();
-                        }
-                    };
-                })
-                .build());
+        for (Error error : cause) {
+            errors.add(error.indent());
+        }
+
+        return new Result<>(errors);
     }
 
     public static <T> Result<T> of(T value) {

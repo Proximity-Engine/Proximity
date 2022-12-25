@@ -33,4 +33,9 @@ public class JsonNumberImpl extends JsonNumber implements AbstractJsonElement {
     public void write(JsonWriter writer) throws IOException {
         writer.value(this.getValue());
     }
+
+    @Override
+    public JsonNumber copy() {
+        return new JsonNumberImpl(this.getValue());
+    }
 }

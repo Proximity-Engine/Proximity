@@ -1,6 +1,5 @@
 package dev.hephaestus.proximity.app.impl.rendering.properties;
 
-import com.google.common.collect.ImmutableList;
 import dev.hephaestus.proximity.app.api.rendering.properties.ListProperty;
 import dev.hephaestus.proximity.app.api.rendering.util.Stateful;
 
@@ -13,7 +12,7 @@ public class ListPropertyImpl<D, V, R extends Stateful> implements ListProperty<
     private final D data;
     private final R result;
     private final List<Function<D, Optional<V>>> getters = new ArrayList<>(1);
-    private ImmutableList<V> values;
+    private List<V> values;
 
     public ListPropertyImpl(R result, D data) {
         this.data = data;
@@ -21,15 +20,13 @@ public class ListPropertyImpl<D, V, R extends Stateful> implements ListProperty<
     }
 
     @Override
-    public ImmutableList<V> get() {
+    public List<V> get() {
         if (this.values == null) {
-            ImmutableList.Builder<V> builder = ImmutableList.builder();
+            this.values = new ArrayList<>();
 
             for (var getter : this.getters) {
-                getter.apply(this.data).ifPresent(builder::add);
+                getter.apply(this.data).ifPresent(this.values::add);
             }
-
-            this.values = builder.build();
         }
 
         return this.values;

@@ -6,8 +6,6 @@ import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.app.api.plugins.DataProvider;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
 import dev.hephaestus.proximity.app.impl.exceptions.InitializationException;
-import dev.hephaestus.proximity.app.impl.exceptions.PluginInstantiationException;
-import dev.hephaestus.proximity.app.impl.plugins.Plugin;
 import dev.hephaestus.proximity.app.impl.sidebar.OptionsPane;
 import dev.hephaestus.proximity.app.impl.sidebar.SidebarPane;
 import dev.hephaestus.proximity.json.api.Json;
@@ -32,7 +30,13 @@ import java.lang.module.ModuleReference;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.ServiceLoader;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 public class Proximity {
@@ -43,7 +47,6 @@ public class Proximity {
     private static final SimpleBooleanProperty PAUSED = new SimpleBooleanProperty(false);
     private static final SimpleObjectProperty<SidebarPane> activeCategory = new SimpleObjectProperty<>();
     private static ModuleLayer MODULES;
-    private static Plugin DATA_PROVIDER_PLUGIN;
     private static Path WORKING_DIRECTORY;
     private static Path PLUGIN_DIRECTORY;
     private static Path WORKING_DATA;
@@ -130,7 +133,7 @@ public class Proximity {
     }
 
     private static void saveData() {
-        JsonObject.Mutable json = JsonObject.create();
+        JsonObject json = JsonObject.create();
 
         if (LAST_OPENED_DIRECTORY != null) {
             json.put("last_opened_directory", LAST_OPENED_DIRECTORY.toString());
@@ -241,14 +244,6 @@ public class Proximity {
         }
 
         return services;
-    }
-
-    public static Plugin load(URL jar) throws IOException, PluginInstantiationException {
-        return switch (jar.getProtocol()) {
-            case "file" -> Plugin.fromJar(jar);
-            case "http", "https" -> Plugin.fromJar(CACHE.cache(jar));
-            default -> throw new IllegalStateException("Unexpected protocol: " + jar.getProtocol());
-        };
     }
 
     /**

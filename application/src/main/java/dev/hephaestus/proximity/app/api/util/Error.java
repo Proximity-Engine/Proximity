@@ -1,21 +1,21 @@
 package dev.hephaestus.proximity.app.api.util;
 
-import com.google.common.collect.ImmutableList;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class Error implements Iterable<StackTraceElement> {
     private final int indentation;
     private final String message;
-    private final ImmutableList<StackTraceElement> stackTrace;
+    private final List<StackTraceElement> stackTrace;
 
-    public Error(String message, ImmutableList<StackTraceElement> stackTrace) {
+    public Error(String message, List<StackTraceElement> stackTrace) {
         this(0, message, stackTrace);
     }
 
-    public Error(int indentation, String message, ImmutableList<StackTraceElement> stackTrace) {
+    public Error(int indentation, String message, List<StackTraceElement> stackTrace) {
         this.indentation = indentation;
         this.message = message;
         this.stackTrace = stackTrace;
@@ -25,7 +25,7 @@ public class Error implements Iterable<StackTraceElement> {
         return this.message;
     }
 
-    public ImmutableList<StackTraceElement> getStackTrace() {
+    public List<StackTraceElement> getStackTrace() {
         return this.stackTrace;
     }
 

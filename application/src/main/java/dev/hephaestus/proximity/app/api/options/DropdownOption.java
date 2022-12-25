@@ -1,7 +1,5 @@
 package dev.hephaestus.proximity.app.api.options;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import dev.hephaestus.proximity.app.api.Option;
 import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.json.api.Json;
@@ -17,14 +15,16 @@ import java.util.function.Predicate;
 
 public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T, DropdownOption<T, D>.Widget, D> {
     private final List<Entry<T, D>> entries;
-    private final BiMap<Entry<T, D>, T> producedValues;
+    private final Map<Entry<T, D>, T> producedValues;
+    private final Map<T, Entry<T, D>> producedValuesInverse;
     private final Map<String, T> producedValuesByName;
     private final Map<T, D> valuesToData;
 
     private DropdownOption(String id, Function<D, T> defaultValue, List<Entry<T, D>> entries) {
         super(id, defaultValue);
         this.entries = entries;
-        this.producedValues = HashBiMap.create(entries.size());
+        this.producedValues = new HashMap<>(entries.size());
+        this.producedValuesInverse = new HashMap<>(entries.size());
         this.producedValuesByName = new HashMap<>(entries.size());
         this.valuesToData = new HashMap<>(entries.size());
     }
@@ -39,6 +39,7 @@ public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T
             T value = entry.value.apply(renderJob);
 
             this.producedValues.put(entry, value);
+            this.producedValuesInverse.put(value, entry);
             this.producedValuesByName.put(entry.getName(renderJob), value);
             this.valuesToData.put(value, renderJob);
 
@@ -52,7 +53,7 @@ public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T
         widget.setConverter(new StringConverter<>() {
             @Override
             public String toString(T t) {
-                return DropdownOption.this.producedValues.inverse().get(t).getName(
+                return DropdownOption.this.producedValuesInverse.get(t).getName(
                         DropdownOption.this.valuesToData.get(t)
                 );
             }
