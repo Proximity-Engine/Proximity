@@ -1,9 +1,8 @@
 package dev.hephaestus.proximity.app.api.plugins;
 
 import dev.hephaestus.proximity.app.api.Proximity;
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
-import dev.hephaestus.proximity.app.api.rendering.Document;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonObject;
@@ -25,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 
-public abstract class DataWidget<D extends RenderJob<?>> implements Iterable<DataWidget<D>.Entry> {
+public abstract class DataWidget<D extends RenderData> implements Iterable<DataWidget<D>.Entry> {
     protected final ObservableList<String> errors = FXCollections.observableArrayList();
     protected final DataProvider.Context context;
     protected final SimpleListProperty<Entry> entries = new SimpleListProperty<>(FXCollections.observableArrayList());
@@ -69,7 +68,7 @@ public abstract class DataWidget<D extends RenderJob<?>> implements Iterable<Dat
 
     public abstract class Entry extends SimpleObjectProperty<D> {
         private final ObjectProperty<Template<D>> template = new SimpleObjectProperty<>();
-        private final ObjectProperty<Document<D>> document = new SimpleObjectProperty<>();
+        private final ObjectProperty<DocumentImpl<D>> document = new SimpleObjectProperty<>();
 
         protected final Pane pane;
 
@@ -92,11 +91,11 @@ public abstract class DataWidget<D extends RenderJob<?>> implements Iterable<Dat
             var object = JsonObject.create();
 
             if (this.template.getValue() != null) {
-                object.put("template", this.template.getValue().getName());
+                object.put("template", this.template.getClass().getName());
             }
 
             if (this.getValue() != null) {
-                object.put("job", this.getValue().toJsonImpl());
+// TODO                object.put("job", this.getValue().toJsonImpl());
             }
 
             return object;
@@ -108,7 +107,7 @@ public abstract class DataWidget<D extends RenderJob<?>> implements Iterable<Dat
         }
 
         @ApiStatus.Internal
-        public final Property<Document<D>> document() {
+        public final Property<DocumentImpl<D>> document() {
             return this.document;
         }
     }
@@ -132,7 +131,7 @@ public abstract class DataWidget<D extends RenderJob<?>> implements Iterable<Dat
         public MultiEntry(D data) {
             super(new StackPane(), data);
 
-            Label label = new Label(data.getName());
+            Label label = new Label(data.getClass().getSimpleName());
 
             label.setStyle("-fx-text-fill: #FFFFFFD0; -fx-prompt-text-fill: #FFFFFFA0;");
 

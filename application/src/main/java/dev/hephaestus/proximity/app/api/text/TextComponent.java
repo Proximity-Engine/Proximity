@@ -1,7 +1,5 @@
 package dev.hephaestus.proximity.app.api.text;
 
-import dev.hephaestus.proximity.app.api.text.TextStyle;
-
 public class TextComponent {
     public TextStyle style;
     public String text;

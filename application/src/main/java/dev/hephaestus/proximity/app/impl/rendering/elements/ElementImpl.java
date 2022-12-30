@@ -1,32 +1,41 @@
 package dev.hephaestus.proximity.app.impl.rendering.elements;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
+import dev.hephaestus.proximity.app.api.rendering.Document;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.app.api.rendering.elements.Element;
-import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
-import dev.hephaestus.proximity.app.api.rendering.util.Stateful;
-import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.scene.Node;
 
 import java.util.ArrayDeque;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 
-public abstract class ElementImpl<D extends RenderJob<?>> implements Element<D>, Stateful {
-    private final DocumentImpl<D> document;
-    private final String id;
-    private final String path;
-    private final ElementImpl<D> parent;
+public abstract class ElementImpl<D extends RenderData> implements Element {
+    public final String id;
+    public final String path;
+    public final Document<D> document;
+    public final ParentImpl<D> parent;
 
-    public ElementImpl(DocumentImpl<D> document, String id, ElementImpl<D> parent) {
+    protected final BooleanProperty visibility = new SimpleBooleanProperty(true);
+
+    private boolean isAlwaysVisible = true;
+
+    public ElementImpl(String id, Document<D> document, ParentImpl<D> parent) {
+        this.id = id;
         this.document = document;
-        this.id = id == null ? parent.getId() : id;
         this.parent = parent;
 
         ArrayDeque<String> builder = new ArrayDeque<>();
 
-        builder.add(this.id);
+        if (this.id != null) {
+            builder.add(this.id);
+        }
 
         while (parent != null) {
             //noinspection StringEquality
-            if (parent.id != builder.peekFirst()) {
+            if (parent.id != null && parent.id != builder.peekFirst()) {
                 builder.addFirst(parent.id);
             }
 
@@ -36,65 +45,36 @@ public abstract class ElementImpl<D extends RenderJob<?>> implements Element<D>,
         this.path = String.join("/", builder);
     }
 
+    protected abstract void getAttributes(Consumer<Observable> attributes);
+
+    protected abstract Node render();
+
     @Override
-    public final String getId() {
-        return this.id;
+    public final void visibility(boolean visible) {
+        this.visibility.setValue(visible);
+        this.isAlwaysVisible = false;
+    }
+
+    public final void bindVisibility(ObservableValue<? extends Boolean> binding) {
+        this.visibility.bind(binding);
+        this.isAlwaysVisible = false;
     }
 
     @Override
-    public final String getPath() {
+    public final boolean isVisible() {
+        return this.visibility.get();
+    }
+
+    public final boolean isAlwaysVisible() {
+        return this.isAlwaysVisible;
+    }
+
+    public String getPath() {
         return this.path;
     }
 
-    public final DocumentImpl<D> getDocument() {
-        return this.document;
+    interface Constructor<D extends RenderData, E extends ElementImpl<D>> {
+        E construct(String id, Document<D> document, ParentImpl<D> parent);
     }
 
-    public abstract BoundingBoxes getBounds();
-    public abstract VisibilityProperty<?> visibility();
-
-    public boolean isAlwaysVisible() {
-        return this.visibility().isAlwaysVisible();
-    }
-
-    public interface Constructor<D extends RenderJob<?>, E extends ElementImpl<D>> {
-        E construct(DocumentImpl<D> document, String id, ElementImpl<D> parent);
-    }
-
-    protected class VisibilityProperty<R extends Stateful> implements dev.hephaestus.proximity.app.api.rendering.properties.VisibilityProperty<D, R> {
-        private final D data;
-        private final R result;
-
-        private boolean always = false;
-        private Predicate<D> value = d -> true;
-
-        public VisibilityProperty(R result, D data) {
-            this.data = data;
-            this.result = result;
-        }
-
-        @Override
-        public boolean get() {
-            return this.value.test(this.data);
-        }
-
-        @Override
-        public R set(boolean value) {
-            this.value = d -> value;
-
-            return this.result;
-        }
-
-        @Override
-        public R set(Predicate<D> getter) {
-            this.value = getter;
-            this.always = false;
-
-            return this.result;
-        }
-
-        private boolean isAlwaysVisible() {
-            return this.always;
-        }
-    }
 }

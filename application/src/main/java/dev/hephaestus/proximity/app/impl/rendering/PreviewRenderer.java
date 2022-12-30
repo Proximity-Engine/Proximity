@@ -1,22 +1,19 @@
 package dev.hephaestus.proximity.app.impl.rendering;
 
 
-import dev.hephaestus.proximity.app.api.Parent;
-import dev.hephaestus.proximity.app.api.Template;
-import dev.hephaestus.proximity.app.api.rendering.Document;
-import dev.hephaestus.proximity.app.api.rendering.elements.Child;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.app.api.rendering.elements.Element;
 import dev.hephaestus.proximity.app.api.rendering.elements.Group;
 import dev.hephaestus.proximity.app.api.rendering.elements.Image;
 import dev.hephaestus.proximity.app.api.rendering.elements.Selector;
 import dev.hephaestus.proximity.app.api.rendering.elements.Text;
-import dev.hephaestus.proximity.app.api.rendering.elements.TextBox;
+import dev.hephaestus.proximity.app.api.rendering.elements.Textbox;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBox;
-import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
+import dev.hephaestus.proximity.app.api.rendering.util.ImageSource;
 import dev.hephaestus.proximity.app.api.rendering.util.Rect;
 import dev.hephaestus.proximity.app.api.text.TextComponent;
 import dev.hephaestus.proximity.app.api.text.TextStyle;
-import dev.hephaestus.proximity.app.impl.rendering.properties.ImagePropertyImpl;
+import dev.hephaestus.proximity.app.impl.rendering.elements.ElementImpl;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -27,6 +24,7 @@ import javafx.scene.text.Font;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
@@ -35,26 +33,26 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class PreviewImageRenderer {
+public class PreviewRenderer {
     private final int width, height;
     private final Cache cache = new Cache(15);
 
-    public PreviewImageRenderer(int width, int height) {
+    public PreviewRenderer(int width, int height) {
         this.width = width;
         this.height = height;
     }
 
-    private URL downscale(Image<?> node, int n) throws IOException {
+    private URL downscale(Image node, int n) throws IOException {
         Path path = Path.of(".tmp", "downscaled", this.width + "x" + this.height);
-        Template<?> template = node.getDocument().getTemplate();
-        ImagePropertyImpl<?> src = (ImagePropertyImpl<?>) node.src();
+        Template<?> template = ((ElementImpl<?>) node).document.getTemplate();
+        ImageSource src = node.source();
 
         switch (src.getType()) {
             case UNSET -> throw new UnsupportedOperationException();
             case TEMPLATE_RESOURCE -> {
                 path = path.resolve(template.getClass().getModule().getName());
-                path = path.resolve(template.getName());
-                path = path.resolve(node.getPath() + "." + node.getFormat());
+                path = path.resolve(template.getClass().getSimpleName());
+                path = path.resolve(((ElementImpl<?>) node).path + ".png");
             }
             case DYNAMIC -> {
                 URL url = src.getUrl();
@@ -76,7 +74,7 @@ public class PreviewImageRenderer {
 
                     Files.createDirectories(path);
 
-                    path = path.resolve(URLEncoder.encode(url.getQuery(), StandardCharsets.US_ASCII) + node.getFormat());
+                    path = path.resolve(URLEncoder.encode(url.getQuery(), StandardCharsets.US_ASCII) + ".png");
                 }
 
             }
@@ -85,10 +83,10 @@ public class PreviewImageRenderer {
         Files.createDirectories(path.getParent());
 
         if (!Files.exists(path)) {
-            BoundingBoxes boxes = node.getBounds();
-            Rect destinationDimensions = new Rect((int) (boxes.getWidth() / n), (int) (boxes.getHeight() / n));
+            Rectangle2D bounds = node.bounds();
+            Rect destinationDimensions = new Rect((int) (bounds.getWidth() / n), (int) (bounds.getHeight() / n));
 
-            BufferedImage image = ImageIO.read(node.src().get());
+            BufferedImage image = ImageIO.read(node.source().get());
 
             BufferedImage out = new BufferedImage(destinationDimensions.width(), destinationDimensions.height(), BufferedImage.TYPE_INT_ARGB);
             out.getGraphics().drawImage(image.getScaledInstance(destinationDimensions.width(), destinationDimensions.height(), java.awt.Image.SCALE_SMOOTH), 0, 0, null);
@@ -99,10 +97,10 @@ public class PreviewImageRenderer {
         return path.toUri().toURL();
     }
 
-    protected void render(Image<?> image, Canvas canvas) throws IOException {
+    protected void render(Image image, Canvas canvas) throws IOException {
         int n = (int) Math.round(1D / canvas.rW);
 
-        BoundingBox dimensions = image.getBounds().iterator().next();
+        Rectangle2D dimensions = image.bounds();
         URL url = this.downscale(image, n);
         ImageView imageView = new ImageView(this.cache.get(url));
 
@@ -116,15 +114,15 @@ public class PreviewImageRenderer {
         StackPane.setAlignment(imageView, Pos.TOP_LEFT);
     }
 
-    private void render(Group<?> group, Canvas canvas) throws IOException {
-        for (Element<?> node : group) {
-            if (node instanceof Child<?> child && child.visibility().get() || node instanceof Parent<?> parent && parent.isVisible()) {
+    private void render(Group group, Canvas canvas) throws IOException {
+        for (Element node : group) {
+            if (node.isVisible()) {
                 this.render(node, canvas);
             }
         }
     }
 
-    private void render(Selector<?> selector, Canvas canvas) throws IOException {
+    private void render(Selector selector, Canvas canvas) throws IOException {
         var selected = selector.getSelected();
 
         if (selected.isPresent()) {
@@ -132,25 +130,25 @@ public class PreviewImageRenderer {
         }
     }
 
-    private void render(TextBox<?> text, Canvas canvas) {
+    private void render(Textbox text, Canvas canvas) {
         text.layout(canvas::drawText);
     }
 
-    private void render(Text<?> text, Canvas canvas) {
+    private void render(Text text, Canvas canvas) {
         text.layout(canvas::drawText);
     }
 
-    private void render(Element<?> node, Canvas canvas) throws IOException {
-        if (node instanceof Child<?> child && child.visibility().get() || node instanceof Parent<?> parent && parent.isVisible()) {
-            if (node instanceof Group<?> group) {
+    private void render(Element node, Canvas canvas) throws IOException {
+        if (node.isVisible()) {
+            if (node instanceof Group group) {
                 this.render(group, canvas);
-            } else if (node instanceof Selector<?> selector) {
+            } else if (node instanceof Selector selector) {
                 this.render(selector, canvas);
-            } else if (node instanceof Image<?> image) {
+            } else if (node instanceof Image image) {
                 this.render(image, canvas);
-            } else if (node instanceof TextBox<?> textBox) {
+            } else if (node instanceof Textbox textBox) {
                 this.render(textBox, canvas);
-            } else if (node instanceof Text<?> text) {
+            } else if (node instanceof Text text) {
                 this.render(text, canvas);
             } else {
                 throw new UnsupportedOperationException(String.format("Unexpected node class: %s", node.getClass()));
@@ -158,11 +156,11 @@ public class PreviewImageRenderer {
         }
     }
 
-    public void render(Document<?> document, ObservableList<Node> nodes) throws IOException {
+    public void render(DocumentImpl document, ObservableList<Node> nodes) throws IOException {
         float rW = ((float) this.width) / document.getTemplate().getWidth();
         float rH = ((float) this.height) / document.getTemplate().getHeight();
 
-        for (Element<?> node : document) {
+        for (Element node : document.getElements()) {
             this.render(node, new Canvas(document, rW, rH, nodes));
         }
     }
@@ -196,7 +194,7 @@ public class PreviewImageRenderer {
         }
     }
 
-    private record Canvas(Document<?> document, float rW, float rH, ObservableList<Node> nodes) {
+    private record Canvas(DocumentImpl document, float rW, float rH, ObservableList<Node> nodes) {
         public void drawText(TextComponent component, BoundingBox bounds, int x, int y) {
             Font font = document.getTemplate().getFXFont(
                     component.italic ? component.style.getItalicFontName() : component.style.getFontName(), (float) (component.style.getSize() / 72F * document.getTemplate().getDPI() * rW));
@@ -240,10 +238,10 @@ public class PreviewImageRenderer {
     }
 
 //    private static final class TextRenderer implements Text.Consumer {
-//        private final Document<?> document;
+//        private final Document document;
 //        private final dev.hephaestus.proximity.app.api.rendering.Canvas canvas;
 //
-//        private TextRenderer(Document<?> document, int width, int height, int dpi) {
+//        private TextRenderer(Document document, int width, int height, int dpi) {
 //            this.document = document;
 //            this.canvas = new dev.hephaestus.proximity.app.api.rendering.Canvas(width, height, dpi);
 //        }

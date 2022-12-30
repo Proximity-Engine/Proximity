@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public final class BoundingBoxes implements Iterable<BoundingBox> {
-    public static final BoundingBoxes EMPTY = new BoundingBoxes();
-
     private final List<BoundingBox> boxes = new ArrayList<>();
     private Rectangle2D bounds = null;
 

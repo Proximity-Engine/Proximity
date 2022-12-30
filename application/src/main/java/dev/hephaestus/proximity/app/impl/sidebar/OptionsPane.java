@@ -1,10 +1,9 @@
 package dev.hephaestus.proximity.app.impl.sidebar;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
-import dev.hephaestus.proximity.app.api.rendering.Document;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.app.impl.OptionsImpl;
 import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
@@ -13,9 +12,6 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -35,11 +31,11 @@ public class OptionsPane extends SidebarPane {
         }
     };
 
-    private final ChangeListener<Document<?>> documentChangeListener = ((observable, oldValue, newValue) -> {
+    private final ChangeListener<DocumentImpl<?>> documentChangeListener = ((observable, oldValue, newValue) -> {
         this.updateDocument(newValue);
     });
 
-    private <D extends RenderJob<?>> void updateDocument(Document<D> document) {
+    private <D extends RenderData> void updateDocument(DocumentImpl<D> document) {
         //noinspection unchecked
         DataWidget<D>.Entry entry = (DataWidget<D>.Entry) this.selected.getValue();
 
@@ -64,7 +60,7 @@ public class OptionsPane extends SidebarPane {
         this.templateSelector.setConverter(new StringConverter<>() {
             @Override
             public String toString(Template<?> object) {
-                return object == null ? "" : object.getName();
+                return object == null ? "" : object.getClass().getName();
             }
 
             @Override
@@ -93,12 +89,12 @@ public class OptionsPane extends SidebarPane {
         this.templateSelector.valueProperty().addListener(this.templateChangeListener);
     }
 
-    private <D extends RenderJob<?>> void setTemplate(Template<D> template) {
+    private <D extends RenderData> void setTemplate(Template<D> template) {
         //noinspection unchecked
         ((DataWidget<D>.Entry) this.selected.getValue()).template().setValue(template);
     }
 
-    public <D extends RenderJob<?>> void select(DataWidget<D>.Entry entry) {
+    public <D extends RenderData> void select(DataWidget<D>.Entry entry) {
         this.selected.setValue(entry);
 
         // Remove any existing listeners to prevent duplicates
@@ -114,7 +110,7 @@ public class OptionsPane extends SidebarPane {
         }
 
         Template<D> template = entry.template().getValue();
-        DocumentImpl<D> document = (DocumentImpl<D>) entry.document().getValue();
+        DocumentImpl<D> document = entry.document().getValue();
 
         this.templateSelector.valueProperty().removeListener(this.templateChangeListener);
         this.templateSelector.setValue(template);

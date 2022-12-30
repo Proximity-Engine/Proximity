@@ -1,6 +1,6 @@
 module dev.hephaestus.proximity.app {
     uses dev.hephaestus.proximity.app.api.plugins.DataProvider;
-    uses dev.hephaestus.proximity.app.api.Template;
+    uses dev.hephaestus.proximity.app.api.rendering.Template;
 
     exports dev.hephaestus.proximity.app.api;
     exports dev.hephaestus.proximity.app.api.controls;
@@ -10,7 +10,6 @@ module dev.hephaestus.proximity.app {
     exports dev.hephaestus.proximity.app.api.plugins;
     exports dev.hephaestus.proximity.app.api.rendering;
     exports dev.hephaestus.proximity.app.api.rendering.elements;
-    exports dev.hephaestus.proximity.app.api.rendering.properties;
     exports dev.hephaestus.proximity.app.api.rendering.util;
     exports dev.hephaestus.proximity.app.api.text;
 
@@ -34,5 +33,4 @@ module dev.hephaestus.proximity.app {
 
     opens dev.hephaestus.proximity.app.impl to javafx.fxml;
     opens dev.hephaestus.proximity.app.impl.sidebar to javafx.fxml;
-    exports dev.hephaestus.proximity.app.api.v2;
 }

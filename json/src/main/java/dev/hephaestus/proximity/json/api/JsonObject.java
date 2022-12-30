@@ -1,13 +1,16 @@
 package dev.hephaestus.proximity.json.api;
 
 import dev.hephaestus.proximity.json.impl.json.JsonObjectImpl;
+import javafx.beans.value.ObservableBooleanValue;
 
 import java.util.Map;
 
 public interface JsonObject extends JsonElement, Iterable<Map.Entry<String, JsonElement>> {
     boolean has(String... keys);
 
-    JsonElement get(String... keys);
+    ObservableBooleanValue contains(String... keys);
+
+    <T extends JsonElement> T get(String... keys);
 
     boolean getBoolean(String... keys);
 

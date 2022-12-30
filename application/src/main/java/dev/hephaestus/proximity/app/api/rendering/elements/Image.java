@@ -1,20 +1,30 @@
 package dev.hephaestus.proximity.app.api.rendering.elements;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.rendering.properties.ImageProperty;
-import dev.hephaestus.proximity.app.api.rendering.properties.Property;
-import dev.hephaestus.proximity.app.api.rendering.properties.VisibilityProperty;
-import dev.hephaestus.proximity.app.api.rendering.util.ImagePosition;
-import dev.hephaestus.proximity.app.api.rendering.util.Rect;
-import org.jetbrains.annotations.ApiStatus;
+import dev.hephaestus.proximity.app.api.rendering.util.Alignment;
+import dev.hephaestus.proximity.app.api.rendering.util.ImageSource;
+import javafx.beans.property.Property;
 
-@ApiStatus.NonExtendable
-public interface Image<D extends RenderJob<?>> extends Child<D> {
-    ImageProperty<D> src();
-    Property<D, ImagePosition, Image<D>> position();
-    VisibilityProperty<D, Image<D>> visibility();
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
+import java.net.URL;
 
-    String getFormat();
+public interface Image extends Element {
+    void source(URL url);
 
-    Rect getSourceImageDimensions();
+    /**
+     * @param src a path to a resource in this templates package
+     */
+    void source(String src);
+
+    void pos(int x, int y);
+
+    void fill(int x, int y, int width, int height);
+
+    void cover(int x, int y, int width, int height, Alignment horizontalAlignment, Alignment verticalAlignment);
+
+    Rectangle2D bounds();
+
+    Property<Rectangle2D> boundsProperty();
+
+    ImageSource source() throws IOException;
 }

@@ -7,6 +7,8 @@ import dev.hephaestus.proximity.json.api.JsonObject;
 import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.value.ObservableBooleanValue;
 import org.jetbrains.annotations.NotNull;
 import org.quiltmc.json5.JsonWriter;
 
@@ -149,11 +151,18 @@ public class JsonObjectImpl implements JsonObject, Observable, AbstractJsonEleme
     }
 
     @Override
-    public JsonElement get(String... keys) {
+    public ObservableBooleanValue contains(String... keys) {
+        return Bindings.createBooleanBinding(() -> {
+            return this.has(keys);
+        }, this);
+    }
+
+    @Override
+    public <T extends JsonElement> T get(String... keys) {
         if (keys.length == 0) {
             return null;
         } if (keys.length == 1) {
-            return this.values.get(keys[0]);
+            return (T) this.values.get(keys[0]);
         } else {
             JsonObject object = this;
 

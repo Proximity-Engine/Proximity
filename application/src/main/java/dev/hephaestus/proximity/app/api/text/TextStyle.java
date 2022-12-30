@@ -1,9 +1,17 @@
 package dev.hephaestus.proximity.app.api.text;
 
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.property.SimpleObjectProperty;
+
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Function;
 
-public final class TextStyle {
+public final class TextStyle implements Observable {
+    private final ConcurrentLinkedDeque<InvalidationListener> listeners = new ConcurrentLinkedDeque<>();
     private final TextStyle parent;
 
     private final Value<String> fontName, italicFontName;
@@ -12,6 +20,8 @@ public final class TextStyle {
     private final Value<Outline> outline;
     private final Value<Capitalization> capitalization;
     private final Value<Color> color;
+
+    private boolean frozen;
 
     public TextStyle() {
         this(null);
@@ -121,6 +131,50 @@ public final class TextStyle {
         return new TextStyle(parent, this);
     }
 
+    private void invalidate() {
+        if (this.frozen) return;
+
+        if (this.parent != null) {
+            this.parent.invalidate();
+        }
+
+        for (InvalidationListener listener : this.listeners) {
+            listener.invalidated(this);
+        }
+    }
+
+    @Override
+    public void addListener(InvalidationListener listener) {
+        this.listeners.add(listener);
+    }
+
+    @Override
+    public void removeListener(InvalidationListener listener) {
+        this.listeners.remove(listener);
+    }
+
+    public void merge(TextStyle style) {
+        this.freeze();
+
+        if (style.fontName.isSet()) this.fontName.setValue(style.fontName.getValue());
+        if (style.italicFontName.isSet()) this.italicFontName.setValue(style.italicFontName.getValue());
+        if (style.size.isSet()) this.size.setValue(style.size.getValue());
+        if (style.shadow.isSet()) this.shadow.setValue(style.shadow.getValue());
+        if (style.outline.isSet()) this.outline.setValue(style.outline.getValue());
+        if (style.capitalization.isSet()) this.capitalization.setValue(style.capitalization.getValue());
+        if (style.color.isSet()) this.color.setValue(style.color.getValue());
+
+        this.unfreeze();
+    }
+
+    private void freeze() {
+        this.frozen = true;
+    }
+
+    private void unfreeze() {
+        this.frozen = false;
+    }
+
     public enum Capitalization {
         ALL_CAPS, NO_CAPS, SMALL_CAPS;
     }
@@ -151,26 +205,22 @@ public final class TextStyle {
         }
     }
 
-    private static final class Value<T> {
-        private T value;
+    private final class Value<T> extends SimpleObjectProperty<T> {
         private boolean set;
 
         public Value(T value) {
-            this.value = value;
+            super(value);
             this.set = true;
         }
 
         public Value() {
-
+            this.addListener(o -> TextStyle.this.invalidate());
         }
 
-        public T getValue() {
-            return this.value;
-        }
-
+        @Override
         public void setValue(T value) {
-            this.value = value;
             this.set = true;
+            super.setValue(value);
         }
 
         public boolean isSet() {
@@ -179,7 +229,7 @@ public final class TextStyle {
 
         public Value<T> copy() {
             if (this.isSet()) {
-                return new Value<>(this.value);
+                return new Value<>(this.getValue());
             } else {
                 return new Value<>();
             }

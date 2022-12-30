@@ -1,80 +1,46 @@
 package dev.hephaestus.proximity.app.impl.rendering.elements;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.rendering.elements.Text;
-import dev.hephaestus.proximity.app.api.rendering.properties.Property;
-import dev.hephaestus.proximity.app.api.rendering.properties.TextProperty;
 import dev.hephaestus.proximity.app.api.rendering.util.Alignment;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBox;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBoxes;
+import dev.hephaestus.proximity.app.api.rendering.Document;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.app.api.text.TextComponent;
-import dev.hephaestus.proximity.app.api.text.TextStyle;
 import dev.hephaestus.proximity.app.api.text.Word;
-import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
-import dev.hephaestus.proximity.app.impl.rendering.properties.BasicProperty;
-import dev.hephaestus.proximity.app.impl.rendering.properties.TextPropertyImpl;
-import org.jetbrains.annotations.NotNull;
+import dev.hephaestus.proximity.app.api.util.Properties;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.Property;
+import javafx.beans.value.ObservableValue;
 
-import java.awt.Font;
-import java.awt.Rectangle;
-import java.awt.Shape;
+import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.awt.geom.Rectangle2D;
+import java.util.function.Consumer;
 
-public class TextImpl<D extends RenderJob<?>> extends ElementImpl<D> implements Text<D> {
-    private final VisibilityProperty<Text<D>> visibility;
-    protected final BasicProperty<D, Integer, Text<D>> x, y;
-    protected final BasicProperty<D, TextStyle, Text<D>> style;
-    protected final BasicProperty<D, Alignment, Text<D>> alignment;
-    protected final TextProperty<D, Text<D>> text;
+public class TextImpl<D extends RenderData> extends AbstractTextImpl<D> implements Text {
+    private final Property<Alignment> alignment = Properties.of("alignment", Alignment.START);
 
-    public TextImpl(DocumentImpl<D> document, String id, ElementImpl<D> parent) {
-        super(document, id, parent);
-
-        D data = document.getData();
-
-        this.visibility = new VisibilityProperty<Text<D>>(this, data);
-        this.x = new BasicProperty<>(this, data, 0);
-        this.y = new BasicProperty<>(this, data, 0);
-        this.style = new BasicProperty<>(this, data);
-        this.alignment = new BasicProperty<>(this, data, Alignment.START);
-        this.text = new TextPropertyImpl<>(this, data);
+    public TextImpl(String id, Document<D> document, ParentImpl<D> parent) {
+        super(id, document, parent);
+        this.bounds.bind(this.bindBounds());
     }
 
     @Override
-    public Property<D, Integer, Text<D>> x() {
-        return this.x;
-    }
-
-    @Override
-    public Property<D, Integer, Text<D>> y() {
-        return this.y;
-    }
-
-    @Override
-    public Property<D, TextStyle, Text<D>> style() {
-        return this.style;
-    }
-
-    @Override
-    public Property<D, Alignment, Text<D>> alignment() {
-        return this.alignment;
-    }
-
-    @Override
-    public TextProperty<D, Text<D>> text() {
-        return this.text;
+    protected ObservableValue<Rectangle2D> bindBounds() {
+        return Bindings.createObjectBinding(this::calculateBounds, this.x, this.y, this.text, this.style, this.style.getValue(), this.alignment);
     }
 
     protected final BoundingBox measure(TextComponent component, AffineTransform transform) {
-        Font font = this.getDocument().getTemplate().getFont(
-                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), (float) (component.style.getSize() / 72F * getDocument().getTemplate().getDPI()));
+        float size = component.style.getSize() == null ? this.style.getValue().getSize().floatValue() : component.style.getSize().floatValue();
 
-        if (component.style.getSize() <= 0 || font == null) {
+        java.awt.Font font = this.document.getTemplate().getFont(
+                component.italic ? component.style.getItalicFontName() : component.style.getFontName(), size / 72F * this.document.getTemplate().getDPI());
+
+        if (size <= 0 || font == null) {
             return new BoundingBox(transform.getTranslateX(), transform.getTranslateY(), 0, 0, false);
         }
 
@@ -94,28 +60,12 @@ public class TextImpl<D extends RenderJob<?>> extends ElementImpl<D> implements 
     }
 
     @Override
-    public BoundingBoxes getBounds() {
-        List<BoundingBox> boxes = new ArrayList<>(this.text.wordCount());
+    public BoundingBoxes layout(Text.LayoutConsumer consumer) {
+        AffineTransform transform = AffineTransform.getTranslateInstance(this.x.getValue(), this.y.getValue());
 
-        this.layout((component, bounds, x, y) -> {
-            boxes.add(bounds);
-        });
-
-        return new BoundingBoxes(boxes);
-    }
-
-    @Override
-    public VisibilityProperty<Text<D>> visibility() {
-        return this.visibility;
-    }
-
-    @Override
-    public void layout(Consumer consumer) {
-        AffineTransform transform = AffineTransform.getTranslateInstance(this.x.get(), this.y.get());
-
-        for (Word word : this) {
+        for (Word word : this.text) {
             for (TextComponent component : word) {
-                component.style = component.style.derive(this.style.get());
+//                component.style = component.style.derive(this.style.getValue());
                 BoundingBox bounds = this.measure(component, transform);
 
                 transform.translate(bounds.width, 0);
@@ -124,46 +74,38 @@ public class TextImpl<D extends RenderJob<?>> extends ElementImpl<D> implements 
 
         double dX = transform.getTranslateX();
 
-        transform.setTransform(AffineTransform.getTranslateInstance(this.x.get(), this.y.get()));
+        transform.setTransform(AffineTransform.getTranslateInstance(this.x.getValue(), this.y.getValue()));
 
-        switch (this.alignment.get()) {
-            case CENTER -> transform.translate(-((dX - this.x.get()) / 2), 0);
-            case END -> transform.translate(-(dX - this.x.get()), 0);
+        switch (this.alignment.getValue()) {
+            case CENTER -> transform.translate(-((dX - this.x.getValue()) / 2), 0);
+            case END -> transform.translate(-(dX - this.x.getValue()), 0);
         }
 
-        for (Word word : this) {
+        BoundingBoxes boxes = new BoundingBoxes();
+
+        for (Word word : this.text) {
             for (TextComponent component : word) {
-                component.style = component.style.derive(this.style.get());
+                component.style = component.style.derive(this.style.getValue());
                 BoundingBox bounds = this.measure(component, transform);
 
+                boxes.add(bounds);
                 consumer.render(component, bounds, (int) transform.getTranslateX(), (int) transform.getTranslateY());
 
                 transform.translate(bounds.width, 0);
             }
         }
+
+        return boxes;
     }
 
-    @NotNull
     @Override
-    public Iterator<Word> iterator() {
-        return new Iterator<>() {
-            private final Iterator<Word> itr = TextImpl.this.text.iterator();
+    protected void getAttributes(Consumer<Observable> attributes) {
+        super.getAttributes(attributes);
+        attributes.accept(this.alignment);
+    }
 
-            @Override
-            public boolean hasNext() {
-                return this.itr.hasNext();
-            }
-
-            @Override
-            public Word next() {
-                Word word = this.itr.next();
-
-                for (TextComponent component : word) {
-                    component.style = component.style.derive(TextImpl.this.style.get());
-                }
-
-                return word;
-            }
-        };
+    @Override
+    public void alignment(Alignment alignment) {
+        this.alignment.setValue(alignment);
     }
 }

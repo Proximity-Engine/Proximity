@@ -1,24 +1,29 @@
 package dev.hephaestus.proximity.app.impl;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.logging.ExceptionUtil;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
 import dev.hephaestus.proximity.app.api.rendering.Canvas;
 import dev.hephaestus.proximity.app.api.rendering.Document;
 import dev.hephaestus.proximity.app.api.rendering.ImageRenderer;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.app.api.util.Task;
-import dev.hephaestus.proximity.app.impl.rendering.PreviewImageRenderer;
+import dev.hephaestus.proximity.app.impl.rendering.DocumentImpl;
+import dev.hephaestus.proximity.app.impl.rendering.PreviewRenderer;
+import dev.hephaestus.proximity.app.impl.rendering.elements.GroupImpl;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.Image;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.Background;
@@ -112,7 +117,7 @@ public class PreviewPane extends VBox {
                     .then(this::copyToClipboard);
         }
 
-        private <D extends RenderJob<?>> Document<?> startCopy() {
+        private <D extends RenderData> Document<?> startCopy() {
             return PreviewPane.this.mostRecentlyDrawn.document().getValue();
         }
 
@@ -168,7 +173,7 @@ public class PreviewPane extends VBox {
     private class RenderTask extends Task {
         private final ThreadLocal<DataWidget<?>.Entry> widget = ThreadLocal.withInitial(() -> PreviewPane.this.mostRecentlyDrawn);
         private final ThreadLocal<Document<?>> document = new ThreadLocal<>();
-        private final Map<Integer, Map<Integer, PreviewImageRenderer>> renderers = new HashMap<>(1);
+        private final Map<Integer, Map<Integer, PreviewRenderer>> renderers = new HashMap<>(1);
         public RenderTask(String name, Log log) {
             super(name, log);
         }
@@ -181,7 +186,7 @@ public class PreviewPane extends VBox {
                     .then(this::setPreview);
         }
 
-        private <D extends RenderJob<?>> RenderResult clearPreviewPane() {
+        private <D extends RenderData> RenderResult clearPreviewPane() {
             //noinspection unchecked
             var widget = (DataWidget<D>.Entry) this.widget.get();
             Template<D> template = widget.template().getValue();
@@ -203,7 +208,7 @@ public class PreviewPane extends VBox {
             return PreviewPane.this.cache.get(widget);
         }
 
-        private <D extends RenderJob<?>> RenderResult assemble(RenderResult result) {
+        private <D extends RenderData> RenderResult assemble(RenderResult result) {
             if (result.original == null && !PreviewPane.this.cropPreview || result.cropped == null && PreviewPane.this.cropPreview) {
                 Platform.runLater(() -> PreviewPane.this.isRendering.set(true));
 
@@ -219,25 +224,32 @@ public class PreviewPane extends VBox {
         }
 
 
-        private StackPane render(RenderResult result) {
+        private Node render(RenderResult result) {
             Document<?> document = this.document.get();
             Template<?> template = document.getTemplate();
             double rW = PreviewPane.this.getWidth() / template.getWidth();
             double rH = PreviewPane.this.getHeight() / template.getHeight();
             double r = Math.min(rW, rH);
 
-            int width = (int) (template.getWidth() * r);
-            int height = (int) (template.getHeight() * r);
-
-            PreviewImageRenderer renderer = this.renderers.computeIfAbsent(width, w -> new HashMap<>(1))
-                    .computeIfAbsent(height, h -> new PreviewImageRenderer(width, height));
-
-            StackPane preview = new StackPane();
-
             try {
-                renderer.render(document, preview.getChildren());
+                StackPane pane = (StackPane) ((GroupImpl<?>) document.getElements()).render();
+                Group group = new Group(pane);
 
-                return preview;
+                Platform.runLater(() -> {
+                    WritableImage image = pane.snapshot(new SnapshotParameters(), null);
+
+                    Clipboard clipboard = Clipboard.getSystemClipboard();
+                    ClipboardContent content = new ClipboardContent();
+
+                    content.putImage(image);
+
+                    clipboard.setContent(content);
+
+                    pane.setScaleX(r);
+                    pane.setScaleY(r);
+                });
+
+                return group;
             } catch (Exception e) {
                 if (!(e instanceof RuntimeException)) {
                     this.widget.get().getWidget().getErrorProperty().add(ExceptionUtil.getErrorMessage(e));
@@ -247,7 +259,7 @@ public class PreviewPane extends VBox {
             }
         }
 
-        private void setPreview(StackPane stackPane) {
+        private void setPreview(Node node) {
             DataWidget<?>.Entry widget = this.widget.get();
 
             Platform.runLater(() -> {
@@ -258,7 +270,7 @@ public class PreviewPane extends VBox {
 //                        stackPane.getChildren().add(0, new Rectangle(image.getWidth(), image.getHeight(), Color.GREY));
                     }
 
-                    children.add(stackPane);
+                    children.add(node);
 
                     if (children.size() > 1) {
                         children.remove(0, children.size() - 1);
@@ -277,7 +289,7 @@ public class PreviewPane extends VBox {
         }
     }
 
-    public <D extends RenderJob<?>> void render(DataWidget<D>.Entry widget) {
+    public <D extends RenderData> void render(DataWidget<D>.Entry widget) {
         if (!Proximity.isPaused() && this.mostRecentlyDrawn == null || this.mostRecentlyDrawn != widget) {
             this.mostRecentlyDrawn = widget;
             this.render.run();
@@ -290,10 +302,10 @@ public class PreviewPane extends VBox {
     }
 
     public void rerender(DataWidget<?>.Entry entry) {
-        if (entry == this.mostRecentlyDrawn) {
-            this.cache.remove(entry);
-            this.render.run();
-        }
+//        if (entry == this.mostRecentlyDrawn) {
+//            this.cache.remove(entry);
+//            this.render.run();
+//        }
     }
 
     private static final class RenderResult {

@@ -1,10 +1,18 @@
-package dev.hephaestus.proximity.app.api;
+package dev.hephaestus.proximity.app.api.rendering;
 
+import dev.hephaestus.proximity.app.api.Option;
+import dev.hephaestus.proximity.app.api.ResourceProvider;
 import dev.hephaestus.proximity.app.api.exceptions.ResourceNotFoundException;
+import dev.hephaestus.proximity.app.api.rendering.elements.Group;
 import dev.hephaestus.proximity.app.impl.rendering.DefaultResourceProvider;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableBooleanValue;
 
-import java.awt.Font;
-import java.awt.FontFormatException;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -13,39 +21,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public abstract class Template<D extends RenderJob<?>> {
+public abstract class Template<D extends RenderData> {
     private final Map<String, Font> fonts = new HashMap<>();
     private final Map<String, javafx.scene.text.Font> fxFonts = new HashMap<>();
     private final List<ResourceProvider> resourceProviders = new ArrayList<>(1);
 
-    protected final String name;
-    protected final int width, height, dpi;
-
-    protected Template(String name, int width, int height, int dpi, boolean addDefaultResourceProvider) {
-        this.name = name;
-        this.width = width;
-        this.height = height;
-        this.dpi = dpi;
-
-        if (addDefaultResourceProvider) {
-            this.addResourceProvider(new DefaultResourceProvider(this.getClass().getModule()));
-        }
+    public Template() {
+        this.addResourceProviders();
     }
 
-    public final String getName() {
-        return this.name;
-    }
+    public abstract int getDPI();
+    public abstract int getWidth();
+    public abstract int getHeight();
+    public abstract void build(D data, Group image);
+    public abstract void createOptions(Options<D> options);
+    public abstract boolean canHandle(RenderData data);
 
-    public final int getWidth() {
-        return this.width;
-    }
-
-    public final int getHeight() {
-        return this.height;
-    }
-
-    public final int getDPI() {
-        return this.dpi;
+    protected void addResourceProviders() {
+        this.addResourceProvider(new DefaultResourceProvider(this.getClass().getModule()));
     }
 
     public final void addResourceProvider(ResourceProvider resourceProvider) {
@@ -69,7 +62,7 @@ public abstract class Template<D extends RenderJob<?>> {
             }
         }
 
-        throw new ResourceNotFoundException(name);
+        return null;
     }
 
     public final Font getFont(String fontName, float size) {
@@ -121,15 +114,68 @@ public abstract class Template<D extends RenderJob<?>> {
         }
     }
 
-    public abstract boolean canHandle(Object data);
 
-    public abstract void createLayers(Parent<D> layers);
+    protected static Observable all(Observable... observables) {
+        return new Observable() {
+            @Override
+            public void addListener(InvalidationListener listener) {
+                for (Observable observable : observables) {
+                    if (observable != null) {
+                        observable.addListener(listener);
+                    }
+                }
+            }
 
-    public void createOptions(Options<D> options) {
-
+            @Override
+            public void removeListener(InvalidationListener listener) {
+                for (Observable observable : observables) {
+                    if (observable != null) {
+                        observable.removeListener(listener);
+                    }
+                }
+            }
+        };
     }
 
-    public interface Options<D extends RenderJob<?>> {
+    protected static ObservableBooleanValue and(ObservableBooleanValue... values) {
+        SimpleBooleanProperty property = new SimpleBooleanProperty();
+
+        property.bind(Bindings.createBooleanBinding(() -> {
+            boolean bl = true;
+
+            for (ObservableBooleanValue value : values) {
+                bl &= value.get();
+            }
+
+            return bl;
+        }, values));
+
+        return property;
+    }
+
+    protected static ObservableBooleanValue not(ObservableBooleanValue value) {
+        SimpleBooleanProperty property = new SimpleBooleanProperty();
+
+        property.bind(Bindings.createBooleanBinding(() -> !value.get(), value));
+
+        return property;
+    }
+
+    protected static ReadOnlyBooleanProperty[] level(ReadOnlyBooleanProperty... properties) {
+        return properties;
+    }
+
+    protected static ReadOnlyBooleanProperty[] level(String defaultBranch, ReadOnlyBooleanProperty... properties) {
+        ReadOnlyBooleanProperty[] result = new ReadOnlyBooleanProperty[properties.length + 1];
+
+        result[0] = new SimpleBooleanProperty(null, defaultBranch, true);
+
+        System.arraycopy(properties, 0, result, 1, properties.length);
+
+        return result;
+    }
+
+    public interface Options<D> {
         void add(Option<?, ?, ? super D> option);
         void add(Option<?, ?, ? super D> option, String category);
         void category(String id, Consumer<Options<D>> category);

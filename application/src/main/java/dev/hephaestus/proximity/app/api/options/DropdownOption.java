@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.app.api.options;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonString;
@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T, DropdownOption<T, D>.Widget, D> {
+public abstract class DropdownOption<T, D extends RenderData> extends Option<T, DropdownOption<T, D>.Widget, D> {
     private final List<Entry<T, D>> entries;
     private final Map<Entry<T, D>, T> producedValues;
     private final Map<T, Entry<T, D>> producedValuesInverse;
@@ -53,6 +53,8 @@ public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T
         widget.setConverter(new StringConverter<>() {
             @Override
             public String toString(T t) {
+                if (t == null) return "None";
+
                 return DropdownOption.this.producedValuesInverse.get(t).getName(
                         DropdownOption.this.valuesToData.get(t)
                 );
@@ -76,15 +78,15 @@ public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T
         }
     }
 
-    public static <T, D extends RenderJob<?>> Builder<T, D> builder(String id, Function<T, String> stringFunction, Function<T, JsonElement> toJson, Function<JsonElement, T> fromJson) {
+    public static <T, D extends RenderData> Builder<T, D> builder(String id, Function<T, String> stringFunction, Function<T, JsonElement> toJson, Function<JsonElement, T> fromJson) {
         return new Builder<>(id, stringFunction, toJson, fromJson);
     }
 
-    public static <D extends RenderJob<?>> Builder<String, D> builder(String id) {
+    public static <D extends RenderData> Builder<String, D> builder(String id) {
         return new Builder<>(id, s -> s, Json::create, JsonString::get);
     }
 
-    public static final class Builder<T, D extends RenderJob<?>> {
+    public static final class Builder<T, D extends RenderData> {
         private final String id;
         private final Function<T, String> stringFunction;
         private final Function<T, JsonElement> toJson;
@@ -159,7 +161,7 @@ public abstract class DropdownOption<T, D extends RenderJob<?>> extends Option<T
         }
     }
 
-    private record Entry<T, D extends RenderJob<?>>(String name, Function<D, T> value, Predicate<D> predicate, Function<D, String> stringFunction) {
+    private record Entry<T, D extends RenderData>(String name, Function<D, T> value, Predicate<D> predicate, Function<D, String> stringFunction) {
         public Entry(Function<D, T> value, Predicate<D> predicate, Function<D, String> stringFunction) {
             this(null, value, predicate, stringFunction);
         }

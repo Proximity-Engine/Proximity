@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.app.api.options;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonString;
@@ -14,7 +14,7 @@ import javafx.scene.layout.Priority;
 
 import java.util.function.Function;
 
-public class StringOption<D extends RenderJob<?>> extends Option<String, StringOption<D>.Widget, D> {
+public class StringOption<D extends RenderData> extends Option<String, StringOption<D>.Widget, D> {
     public StringOption(String id, String defaultValue) {
         super(id, defaultValue);
     }

@@ -1,10 +1,10 @@
 package dev.hephaestus.proximity.app.impl;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.app.api.plugins.DataProvider;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.app.impl.exceptions.InitializationException;
 import dev.hephaestus.proximity.app.impl.sidebar.OptionsPane;
 import dev.hephaestus.proximity.app.impl.sidebar.SidebarPane;
@@ -256,7 +256,7 @@ public class Proximity {
         return CACHE.cache(url);
     }
 
-    public static <D extends RenderJob<?>> DataProvider<D> getDataProvider() {
+    public static <D extends RenderData> DataProvider<D> getDataProvider() {
         //noinspection unchecked
         return (DataProvider<D>) DATA_PROVIDER;
     }
@@ -327,7 +327,7 @@ public class Proximity {
 
     public static Template<?> getTemplate(String name) {
         for (Template<?> template : templates()) {
-            if (template.getName().equalsIgnoreCase(name)) {
+            if (template.getClass().getName().equalsIgnoreCase(name)) {
                 return template;
             }
         }
@@ -337,7 +337,7 @@ public class Proximity {
         return null;
     }
 
-    public static <D extends RenderJob<?>> void select(DataWidget<D>.Entry entry) {
+    public static <D extends RenderData> void select(DataWidget<D>.Entry entry) {
         INSTANCE.options.select(entry);
         SELECTION_MANAGER.select(entry);
     }
@@ -363,7 +363,7 @@ public class Proximity {
         return PAUSED;
     }
 
-    public static <D extends RenderJob<?>> void select(DataRow<D> row) {
+    public static <D extends RenderData> void select(DataRow<D> row) {
         SELECTION_MANAGER.select(row);
     }
 

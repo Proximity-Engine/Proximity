@@ -20,7 +20,7 @@ jlink {
 }
 
 group = 'dev.hephaestus.proximity'
-version = '1.1.0-SNAPSHOT'
+version = '1.2.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -38,9 +38,9 @@ dependencies {
     api project(':utilities')
     api project(':json')
 
-    runtimeOnly 'dev.hephaestus.proximity:mtg:1.1.0-SNAPSHOT'
-    runtimeOnly 'dev.hephaestus.proximity:scryfall:1.1.0-SNAPSHOT'
-    runtimeOnly 'dev.hephaestus.proximity:m15-ultimate:1.0.1-SNAPSHOT'
+    runtimeOnly 'dev.hephaestus.proximity:mtg:1.2.0-SNAPSHOT'
+    runtimeOnly 'dev.hephaestus.proximity:scryfall:1.2.0-SNAPSHOT'
+    runtimeOnly 'dev.hephaestus.proximity:m15-ultimate:1.1.0-SNAPSHOT'
 }
 
 application {

@@ -1,12 +1,13 @@
 package dev.hephaestus.proximity.app.api;
 
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import javafx.beans.property.Property;
 import javafx.scene.Node;
 
 import java.util.function.Function;
 
-public abstract class Option<T, W extends Node & Option.Widget<T>, D extends RenderJob<?>> implements Function<D, T> {
+public abstract class Option<T, W extends Node & Option.Widget<T>, D extends RenderData> {
     private final String id;
     private final Function<D, T> defaultValue;
 
@@ -18,11 +19,6 @@ public abstract class Option<T, W extends Node & Option.Widget<T>, D extends Ren
     protected Option(String id, Function<D, T> defaultValue) {
         this.id = id;
         this.defaultValue = defaultValue;
-    }
-
-    @Override
-    public T apply(D d) {
-        return d.getOption(this);
     }
 
     public final String getId() {

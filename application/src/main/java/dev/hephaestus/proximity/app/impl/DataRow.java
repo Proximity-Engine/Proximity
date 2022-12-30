@@ -1,10 +1,10 @@
 package dev.hephaestus.proximity.app.impl;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.logging.Log;
 import dev.hephaestus.proximity.app.api.plugins.DataProvider;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.app.impl.skins.TooltipSkin;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import javafx.beans.Observable;
@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.util.Iterator;
 
-public final class DataRow<D extends RenderJob<?>> extends HBox implements Iterable<DataWidget<D>.Entry> {
+public final class DataRow<D extends RenderData> extends HBox implements Iterable<DataWidget<D>.Entry> {
     private final StackPane status;
     private final DataEntryArea dataEntryArea;
 
@@ -96,7 +96,7 @@ public final class DataRow<D extends RenderJob<?>> extends HBox implements Itera
                 }
 
                 if (entry.template().getValue() == null) {
-                    entry.getWidget().getErrorProperty().add(String.format("Supported template not found for '%s'", entry.get().getName()));
+                    entry.getWidget().getErrorProperty().add(String.format("Supported template not found for '%s'", entry.get().getClass().getName()));
                 }
             }
 

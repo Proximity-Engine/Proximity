@@ -1,9 +1,9 @@
 package dev.hephaestus.proximity.app.impl;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataProvider;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -81,7 +81,7 @@ public final class DataEntryArea extends StackPane {
         return this.rows.size();
     }
 
-    public <D extends RenderJob<?>> void add(DataWidget<D> widget) {
+    public <D extends RenderData> void add(DataWidget<D> widget) {
         this.add(Collections.singletonList(widget), false);
     }
 
@@ -108,7 +108,7 @@ public final class DataEntryArea extends StackPane {
         }
     }
 
-    private <D extends RenderJob<?>> void add(DataWidget<D> widget, Collection<DataRow<?>> rows) {
+    private <D extends RenderData> void add(DataWidget<D> widget, Collection<DataRow<?>> rows) {
         DataRow<D> row = new DataRow<>(this, widget);
 
         this.rows.add(row);
@@ -124,7 +124,7 @@ public final class DataEntryArea extends StackPane {
             }
 
             if (entry.template().getValue() == null) {
-                entry.getWidget().getErrorProperty().add(String.format("Supported template not found for '%s'", entry.get().getName()));
+                entry.getWidget().getErrorProperty().add(String.format("Supported template not found for '%s'", entry.get().getClass().getName()));
             }
         }
     }

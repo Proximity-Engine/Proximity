@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.app.api.plugins;
 
-import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.logging.Log;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import javafx.scene.layout.Pane;
 
@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-public interface DataProvider<D extends RenderJob<?>> {
+public interface DataProvider<D extends RenderData> {
     Class<D> getDataClass();
 
     Pane createHeaderElement();

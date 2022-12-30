@@ -1,13 +1,11 @@
 package dev.hephaestus.proximity.app.api.rendering;
 
-import dev.hephaestus.proximity.app.api.rendering.elements.Element;
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
+import dev.hephaestus.proximity.app.api.rendering.elements.Group;
+import javafx.collections.ObservableList;
 
-import java.io.InputStream;
-
-public interface Document<D extends RenderJob<?>> extends Iterable<Element<D>> {
-    InputStream getResource(String src, String... alternateFileExtensions);
-
+public interface Document<D extends RenderData> {
+    D getRenderData();
     Template<D> getTemplate();
+    ObservableList<String> getErrors();
+    Group getElements();
 }

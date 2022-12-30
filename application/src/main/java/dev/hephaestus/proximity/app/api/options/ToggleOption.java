@@ -1,8 +1,8 @@
 package dev.hephaestus.proximity.app.api.options;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.controls.SwitchButton;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.app.impl.Appearance;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonBoolean;
@@ -14,7 +14,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 
-public class ToggleOption<D extends RenderJob<?>> extends Option<Boolean, ToggleOption<D>.Widget, D> {
+public class ToggleOption<D extends RenderData> extends Option<Boolean, ToggleOption<D>.Widget, D> {
     public ToggleOption(String id, Boolean defaultValue) {
         super(id, defaultValue);
     }
@@ -37,10 +37,13 @@ public class ToggleOption<D extends RenderJob<?>> extends Option<Boolean, Toggle
     public class Widget extends HBox implements Option.Widget<Boolean> {
         private final SwitchButton switchButton;
 
-        private Widget(RenderJob<?> renderJob) {
+        private Widget(RenderData renderJob) {
             Label label = new Label(ToggleOption.this.getId());
             Pane spacer = new Pane();
-            this.switchButton = new SwitchButton(8, 40, 20, Color.GREEN, Appearance.BASE.brighter().brighter().brighter(), renderJob.getOption(ToggleOption.this));
+            var option = renderJob.getOption(ToggleOption.this);
+            this.switchButton = new SwitchButton(8, 40, 20, Color.GREEN, Appearance.BASE.brighter().brighter().brighter(), option.getValue());
+
+            this.switchButton.getState().bindBidirectional(option);
 
             this.getChildren().addAll(label, spacer, this.switchButton);
 

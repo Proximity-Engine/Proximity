@@ -20,20 +20,20 @@ public interface ImagePosition {
     /**
      * Stretches the image proportionally to cover the given area.
      *
-     * <p>Some portions of the image may ie outside of the given area.</p>
+     * <p>Some portions of the image may ie outside of the given area, and be clipped.</p>
      */
     record Cover(int x, int y, int width, int height, Alignment horizontalAlignment,
                  Alignment verticalAlignment) implements ImagePosition {
         @Override
         public BoundingBox getBounds(Rect imageDimensions) {
-            int x, y, width, height;
+            int x, y, width = this.width, height = this.height;
 
-            double rW = ((double) this.width) / imageDimensions.width();
-            double rH = ((double) this.height) / imageDimensions.height();
-            double r = Math.max(rW, rH);
-
-            width = (int) (imageDimensions.width() * r);
-            height = (int) (imageDimensions.height() * r);
+//            double rW = ((double) this.width) / imageDimensions.width();
+//            double rH = ((double) this.height) / imageDimensions.height();
+//            double r = Math.max(rW, rH);
+//
+//            width = (int) (imageDimensions.width() * r);
+//            height = (int) (imageDimensions.height() * r);
 
             x = switch (this.horizontalAlignment) {
                 case START -> this.x;

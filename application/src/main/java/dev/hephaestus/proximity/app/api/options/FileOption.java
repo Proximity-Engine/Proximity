@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.app.api.options;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.app.impl.Proximity;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
@@ -18,7 +18,7 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.nio.file.Path;
 
-public class FileOption<D extends RenderJob<?>> extends Option<Path, FileOption<D>.Widget, D> {
+public class FileOption<D extends RenderData> extends Option<Path, FileOption<D>.Widget, D> {
     private final FileChooser.ExtensionFilter[] filters;
 
     public FileOption(String id, Path defaultValue, FileChooser.ExtensionFilter... filters) {
@@ -92,7 +92,7 @@ public class FileOption<D extends RenderJob<?>> extends Option<Path, FileOption<
                 } else {
                     Proximity.setLastOpenedDirectory(file.getParentFile().toPath());
                     this.value.setValue(file.toPath());
-                    renderJob.getOptionProperty(FileOption.this).bind(this.value);
+                    renderJob.getOption(FileOption.this).bind(this.value);
                 }
             });
         }

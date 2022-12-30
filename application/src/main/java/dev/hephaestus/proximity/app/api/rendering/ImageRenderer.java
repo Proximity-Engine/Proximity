@@ -1,7 +1,7 @@
 package dev.hephaestus.proximity.app.api.rendering;
 
-import dev.hephaestus.proximity.app.api.text.TextComponent;
 import dev.hephaestus.proximity.app.api.rendering.elements.Image;
+import dev.hephaestus.proximity.app.api.text.TextComponent;
 import dev.hephaestus.proximity.app.api.rendering.util.BoundingBox;
 
 import javax.imageio.ImageIO;
@@ -13,6 +13,7 @@ import java.awt.Shape;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -23,10 +24,10 @@ public class ImageRenderer extends Renderer<Canvas> {
     }
 
     @Override
-    protected void render(Image<?> image, Canvas canvas) throws IOException {
-        BoundingBox dimensions = image.getBounds().iterator().next();
+    protected void render(Image image, Canvas canvas) throws IOException {
+        Rectangle2D dimensions = image.bounds();
 
-        canvas.drawImage(ImageIO.read(image.src().get()),
+        canvas.drawImage(ImageIO.read(image.source().get()),
                 (int) dimensions.getX(),
                 (int) dimensions.getY(),
                 (int) dimensions.getWidth(),

@@ -1,8 +1,8 @@
 package dev.hephaestus.proximity.app.api.options;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
 import dev.hephaestus.proximity.app.api.controls.ColorPicker;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
 import dev.hephaestus.proximity.json.api.Json;
 import dev.hephaestus.proximity.json.api.JsonElement;
 import dev.hephaestus.proximity.json.api.JsonString;
@@ -11,7 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
-public class ColorOption<D extends RenderJob<?>> extends Option<Color, ColorOption<D>.Widget, D> {
+public class ColorOption<D extends RenderData> extends Option<Color, ColorOption<D>.Widget, D> {
     public ColorOption(String id, Color defaultValue) {
         super(id, defaultValue);
     }
@@ -37,18 +37,15 @@ public class ColorOption<D extends RenderJob<?>> extends Option<Color, ColorOpti
     public class Widget extends VBox implements Option.Widget<Color> {
         private final ColorPicker picker;
 
-        private Widget(RenderJob<?> renderJob) {
+        private Widget(RenderData renderJob) {
             Label label = new Label(ColorOption.this.getId());
 
             label.getStyleClass().add("sidebar-text");
 
-            Color color = renderJob.getOption(ColorOption.this);
 
-            this.picker = new ColorPicker(
-                    color.getHue(),
-                    color.getSaturation(),
-                    color.getBrightness()
-            );
+            this.picker = new ColorPicker(0, 0, 0);
+
+            this.picker.getColorProperty().bindBidirectional(renderJob.getOption(ColorOption.this));
 
             this.getChildren().addAll(label, picker);
 

@@ -1,11 +1,9 @@
 package dev.hephaestus.proximity.app.impl;
 
 import dev.hephaestus.proximity.app.api.Option;
-import dev.hephaestus.proximity.app.api.RenderJob;
-import dev.hephaestus.proximity.app.api.Template;
 import dev.hephaestus.proximity.app.api.plugins.DataWidget;
-import dev.hephaestus.proximity.json.api.JsonElement;
-import dev.hephaestus.proximity.json.api.JsonObject;
+import dev.hephaestus.proximity.app.api.rendering.RenderData;
+import dev.hephaestus.proximity.app.api.rendering.Template;
 import dev.hephaestus.proximity.json.api.JsonString;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -17,7 +15,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TitledPane;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> {
+public class OptionsImpl<D extends RenderData> implements Template.Options<D> {
     protected final List<Option<?, ?, ? super D>> options = new ArrayList<>();
     private final Map<String, Category> categories = new LinkedHashMap<>();
 
@@ -106,46 +110,42 @@ public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> 
             categoryPane.setExpanded(category.expandedByDefault);
         }
 
-        JsonElement element = entry.getValue().toJson();
+        VBox parent = new VBox();
+        ScrollPane scrollPane = new ScrollPane(parent);
+        TitledPane categoryPane = new TitledPane("Data", scrollPane);
 
-        if (element instanceof JsonObject object) {
-            VBox parent = new VBox();
-            ScrollPane scrollPane = new ScrollPane(parent);
-            TitledPane categoryPane = new TitledPane("Data", scrollPane);
+        scrollPane.setFitToWidth(true);
+        scrollPane.prefWidthProperty().bind(categoryPane.widthProperty());
 
-            scrollPane.setFitToWidth(true);
-            scrollPane.prefWidthProperty().bind(categoryPane.widthProperty());
+        for (var e : entry.getValue().json) {
+            var json = e.getValue();
 
-            for (var e : object) {
-                var json = e.getValue();
+            if (json instanceof JsonString string) {
+                HBox box = new HBox();
+                TextField textField = new TextField(string.get());
 
-                if (json instanceof JsonString string) {
-                    HBox box = new HBox();
-                    TextField textField = new TextField(string.get());
+                Label label = new Label(e.getKey());
+                Pane s = new Pane();
 
-                    Label label = new Label(e.getKey());
-                    Pane s = new Pane();
+                label.getStyleClass().add("sidebar-text");
+                box.getStyleClass().add("sidebar-entry");
 
-                    label.getStyleClass().add("sidebar-text");
-                    box.getStyleClass().add("sidebar-entry");
+                box.getChildren().addAll(label, s, textField);
 
-                    box.getChildren().addAll(label, s, textField);
+                textField.getStyleClass().add("string-entry");
 
-                    textField.getStyleClass().add("string-entry");
+                HBox.setHgrow(s, Priority.ALWAYS);
 
-                    HBox.setHgrow(s, Priority.ALWAYS);
+                parent.getChildren().add(box);
 
-                    parent.getChildren().add(box);
-
-                    textField.textProperty().bindBidirectional(string);
-                    textField.textProperty().addListener(observable -> Proximity.rerender(entry));
-                }
+                textField.textProperty().bindBidirectional(string);
+                textField.textProperty().addListener(observable -> Proximity.rerender(entry));
             }
-
-            categoryPane.setAnimated(false);
-            categoryPane.setExpanded(false);
-            categoryPanes.add(categoryPane);
         }
+
+        categoryPane.setAnimated(false);
+        categoryPane.setExpanded(false);
+        categoryPanes.add(categoryPane);
 
         nodes.setAll(categoryPanes);
     }
@@ -153,7 +153,7 @@ public class OptionsImpl<D extends RenderJob<?>> implements Template.Options<D> 
     private <T, W extends Node & Option.Widget<T>> W createWidget(DataWidget<D>.Entry entry, Option<T, W, ? super D> option) {
         D job = entry.getValue();
         W control = option.createControl(job);
-        Property<T> property = job.getOptionProperty(option);
+        Property<T> property = job.getOption(option);
 
         control.getValueProperty().bindBidirectional(property);
 

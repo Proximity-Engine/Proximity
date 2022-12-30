@@ -50,7 +50,7 @@ public abstract class Task {
         if (this.currentExecution != null) {
             this.currentExecution.interrupt();
 
-            if (!(throwable instanceof RuntimeException)) {
+            if (!(throwable.getClass().equals(RuntimeException.class))) {
                 this.log.print(throwable);
             }
 
