@@ -24,7 +24,7 @@ public interface Textbox extends Element {
 
     void style(TextStyle style);
 
-    void wrap(Shape wrap);
+    void wrap(Shape... wraps);
 
     void padding(int top, int right, int bottom, int left);
 

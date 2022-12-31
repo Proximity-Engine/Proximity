@@ -18,4 +18,9 @@ public class TextComponent {
     public TextComponent(String text) {
         this(new TextStyle(null), text);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof TextComponent component && component.text.equals(this.text) && component.style.equals(this.style) && component.italic == this.italic;
+    }
 }

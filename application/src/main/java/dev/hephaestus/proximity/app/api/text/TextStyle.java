@@ -3,6 +3,7 @@ package dev.hephaestus.proximity.app.api.text;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -98,7 +99,9 @@ public final class TextStyle implements Observable {
     }
 
     public TextStyle setSize(Double size) {
-        this.size.setValue(size);
+        if (size == null || size > 0.1) {
+            this.size.setValue(size);
+        }
 
         return this;
     }
@@ -175,6 +178,18 @@ public final class TextStyle implements Observable {
         this.frozen = false;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof TextStyle style
+                && style.size.equals(this.size)
+                && style.fontName.equals(this.fontName)
+                && style.italicFontName.equals(this.italicFontName)
+                && style.capitalization.equals(this.capitalization)
+                && style.color.equals(this.color)
+                && style.shadow.equals(this.shadow)
+                && style.outline.equals(this.outline);
+    }
+
     public enum Capitalization {
         ALL_CAPS, NO_CAPS, SMALL_CAPS;
     }
@@ -233,6 +248,16 @@ public final class TextStyle implements Observable {
             } else {
                 return new Value<>();
             }
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof ObservableValue<?> value && (
+                    (
+                            value.getValue() != null && value.getValue().equals(this.getValue()))
+                            || (value.getValue() == null && this.getValue() == null
+                    )
+            );
         }
     }
 }

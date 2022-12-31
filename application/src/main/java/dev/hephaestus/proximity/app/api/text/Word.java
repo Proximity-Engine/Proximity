@@ -25,4 +25,9 @@ public final class Word implements Iterable<TextComponent> {
     public Iterator<TextComponent> iterator() {
         return new UnmodifiableIterator<>(this.components);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Word word && word.components.equals(this.components);
+    }
 }

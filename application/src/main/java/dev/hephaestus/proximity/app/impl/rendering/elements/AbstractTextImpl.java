@@ -30,7 +30,25 @@ public abstract class AbstractTextImpl<D extends RenderData> extends ElementImpl
     protected final Property<Integer> x = Properties.of("x", 0), y = Properties.of("y", 0);
     protected final ListProperty<Word> text = Properties.list("text");
     protected final Property<TextStyle> style = Properties.of("style", new TextStyle());
-    protected final Property<Rectangle2D> bounds = new SimpleObjectProperty<>();
+    protected final Property<Rectangle2D> bounds = new SimpleObjectProperty<>() {
+        @Override
+        public void set(Rectangle2D newValue) {
+            Rectangle2D oldValue = this.get();
+
+            if (!newValue.equals(oldValue)) {
+                super.set(newValue);
+            }
+        }
+
+        @Override
+        public void setValue(Rectangle2D newValue) {
+            Rectangle2D oldValue = this.get();
+
+            if (!newValue.equals(oldValue)) {
+                super.setValue(newValue);
+            }
+        }
+    };
 
     public AbstractTextImpl(String id, Document<D> document, ParentImpl<D> parent) {
         super(id, document, parent);
@@ -117,17 +135,26 @@ public abstract class AbstractTextImpl<D extends RenderData> extends ElementImpl
     }
 
     public void set(Collection<Word> words) {
-        this.text.setAll(words);
+        if (!words.equals(this.text.get())) {
+            this.text.setAll(words);
+        }
     }
 
     public void pos(int x, int y) {
-        this.x.setValue(x);
-        this.y.setValue(y);
+        if (x != this.x.getValue()) {
+            this.x.setValue(x);
+        }
+
+        if (y != this.y.getValue()) {
+            this.y.setValue(y);
+        }
     }
 
     public final void style(TextStyle style) {
-        this.style.setValue(style);
-        this.bounds.bind(this.bindBounds());
+        if (!style.equals(this.style.getValue())) {
+            this.style.setValue(style);
+            this.bounds.bind(this.bindBounds());
+        }
     }
 
     protected final void drawText(Consumer<Node> nodes, TextComponent component, BoundingBox bounds, int x, int y) {

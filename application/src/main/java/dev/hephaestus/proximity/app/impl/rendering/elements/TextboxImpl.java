@@ -24,6 +24,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -61,8 +62,8 @@ public class TextboxImpl<D extends RenderData> extends AbstractTextImpl<D> imple
         Rectangle bounds = shape.getBounds();
 
         return new BoundingBox(
-                bounds.x,
-                bounds.y,
+                bounds.isEmpty() ? transform.getTranslateX() : bounds.x,
+                bounds.isEmpty() ? transform.getTranslateY() : bounds.y,
                 textLayout.getAdvance(),
                 textLayout.getAscent(),
                 true
@@ -188,18 +189,32 @@ public class TextboxImpl<D extends RenderData> extends AbstractTextImpl<D> imple
     @Override
     public void pos(int x, int y, int width, int height) {
         super.pos(x, y);
-        this.width.setValue(width);
-        this.height.setValue(height);
+
+        if (width != this.width.getValue()) {
+            this.width.setValue(width);
+        }
+
+        if (height != this.height.getValue()) {
+            this.height.setValue(height);
+        }
     }
 
     @Override
-    public void wrap(Shape wrap) {
-        this.wraps.add(wrap);
+    public void wrap(Shape... wraps) {
+        List<Shape> list = Arrays.asList(wraps);
+
+        if (!list.equals(this.wraps)) {
+            this.wraps.setAll(list);
+        }
     }
 
     @Override
     public void padding(int top, int right, int bottom, int left) {
-        this.padding.setValue(new Padding(top, right, bottom, left));
+        Padding padding = new Padding(top, right, bottom, left);
+
+        if (!padding.equals(this.padding.getValue())) {
+            this.padding.setValue(padding);
+        }
     }
 
     @Override
